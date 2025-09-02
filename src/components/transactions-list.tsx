@@ -53,7 +53,11 @@ export default function TransactionsList({ transactions }: TransactionsListProps
                   </TableCell>
                   <TableCell className="font-medium">{transaction.description}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{transaction.category}</Badge>
+                    <div className="flex flex-wrap gap-1">
+                      {transaction.category.map(cat => (
+                        <Badge key={cat} variant="outline">{cat}</Badge>
+                      ))}
+                    </div>
                   </TableCell>
                    <TableCell>{formatDate(transaction.date)}</TableCell>
                   <TableCell className={`text-right font-semibold text-red-600`}>

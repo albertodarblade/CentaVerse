@@ -14,23 +14,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "./ui/checkbox";
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: "Amount must be positive." }),
   description: z.string().min(2, {
     message: "Description must be at least 2 characters.",
   }),
-  category: z.string().min(2, { message: "Please select a category." }),
+  category: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: "You have to select at least one category.",
+  }),
 });
 
 const expenseCategories = ["Food", "Transport", "Housing", "Entertainment", "Shopping", "Health", "Other"];
@@ -47,7 +43,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
     defaultValues: {
       amount: 0,
       description: "",
-      category: "",
+      category: [],
     },
   });
 
@@ -58,10 +54,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
       description: `Your expense of $${values.amount} has been recorded.`,
     });
     form.reset();
-    form.setValue("category", "");
   }
-
-  const categories = expenseCategories;
 
   return (
     <Card>
@@ -102,23 +95,46 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
             <FormField
               control={form.control}
               name="category"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={`Select an expense category`} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="mb-4">
+                    <FormLabel>Category</FormLabel>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    {expenseCategories.map((item) => (
+                      <FormField
+                        key={item}
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={item}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(item)}
+                                  onCheckedChange={(checked) => {
+                                    return checked
+                                      ? field.onChange([...(field.value || []), item])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== item
+                                          )
+                                        )
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {item}
+                              </FormLabel>
+                            </FormItem>
+                          )
+                        }}
+                      />
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

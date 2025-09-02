@@ -26,7 +26,7 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
       
     const expenseSummary = transactions
       .filter((t) => t.type === 'expense')
-      .map((t) => `${t.description} in ${t.category} ($${t.amount})`)
+      .map((t) => `${t.description} in ${t.category.join('/')} ($${t.amount})`)
       .join(', ');
     
     if (!incomeSummary && !expenseSummary) {
