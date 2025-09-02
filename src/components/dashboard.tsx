@@ -6,7 +6,6 @@ import Header from './header';
 import SummaryCards from './summary-cards';
 import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
-import ExpenseChart from './expense-chart';
 import AIInsights from './ai-insights';
 
 const initialTransactions: Transaction[] = [
@@ -48,14 +47,9 @@ export default function Dashboard() {
         <SummaryCards
           expenses={totalExpenses}
         />
-        <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-            <div className="xl:col-span-2 space-y-4">
-               <TransactionForm onAddTransaction={addTransaction} />
-               <TransactionsList transactions={transactions} />
-            </div>
-            <div className="space-y-4">
-                <ExpenseChart transactions={transactions} />
-            </div>
+        <div className="space-y-4">
+            <TransactionForm onAddTransaction={addTransaction} />
+            <TransactionsList transactions={transactions} />
         </div>
         <div>
             <AIInsights transactions={transactions} />
