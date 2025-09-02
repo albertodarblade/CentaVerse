@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/lib/types";
-import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { ArrowDownCircle } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
 interface TransactionsListProps {
@@ -25,10 +25,12 @@ export default function TransactionsList({ transactions }: TransactionsListProps
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
   };
 
+  const expenseTransactions = transactions.filter(t => t.type === 'expense');
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Recent Transactions</CardTitle>
+        <CardTitle className="font-headline">Recent Expenses</CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px]">
@@ -43,23 +45,19 @@ export default function TransactionsList({ transactions }: TransactionsListProps
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.length > 0 ? (
-                transactions.map((transaction) => (
+              {expenseTransactions.length > 0 ? (
+                expenseTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
-                    {transaction.type === 'income' ? (
-                       <ArrowUpCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                       <ArrowDownCircle className="h-5 w-5 text-red-500" />
-                    )}
+                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
                   </TableCell>
                   <TableCell className="font-medium">{transaction.description}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{transaction.category}</Badge>
                   </TableCell>
                    <TableCell>{formatDate(transaction.date)}</TableCell>
-                  <TableCell className={`text-right font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                    {transaction.type === 'income' ? '+' : '-'}
+                  <TableCell className={`text-right font-semibold text-red-600`}>
+                    -
                     {formatCurrency(transaction.amount)}
                   </TableCell>
                 </TableRow>
@@ -67,7 +65,7 @@ export default function TransactionsList({ transactions }: TransactionsListProps
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center h-24">
-                    No transactions yet.
+                    No expenses yet.
                   </TableCell>
                 </TableRow>
               )}

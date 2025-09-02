@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -36,14 +34,12 @@ const formSchema = z.object({
 });
 
 const expenseCategories = ["Food", "Transport", "Housing", "Entertainment", "Shopping", "Health", "Other"];
-const incomeCategories = ["Salary", "Freelance", "Rent", "Investment", "Gift", "Other"];
 
 interface TransactionFormProps {
-  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => void;
 }
 
 export default function TransactionForm({ onAddTransaction }: TransactionFormProps) {
-  const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -56,32 +52,23 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onAddTransaction({ ...values, type: transactionType });
+    onAddTransaction(values);
     toast({
       title: "Transaction added",
-      description: `Your ${transactionType} of $${values.amount} has been recorded.`,
+      description: `Your expense of $${values.amount} has been recorded.`,
     });
     form.reset();
     form.setValue("category", "");
   }
 
-  const categories = transactionType === 'expense' ? expenseCategories : incomeCategories;
+  const categories = expenseCategories;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Add a New Transaction</CardTitle>
+        <CardTitle className="font-headline">Add a New Expense</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={transactionType} onValueChange={(value) => setTransactionType(value as 'expense' | 'income')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="expense">Expense</TabsTrigger>
-            <TabsTrigger value="income">Income</TabsTrigger>
-          </TabsList>
-          <TabsContent value="expense" />
-          <TabsContent value="income" />
-        </Tabs>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -105,7 +92,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                   <FormItem className="sm:col-span-2">
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input placeholder={transactionType === 'expense' ? 'e.g., Dinner with friends' : 'e.g., Monthly Salary'} {...field} />
+                      <Input placeholder={'e.g., Dinner with friends'} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,7 +108,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={`Select a ${transactionType} category`} />
+                        <SelectValue placeholder={`Select an expense category`} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -136,7 +123,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full sm:w-auto">Add Transaction</Button>
+            <Button type="submit" className="w-full sm:w-auto">Add Expense</Button>
           </form>
         </Form>
       </CardContent>
