@@ -122,7 +122,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                           <Button
                             key={tag}
                             type="button"
-                            variant={isSelected ? "secondary" : "outline"}
+                            variant={isSelected ? "default" : "outline"}
                             size="sm"
                             onClick={() => {
                               const newValue = isSelected
