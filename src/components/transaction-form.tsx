@@ -16,8 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "./ui/checkbox";
-import { Pencil } from "lucide-react";
+import { Pencil, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal } from "lucide-react";
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }),
@@ -30,6 +29,20 @@ const formSchema = z.object({
 });
 
 const expenseTags = ["Trabajo", "Personal", "Ideas", "Urgente", "Comida", "Transporte", "Vivienda", "Entretenimiento", "Compras", "Salud", "Otro"];
+
+const tagIcons: { [key: string]: React.ReactNode } = {
+    "Trabajo": <Briefcase className="h-4 w-4" />,
+    "Personal": <User className="h-4 w-4" />,
+    "Ideas": <Lightbulb className="h-4 w-4" />,
+    "Urgente": <AlertTriangle className="h-4 w-4" />,
+    "Comida": <Utensils className="h-4 w-4" />,
+    "Transporte": <Car className="h-4 w-4" />,
+    "Vivienda": <Home className="h-4 w-4" />,
+    "Entretenimiento": <Clapperboard className="h-4 w-4" />,
+    "Compras": <ShoppingCart className="h-4 w-4" />,
+    "Salud": <HeartPulse className="h-4 w-4" />,
+    "Otro": <MoreHorizontal className="h-4 w-4" />,
+};
 
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => void;
@@ -95,47 +108,37 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
             <FormField
               control={form.control}
               name="tags"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <div className="mb-4 flex items-center gap-2">
                     <FormLabel>Etiquetas</FormLabel>
                     <Pencil className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="flex flex-wrap gap-4">
-                    {expenseTags.map((item) => (
-                      <FormField
-                        key={item}
-                        control={form.control}
-                        name="tags"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={item}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(item)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...(field.value || []), item])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== item
-                                          )
-                                        )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {item}
-                              </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
-                  </div>
+                  <FormControl>
+                    <div className="flex flex-wrap gap-2">
+                      {expenseTags.map((tag) => {
+                        const isSelected = field.value?.includes(tag);
+                        return (
+                          <Button
+                            key={tag}
+                            type="button"
+                            variant={isSelected ? "secondary" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              const newValue = isSelected
+                                ? field.value?.filter((value) => value !== tag)
+                                : [...(field.value || []), tag];
+                              field.onChange(newValue);
+                            }}
+                            className="rounded-full"
+                          >
+                            {tagIcons[tag]}
+                            {tag}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
