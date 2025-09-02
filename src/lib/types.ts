@@ -6,3 +6,9 @@ export type Transaction = {
   tags: string[];
   date: Date;
 };
+
+export type Tag = {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}

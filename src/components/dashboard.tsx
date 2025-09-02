@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { Transaction } from '@/lib/types';
+import type { Tag, Transaction } from '@/lib/types';
 import Header from './header';
 import SummaryCards from './summary-cards';
 import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
+import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal } from "lucide-react";
 
 const initialTransactions: Transaction[] = [
     { id: '2', type: 'expense', amount: 1200, description: 'Alquiler de Apartamento', tags: ['Vivienda'], date: new Date('2024-07-01T10:00:00Z') },
@@ -18,8 +19,23 @@ const initialTransactions: Transaction[] = [
     { id: '9', type: 'expense', amount: 30, description: 'Farmacia', tags: ['Salud'], date: new Date('2024-07-14T16:00:00Z') },
 ];
 
+const initialTags: Tag[] = [
+    { id: "trabajo", name: "Trabajo", icon: <Briefcase className="h-4 w-4" /> },
+    { id: "personal", name: "Personal", icon: <User className="h-4 w-4" /> },
+    { id: "ideas", name: "Ideas", icon: <Lightbulb className="h-4 w-4" /> },
+    { id: "urgente", name: "Urgente", icon: <AlertTriangle className="h-4 w-4" /> },
+    { id: "comida", name: "Comida", icon: <Utensils className="h-4 w-4" /> },
+    { id: "transporte", name: "Transporte", icon: <Car className="h-4 w-4" /> },
+    { id: "vivienda", name: "Vivienda", icon: <Home className="h-4 w-4" /> },
+    { id: "entretenimiento", name: "Entretenimiento", icon: <Clapperboard className="h-4 w-4" /> },
+    { id: "compras", name: "Compras", icon: <ShoppingCart className="h-4 w-4" /> },
+    { id: "salud", name: "Salud", icon: <HeartPulse className="h-4 w-4" /> },
+    { id: "otro", name: "Otro", icon: <MoreHorizontal className="h-4 w-4" /> },
+];
+
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [tags, setTags] = useState<Tag[]>(initialTags);
 
   const addTransaction = (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
     const newTransaction: Transaction = {
@@ -31,6 +47,32 @@ export default function Dashboard() {
     setTransactions((prev) => [newTransaction, ...prev]);
   };
 
+  const addTag = (tagName: string) => {
+    const newTag: Tag = {
+      id: tagName.toLowerCase().replace(/\s/g, '-'),
+      name: tagName,
+      icon: <MoreHorizontal className="h-4 w-4" />
+    };
+    setTags(prev => [...prev, newTag]);
+  }
+
+  const updateTag = (tagId: string, newName: string) => {
+    setTags(prev => prev.map(tag => tag.id === tagId ? { ...tag, name: newName } : tag));
+    setTransactions(prev => prev.map(t => ({
+      ...t,
+      tags: t.tags.map(tag => tag === tagId ? newName : tag)
+    })));
+  };
+
+  const deleteTag = (tagId: string) => {
+    const tagName = tags.find(t => t.id === tagId)?.name;
+    setTags(prev => prev.filter(tag => tag.id !== tagId));
+    setTransactions(prev => prev.map(t => ({
+      ...t,
+      tags: t.tags.filter(tag => tag !== tagName)
+    })));
+  };
+
   const { totalExpenses } = useMemo(() => {
     const expenses = transactions
       .filter((t) => t.type === 'expense')
@@ -40,6 +82,14 @@ export default function Dashboard() {
     };
   }, [transactions]);
 
+  const tagIcons = useMemo(() => {
+    return tags.reduce((acc, tag) => {
+      acc[tag.name] = tag.icon;
+      return acc;
+    }, {} as { [key: string]: React.ReactNode });
+  }, [tags]);
+
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -48,8 +98,14 @@ export default function Dashboard() {
           expenses={totalExpenses}
         />
         <div className="space-y-4">
-            <TransactionForm onAddTransaction={addTransaction} />
-            <TransactionsList transactions={transactions} />
+            <TransactionForm 
+              onAddTransaction={addTransaction} 
+              tags={tags}
+              onAddTag={addTag}
+              onUpdateTag={updateTag}
+              onDeleteTag={deleteTag}
+            />
+            <TransactionsList transactions={transactions} tagIcons={tagIcons} />
         </div>
         <div>
             <AIInsights transactions={transactions} />

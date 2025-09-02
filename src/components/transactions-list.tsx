@@ -9,29 +9,16 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/lib/types";
-import { ArrowDownCircle, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal } from "lucide-react";
+import { ArrowDownCircle } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
 interface TransactionsListProps {
   transactions: Transaction[];
+  tagIcons: { [key: string]: React.ReactNode };
 }
 
-const tagIcons: { [key: string]: React.ReactNode } = {
-    "Trabajo": <Briefcase className="mr-1 h-3 w-3" />,
-    "Personal": <User className="mr-1 h-3 w-3" />,
-    "Ideas": <Lightbulb className="mr-1 h-3 w-3" />,
-    "Urgente": <AlertTriangle className="mr-1 h-3 w-3 text-red-500" />,
-    "Comida": <Utensils className="mr-1 h-3 w-3" />,
-    "Transporte": <Car className="mr-1 h-3 w-3" />,
-    "Vivienda": <Home className="mr-1 h-3 w-3" />,
-    "Entretenimiento": <Clapperboard className="mr-1 h-3 w-3" />,
-    "Compras": <ShoppingCart className="mr-1 h-3 w-3" />,
-    "Salud": <HeartPulse className="mr-1 h-3 w-3" />,
-    "Otro": <MoreHorizontal className="mr-1 h-3 w-3" />,
-};
 
-
-export default function TransactionsList({ transactions }: TransactionsListProps) {
+export default function TransactionsList({ transactions, tagIcons }: TransactionsListProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
   };
