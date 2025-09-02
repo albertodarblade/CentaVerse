@@ -26,18 +26,18 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
       
     const expenseSummary = transactions
       .filter((t) => t.type === 'expense')
-      .map((t) => `${t.description} in ${t.category.join('/')} ($${t.amount})`)
+      .map((t) => `${t.description} in ${t.tags.join('/')} ($${t.amount})`)
       .join(', ');
     
     if (!incomeSummary && !expenseSummary) {
-        setInsights("Not enough data to generate insights. Please add some transactions.");
+        setInsights("No hay suficientes datos para generar información. Por favor, añade algunas transacciones.");
         setIsLoading(false);
         return;
     }
 
     const result = await getAIInsightsAction({ 
-      incomeSummary: `Income sources: ${incomeSummary || 'None'}`,
-      expenseSummary: `Expenses: ${expenseSummary || 'None'}`
+      incomeSummary: `Fuentes de ingresos: ${incomeSummary || 'Ninguna'}`,
+      expenseSummary: `Gastos: ${expenseSummary || 'Ninguno'}`
     });
 
     setInsights(result);
@@ -49,10 +49,10 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
       <CardHeader>
         <CardTitle className="font-headline flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-primary" />
-          AI Financial Advisor
+          Asesor Financiero IA
         </CardTitle>
         <CardDescription>
-          Get personalized insights and recommendations on how to improve your financial habits.
+          Obtén información y recomendaciones personalizadas sobre cómo mejorar tus hábitos financieros.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -60,10 +60,10 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
+              Generando...
             </>
           ) : (
-            "Generate Insights"
+            "Generar Información"
           )}
         </Button>
         {insights && (

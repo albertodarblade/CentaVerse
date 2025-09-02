@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,18 +17,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "./ui/checkbox";
+import { Pencil } from "lucide-react";
 
 const formSchema = z.object({
-  amount: z.coerce.number().positive({ message: "Amount must be positive." }),
+  amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }),
   description: z.string().min(2, {
-    message: "Description must be at least 2 characters.",
+    message: "La descripción debe tener al menos 2 caracteres.",
   }),
-  category: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: "You have to select at least one category.",
+  tags: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: "Tienes que seleccionar al menos una etiqueta.",
   }),
 });
 
-const expenseCategories = ["Food", "Transport", "Housing", "Entertainment", "Shopping", "Health", "Other"];
+const expenseTags = ["Trabajo", "Personal", "Ideas", "Urgente", "Comida", "Transporte", "Vivienda", "Entretenimiento", "Compras", "Salud", "Otro"];
 
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => void;
@@ -43,15 +43,15 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
     defaultValues: {
       amount: 0,
       description: "",
-      category: [],
+      tags: [],
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     onAddTransaction(values);
     toast({
-      title: "Transaction added",
-      description: `Your expense of $${values.amount} has been recorded.`,
+      title: "Transacción añadida",
+      description: `Tu gasto de ${values.amount}€ ha sido registrado.`,
     });
     form.reset();
   }
@@ -59,7 +59,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Add a New Expense</CardTitle>
+        <CardTitle className="font-headline">Añadir Nuevo Gasto</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -70,7 +70,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                 name="amount"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-1">
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel>Cantidad</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="0.00" {...field} />
                     </FormControl>
@@ -83,9 +83,9 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                 name="description"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Descripción</FormLabel>
                     <FormControl>
-                      <Input placeholder={'e.g., Dinner with friends'} {...field} />
+                      <Input placeholder={'p. ej., Cena con amigos'} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -94,18 +94,19 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
             </div>
             <FormField
               control={form.control}
-              name="category"
+              name="tags"
               render={() => (
                 <FormItem>
-                  <div className="mb-4">
-                    <FormLabel>Category</FormLabel>
+                  <div className="mb-4 flex items-center gap-2">
+                    <FormLabel>Etiquetas</FormLabel>
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex flex-wrap gap-4">
-                    {expenseCategories.map((item) => (
+                    {expenseTags.map((item) => (
                       <FormField
                         key={item}
                         control={form.control}
-                        name="category"
+                        name="tags"
                         render={({ field }) => {
                           return (
                             <FormItem
@@ -139,7 +140,7 @@ export default function TransactionForm({ onAddTransaction }: TransactionFormPro
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full sm:w-auto">Add Expense</Button>
+            <Button type="submit" className="w-full sm:w-auto">Añadir Gasto</Button>
           </form>
         </Form>
       </CardContent>

@@ -9,20 +9,35 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/lib/types";
-import { ArrowDownCircle } from "lucide-react";
+import { ArrowDownCircle, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
 interface TransactionsListProps {
   transactions: Transaction[];
 }
 
+const tagIcons: { [key: string]: React.ReactNode } = {
+    "Trabajo": <Briefcase className="mr-1 h-3 w-3" />,
+    "Personal": <User className="mr-1 h-3 w-3" />,
+    "Ideas": <Lightbulb className="mr-1 h-3 w-3" />,
+    "Urgente": <AlertTriangle className="mr-1 h-3 w-3 text-red-500" />,
+    "Comida": <Utensils className="mr-1 h-3 w-3" />,
+    "Transporte": <Car className="mr-1 h-3 w-3" />,
+    "Vivienda": <Home className="mr-1 h-3 w-3" />,
+    "Entretenimiento": <Clapperboard className="mr-1 h-3 w-3" />,
+    "Compras": <ShoppingCart className="mr-1 h-3 w-3" />,
+    "Salud": <HeartPulse className="mr-1 h-3 w-3" />,
+    "Otro": <MoreHorizontal className="mr-1 h-3 w-3" />,
+};
+
+
 export default function TransactionsList({ transactions }: TransactionsListProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+    return new Intl.DateTimeFormat('es-ES', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
   };
 
   const expenseTransactions = transactions.filter(t => t.type === 'expense');
@@ -30,18 +45,18 @@ export default function TransactionsList({ transactions }: TransactionsListProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Recent Expenses</CardTitle>
+        <CardTitle className="font-headline">Gastos Recientes</CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px]">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="w-[100px]">Tipo</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Etiquetas</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead className="text-right">Cantidad</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -54,8 +69,11 @@ export default function TransactionsList({ transactions }: TransactionsListProps
                   <TableCell className="font-medium">{transaction.description}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {transaction.category.map(cat => (
-                        <Badge key={cat} variant="outline">{cat}</Badge>
+                      {transaction.tags.map(tag => (
+                        <Badge key={tag} variant={tag === 'Urgente' ? 'destructive' : 'outline'} className="flex items-center">
+                           {tagIcons[tag] || null}
+                           {tag}
+                        </Badge>
                       ))}
                     </div>
                   </TableCell>
@@ -69,7 +87,7 @@ export default function TransactionsList({ transactions }: TransactionsListProps
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center h-24">
-                    No expenses yet.
+                    Aún no hay gastos.
                   </TableCell>
                 </TableRow>
               )}
