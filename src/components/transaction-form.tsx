@@ -20,6 +20,10 @@ import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriang
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState } from "react";
+import { cn } from "@/lib/utils";
+import {
+  DialogDescription
+} from "@/components/ui/dialog"
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -117,7 +121,7 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
   const IconPicker = ({ onSelect, children }: { onSelect: (icon: React.ReactNode) => void, children: React.ReactNode }) => (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-auto p-2">
+      <PopoverContent className="w-auto p-2 bg-background border-border">
         <div className="grid grid-cols-5 gap-2">
           {iconList.map(icon => (
             <Button
@@ -137,142 +141,141 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Añadir Nuevo Gasto</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-1">
-                      <FormLabel>Cantidad</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="0.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Descripción</FormLabel>
-                      <FormControl>
-                        <Input placeholder={'p. ej., Cena con amigos'} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
-                      <div className="mb-4 flex items-center justify-between">
-                          <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
-                            <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
-                            <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                          </div>
+      <DialogHeader>
+        <DialogTitle className="font-headline text-2xl">Añadir Nuevo Gasto</DialogTitle>
+        <DialogDescription>
+          Rellena los detalles de tu nuevo gasto.
+        </DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+          <div className="grid grid-cols-1 gap-4">
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cantidad (€)</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0.00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción</FormLabel>
+                  <FormControl>
+                    <Input placeholder={'p. ej., Cena con amigos'} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+                  <div className="mb-4 flex items-center justify-between">
+                      <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
+                        <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
+                        <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
                       </div>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Gestionar Etiquetas</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="flex gap-2">
-                            <IconPicker onSelect={setNewTagIcon}>
-                              <Button variant="outline" size="icon" className="h-10 w-10">{newTagIcon}</Button>
-                            </IconPicker>
-                            <Input 
-                              placeholder="Nueva etiqueta" 
-                              value={newTagName}
-                              onChange={(e) => setNewTagName(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                            />
-                            <Button onClick={handleAddTag}>Añadir</Button>
-                          </div>
-                          <div className="space-y-2">
-                            {tags.map(tag => (
-                              <div key={tag.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
-                                {editingTag?.id === tag.id ? (
-                                  <>
-                                    <IconPicker onSelect={(icon) => setEditingTag({ ...editingTag, icon })}>
-                                      <Button variant="outline" size="icon" className="h-8 w-8">{editingTag.icon}</Button>
-                                    </IconPicker>
-                                    <Input
-                                      value={editingTag.name}
-                                      onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
-                                      onKeyDown={(e) => e.key === 'Enter' && handleUpdateTag()}
-                                      onBlur={handleUpdateTag}
-                                      autoFocus
-                                      className="h-8"
-                                    />
-                                  </>
-                                ) : (
-                                  <span className="flex items-center gap-2">
-                                    {tag.icon}
-                                    {tag.name}
-                                  </span>
-                                )}
+                  </div>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Gestionar Etiquetas</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        <IconPicker onSelect={setNewTagIcon}>
+                          <Button variant="outline" size="icon" className="h-10 w-10">{newTagIcon}</Button>
+                        </IconPicker>
+                        <Input 
+                          placeholder="Nueva etiqueta" 
+                          value={newTagName}
+                          onChange={(e) => setNewTagName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                        />
+                        <Button onClick={handleAddTag}>Añadir</Button>
+                      </div>
+                      <div className="space-y-2">
+                        {tags.map(tag => (
+                          <div key={tag.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
+                            {editingTag?.id === tag.id ? (
+                              <>
+                                <IconPicker onSelect={(icon) => setEditingTag({ ...editingTag, icon })}>
+                                  <Button variant="outline" size="icon" className="h-8 w-8">{editingTag.icon}</Button>
+                                </IconPicker>
+                                <Input
+                                  value={editingTag.name}
+                                  onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
+                                  onKeyDown={(e) => e.key === 'Enter' && handleUpdateTag()}
+                                  onBlur={handleUpdateTag}
+                                  autoFocus
+                                  className="h-8"
+                                />
+                              </>
+                            ) : (
+                              <span className="flex items-center gap-2">
+                                {tag.icon}
+                                {tag.name}
+                              </span>
+                            )}
 
-                                <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingTag(tag)}>
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingTag(tag)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    <FormControl>
-                      <div className="flex flex-wrap gap-2">
-                        {tags.map((tag) => {
-                          const isSelected = field.value?.includes(tag.name);
-                          return (
-                            <Button
-                              key={tag.id}
-                              type="button"
-                              variant={isSelected ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => {
-                                const newValue = isSelected
-                                  ? field.value?.filter((value) => value !== tag.name)
-                                  : [...(field.value || []), tag.name];
-                                field.onChange(newValue);
-                              }}
-                              className="rounded-full"
-                            >
-                              {tag.icon}
-                              {tag.name}
-                            </Button>
-                          );
-                        })}
+                        ))}
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full sm:w-auto">Añadir Gasto</Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <FormControl>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => {
+                      const isSelected = field.value?.includes(tag.name);
+                      return (
+                        <Button
+                          key={tag.id}
+                          type="button"
+                          variant={isSelected ? "default" : "secondary"}
+                          size="sm"
+                          onClick={() => {
+                            const newValue = isSelected
+                              ? field.value?.filter((value) => value !== tag.name)
+                              : [...(field.value || []), tag.name];
+                            field.onChange(newValue);
+                          }}
+                          className="rounded-full"
+                        >
+                          {tag.icon}
+                          {tag.name}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" className="w-full">Añadir Gasto</Button>
+        </form>
+      </Form>
     </>
   );
 }

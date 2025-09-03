@@ -1,22 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/lib/types";
-import { ArrowDownCircle } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface TransactionsListProps {
   transactions: Transaction[];
   tagIcons: { [key: string]: React.ReactNode };
 }
 
+const cardColors = [
+  "bg-pink-900/20 border-pink-700/40",
+  "bg-blue-900/20 border-blue-700/40",
+  "bg-green-900/20 border-green-700/40",
+  "bg-purple-900/20 border-purple-700/40",
+  "bg-yellow-900/20 border-yellow-700/40",
+];
 
 export default function TransactionsList({ transactions, tagIcons }: TransactionsListProps) {
   const formatCurrency = (amount: number) => {
@@ -24,64 +29,43 @@ export default function TransactionsList({ transactions, tagIcons }: Transaction
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+    return formatDistanceToNow(date, { addSuffix: true, locale: es });
   };
-
-  const expenseTransactions = transactions.filter(t => t.type === 'expense');
+  
+  if (transactions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
+        <h3 className="text-xl font-bold tracking-tight text-muted-foreground">No se encontraron gastos</h3>
+        <p className="text-sm text-muted-foreground">Intenta ajustar tu búsqueda o filtros.</p>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-headline">Gastos Recientes</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[400px]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Tipo</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead>Etiquetas</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenseTransactions.length > 0 ? (
-                expenseTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>
-                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
-                  </TableCell>
-                  <TableCell className="font-medium">{transaction.description}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {transaction.tags.map(tag => (
-                        <Badge key={tag} variant={tag === 'Urgente' ? 'destructive' : 'outline'} className="flex items-center">
-                           {tagIcons[tag] || null}
-                           {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                   <TableCell>{formatDate(transaction.date)}</TableCell>
-                  <TableCell className={`text-right font-semibold text-red-600`}>
-                    -
-                    {formatCurrency(transaction.amount)}
-                  </TableCell>
-                </TableRow>
-              ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Aún no hay gastos.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {transactions.map((transaction, index) => (
+        <Card key={transaction.id} className={`${cardColors[index % cardColors.length]}`}>
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">{transaction.description}</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              {formatDate(transaction.date)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-2xl font-bold text-foreground">
+              {formatCurrency(transaction.amount)}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {transaction.tags.map(tag => (
+                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                   {tagIcons[tag] || null}
+                   <span>{tag}</span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

@@ -1,72 +1,46 @@
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { CreditCard, LifeBuoy, LogOut, Settings, User } from "lucide-react"
-import { Button } from "./ui/button"
+import { Search } from "lucide-react";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import type { Tag } from "@/lib/types";
 
-export default function Header() {
+interface HeaderProps {
+  onSearch: (term: string) => void;
+  tags: Tag[];
+  activeTag: string;
+  onSetActiveTag: (tagId: string) => void;
+}
+
+export default function Header({ onSearch, tags, activeTag, onSetActiveTag }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-sm">
-      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-        <div className="flex gap-6 md:gap-10">
-          <h1 className="font-headline text-2xl font-bold text-primary">CentaVerse</h1>
-        </div>
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="user avatar" alt="User Avatar" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">User</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    user@example.com
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Billing</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-               <DropdownMenuItem>
-                <LifeBuoy className="mr-2 h-4 w-4" />
-                <span>Support</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <header className="sticky top-0 z-30 flex h-auto flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur-sm sm:px-6">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input
+          placeholder="Buscar gastos..."
+          className="w-full rounded-full bg-muted pl-10 pr-4 h-12 text-lg"
+          onChange={(e) => onSearch(e.target.value)}
+        />
+      </div>
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        <Button
+            variant={activeTag === 'all' ? 'default' : 'secondary'}
+            className="rounded-full"
+            onClick={() => onSetActiveTag('all')}
+          >
+            Todas
+        </Button>
+        {tags.map((tag) => (
+          <Button
+            key={tag.id}
+            variant={activeTag === tag.name ? 'default' : 'secondary'}
+            className="rounded-full flex-shrink-0"
+            onClick={() => onSetActiveTag(tag.name)}
+          >
+            {tag.icon}
+            {tag.name}
+          </Button>
+        ))}
       </div>
     </header>
-  )
+  );
 }
