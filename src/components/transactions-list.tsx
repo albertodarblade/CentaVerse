@@ -7,11 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/lib/types";
-import { formatDistanceToNow } from "date-fns";
+import { format, isSameDay, isToday, isYesterday } from 'date-fns';
 import { es } from "date-fns/locale";
 import React, { useState, useEffect } from "react";
+import { formatTransactionDate } from '@/lib/utils';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -19,56 +19,55 @@ interface TransactionsListProps {
   onTransactionClick: (transaction: Transaction) => void;
 }
 
-const cardColors = [
-  "bg-pink-100/60 border-pink-300/80",
-  "bg-blue-100/60 border-blue-300/80",
-  "bg-green-100/60 border-green-300/80",
-  "bg-purple-100/60 border-purple-300/80",
-  "bg-yellow-100/60 border-yellow-300/80",
-];
-
-const TransactionCard = ({ transaction, color, onClick, tagIcons }: { transaction: Transaction, color: string, onClick: (transaction: Transaction) => void, tagIcons: { [key: string]: React.ReactNode }}) => {
-  const [formattedDate, setFormattedDate] = useState("");
+const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: Transaction, onClick: (transaction: Transaction) => void, tagIcons: { [key: string]: React.ReactNode }}) => {
+  const [formattedTime, setFormattedTime] = useState<string | null>(null);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
 
-
   useEffect(() => {
-    setFormattedDate(formatDistanceToNow(new Date(transaction.date), { addSuffix: true, locale: es }));
+    setFormattedTime(format(new Date(transaction.date), 'p', { locale: es }));
     setFormattedAmount(
         new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(transaction.amount)
     );
   }, [transaction.date, transaction.amount]);
+  
+  // Get the first tag to determine the icon.
+  const firstTag = transaction.tags.length > 0 ? transaction.tags[0] : 'default';
+  const icon = tagIcons[firstTag] || null;
 
   return (
-    <Card
-      className={`cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${color}`}
+    <div
+      className="flex items-center p-4 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
       onClick={() => onClick(transaction)}
     >
-      <CardHeader>
-        <CardTitle className="text-lg font-bold">{transaction.description}</CardTitle>
-        <CardDescription className="text-xs text-muted-foreground h-4">
-          {formattedDate}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-2xl font-bold text-foreground">
-          {formattedAmount}
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted mr-4">
+            {icon}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {transaction.tags.map(tag => (
-            <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-               {tagIcons[tag] || null}
-               <span>{tag}</span>
-            </Badge>
-          ))}
+        <div className="flex-1">
+            <p className="font-semibold">{transaction.description}</p>
+            <p className="text-sm text-muted-foreground">{formattedTime}</p>
         </div>
-      </CardContent>
-    </Card>
-  )
-
+        <p className="font-bold text-lg">{formattedAmount}</p>
+    </div>
+  );
 }
 
 export default function TransactionsList({ transactions, tagIcons, onTransactionClick }: TransactionsListProps) {
+  const [groupedTransactions, setGroupedTransactions] = useState<{ [key: string]: Transaction[] }>({});
+
+  useEffect(() => {
+    const groupTransactionsByDate = (transactions: Transaction[]) => {
+      return transactions.reduce((acc, transaction) => {
+        const dateKey = formatTransactionDate(new Date(transaction.date));
+        if (!acc[dateKey]) {
+          acc[dateKey] = [];
+        }
+        acc[dateKey].push(transaction);
+        return acc;
+      }, {} as { [key: string]: Transaction[] });
+    };
+
+    setGroupedTransactions(groupTransactionsByDate(transactions));
+  }, [transactions]);
   
   if (transactions.length === 0) {
     return (
@@ -80,15 +79,23 @@ export default function TransactionsList({ transactions, tagIcons, onTransaction
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {transactions.map((transaction, index) => (
-        <TransactionCard 
-          key={transaction.id} 
-          transaction={transaction}
-          color={cardColors[index % cardColors.length]}
-          onClick={onTransactionClick}
-          tagIcons={tagIcons}
-        />
+    <div className="space-y-6">
+      {Object.entries(groupedTransactions).map(([date, transactionsForDate]) => (
+        <div key={date}>
+          <h3 className="text-md font-medium text-muted-foreground mb-2 px-4">{date}</h3>
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            {transactionsForDate.map((transaction, index) => (
+              <React.Fragment key={transaction.id}>
+                <TransactionListItem 
+                  transaction={transaction}
+                  onClick={onTransactionClick}
+                  tagIcons={tagIcons}
+                />
+                {index < transactionsForDate.length - 1 && <div className="border-b" />}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );
