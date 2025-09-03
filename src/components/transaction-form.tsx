@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect } from "react";
@@ -67,6 +67,136 @@ type FormTag = Tag & {
   iconNode: React.ReactNode;
 };
 
+const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName: string) => void, children: React.ReactNode, onOpenChange: (open: boolean) => void }) => (
+    <Popover onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent className="w-auto p-2 bg-background border-border">
+        <div className="grid grid-cols-5 gap-2">
+          {iconList.map(icon => (
+            <Button
+              key={icon.name}
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                onSelect(icon.name)
+              }}
+              className="h-8 w-8"
+            >
+              {icon.component}
+            </Button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+);
+
+const ManageTagsDialogContent = ({ tags, onAddTag, onUpdateTag, onDeleteTag, onOpenChange, onReorderTags }: {
+  tags: FormTag[];
+  onAddTag: () => Promise<void>;
+  onUpdateTag: (tag: Tag, data: Partial<Tag>) => void;
+  onDeleteTag: (tag: Tag) => void;
+  onOpenChange: (open: boolean) => void;
+  onReorderTags: (tags: FormTag[]) => void;
+}) => {
+  const [editingTags, setEditingTags] = useState<FormTag[]>(tags);
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+
+  useEffect(() => {
+    setEditingTags(tags);
+  }, [tags]);
+
+  const handleUpdateTagName = (tag: FormTag, newName: string) => {
+    if (tag.name !== newName) {
+      onUpdateTag(tag, { name: newName });
+    }
+  };
+
+  const handleUpdateTagIcon = (tagToUpdate: FormTag, iconName: string) => {
+    if (tagToUpdate.icon !== iconName) {
+      setEditingTags(currentTags => currentTags.map(t =>
+        t.id === tagToUpdate.id ? { ...t, icon: iconName, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t
+      ));
+      onUpdateTag(tagToUpdate, { icon: iconName });
+    }
+  };
+
+  const handleReorder = (tagId: string, direction: 'up' | 'down') => {
+    const newTags = Array.from(editingTags);
+    const index = newTags.findIndex(t => t.id === tagId);
+    if (index === -1) return;
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= newTags.length) return;
+    const [reorderedItem] = newTags.splice(index, 1);
+    newTags.splice(newIndex, 0, reorderedItem);
+    setEditingTags(newTags);
+    onReorderTags(newTags);
+  };
+  
+  return (
+      <DialogContent onOpenChange={(open) => {
+        if (isIconPickerOpen) return;
+        onOpenChange(open);
+      }}>
+        <DialogHeader>
+          <DialogTitle>Gestionar Etiquetas</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            {editingTags.map((tag, index) => (
+              <div key={tag.id} className="flex items-center gap-2">
+                <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
+                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+                        {tag.iconNode}
+                    </Button>
+                </IconPicker>
+                <Input
+                  defaultValue={tag.name}
+                  onBlur={(e) => handleUpdateTagName(tag, e.target.value)}
+                  className="h-10"
+                />
+                <div className="flex flex-col">
+                  <Button
+                    variant="ghost" size="icon" className="h-5 w-5"
+                    onClick={() => handleReorder(tag.id, 'up')}
+                    disabled={index === 0}
+                  ><ArrowUp className="h-4 w-4" /></Button>
+                  <Button
+                    variant="ghost" size="icon" className="h-5 w-5"
+                    onClick={() => handleReorder(tag.id, 'down')}
+                    disabled={index === editingTags.length - 1}
+                  ><ArrowDown className="h-4 w-4" /></Button>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            ))}
+          </div>
+          <Button variant="outline" className="w-full" onClick={onAddTag}>
+            <Plus className="mr-2 h-4 w-4" />
+            Añadir nueva etiqueta
+          </Button>
+        </div>
+      </DialogContent>
+  )
+}
+
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction, closeModal?: boolean) => Promise<void>;
@@ -84,12 +214,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [editingTags, setEditingTags] = useState<FormTag[]>([]);
-
-  useEffect(() => {
-    setEditingTags(tags);
-  }, [tags]);
-
+  
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -178,59 +303,17 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     await onAddTag(newTagName, newTagIcon);
   };
   
-  const handleUpdateTagName = (tag: FormTag, newName: string) => {
-    if (tag.name !== newName) {
-      onUpdateTag({ ...tag, name: newName });
-    }
+  const handleUpdateTag = (tag: Tag, data: Partial<Tag>) => {
+      onUpdateTag({ ...tag, ...data });
   };
   
-  const handleUpdateTagIcon = (tag: FormTag, iconName: string) => {
-    if (tag.icon !== iconName) {
-      onUpdateTag({ ...tag, icon: iconName });
-    }
-  };
-
   const handleDeleteTag = (tag: Tag) => {
     onDeleteTag(tag);
   };
 
-  const handleReorderTags = (tagId: string, direction: 'up' | 'down') => {
-    const newTags = Array.from(editingTags);
-    const index = newTags.findIndex(t => t.id === tagId);
-
-    if (index === -1) return;
-
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (newIndex < 0 || newIndex >= newTags.length) return;
-
-    const [reorderedItem] = newTags.splice(index, 1);
-    newTags.splice(newIndex, 0, reorderedItem);
-    
-    setEditingTags(newTags);
-    updateTagOrder(newTags);
+  const handleReorderTags = (tags: FormTag[]) => {
+    updateTagOrder(tags);
   };
-
-  const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName: string) => void, children: React.ReactNode, onOpenChange: (open: boolean) => void }) => (
-    <Popover onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-auto p-2 bg-background border-border">
-        <div className="grid grid-cols-5 gap-2">
-          {iconList.map(icon => (
-            <Button
-              key={icon.name}
-              variant="ghost"
-              size="icon"
-              onClick={() => onSelect(icon.name)}
-              className="h-8 w-8"
-            >
-              {icon.component}
-            </Button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
@@ -315,82 +398,21 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             name="tags"
             render={({ field }) => (
               <FormItem>
-                <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
-                  <div className="mb-4 flex items-center justify-between">
-                      <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
-                        <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
-                        <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                      </div>
-                  </div>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Gestionar Etiquetas</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        {editingTags.map((tag, index) => (
-                          <div
-                            key={tag.id}
-                            className="flex items-center gap-2"
-                          >
-                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
-                              <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                                {tag.iconNode}
-                              </Button>
-                            </IconPicker>
-                            <Input
-                              defaultValue={tag.name}
-                              onBlur={(e) => handleUpdateTagName(tag, e.target.value)}
-                              className="h-10"
-                            />
-                            <div className="flex flex-col">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-5 w-5"
-                                onClick={() => handleReorderTags(tag.id, 'up')}
-                                disabled={index === 0}
-                              >
-                                <ArrowUp className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-5 w-5"
-                                onClick={() => handleReorderTags(tag.id, 'down')}
-                                disabled={index === editingTags.length - 1}
-                              >
-                                <ArrowDown className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
-                                  <Trash2 className="h-5 w-5" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteTag(tag)}>Eliminar</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        ))}
-                      </div>
-                      <Button variant="outline" className="w-full" onClick={handleAddNewTag}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Añadir nueva etiqueta
-                      </Button>
+                 <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+                    <div className="mb-4 flex items-center justify-between">
+                        <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
+                            <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
+                            <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                        </div>
                     </div>
-                  </DialogContent>
+                    <ManageTagsDialogContent
+                        tags={tags}
+                        onAddTag={handleAddNewTag}
+                        onUpdateTag={handleUpdateTag}
+                        onDeleteTag={handleDeleteTag}
+                        onOpenChange={setIsManageTagsOpen}
+                        onReorderTags={handleReorderTags}
+                    />
                 </Dialog>
                 <FormControl>
                   <div className="flex flex-wrap gap-2">
