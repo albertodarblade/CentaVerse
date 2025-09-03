@@ -114,4 +114,3 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
     </Card>
   );
 }
-
