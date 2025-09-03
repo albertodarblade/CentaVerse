@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect, useCallback } from "react";
@@ -303,14 +303,14 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
     if (transactionToEdit) {
-      // When the "Close" button is clicked in edit mode
-      onClose();
+      await onUpdateTransaction({ ...transactionToEdit, ...values });
     } else {
-      setIsSubmitting(true);
       await onAddTransaction(values);
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
+    onClose();
   }
 
   const handleDelete = async () => {
@@ -374,9 +374,13 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle className="font-headline text-2xl">{transactionToEdit ? 'Editar Gasto' : 'Añadir Nuevo Gasto'}</DialogTitle>
-        <DialogDescription>
+      <DialogHeader className="relative">
+        <Button variant="ghost" size="icon" className="absolute -top-2 -left-2" onClick={onClose}>
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Volver</span>
+        </Button>
+        <DialogTitle className="font-headline text-2xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Nuevo Gasto'}</DialogTitle>
+        <DialogDescription className="text-center">
           {transactionToEdit ? 'Los cambios se guardan automáticamente.' : 'Rellena los detalles de tu nuevo gasto.'}
         </DialogDescription>
       </DialogHeader>
@@ -499,7 +503,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                 </AlertDialog>
             ): <div/>}
             <Button type="submit" className="w-full" disabled={isSubmitting || autosaveStatus === 'saving'}>
-              {isSubmitting ? 'Guardando...' : (transactionToEdit ? 'Cerrar' : 'Añadir Gasto')}
+              {isSubmitting ? 'Guardando...' : (transactionToEdit ? 'Guardar Cambios' : 'Añadir Gasto')}
             </Button>
           </div>
            <AutosaveStatus />
