@@ -6,6 +6,7 @@ import Header from './header';
 import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
+import MonthlySummary from './monthly-summary';
 import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag } from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
@@ -221,7 +222,8 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
         activeTag={activeTag} 
         onSetActiveTag={setActiveTag}
       />
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1 p-4 md:p-6 space-y-6">
+        <MonthlySummary transactions={transactions} />
         <Tabs defaultValue="all-expenses">
           <TabsList className="mb-4">
             <TabsTrigger value="all-expenses">Todos los gastos</TabsTrigger>
