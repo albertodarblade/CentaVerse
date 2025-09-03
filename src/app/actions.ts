@@ -26,7 +26,7 @@ export async function getAIInsightsAction(input: SpendingInsightsInput) {
   }
 }
 
-export async function getTransactions(page: number, limit: number = 10): Promise<Transaction[]> {
+export async function getTransactions(page: number, limit: number = 30): Promise<Transaction[]> {
     try {
         const db = await getDb();
         const transactions = await db.collection("transactions")
@@ -90,7 +90,8 @@ export async function deleteTransaction(transaction: Transaction) {
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
         await db.collection('transactions').deleteOne({ _id: objectId });
         revalidatePath('/');
-    } catch (error) {
+    } catch (error)
+    {
         console.error("Error deleting transaction:", error);
         throw new Error("Failed to delete transaction.");
     }
