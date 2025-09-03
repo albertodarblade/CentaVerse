@@ -14,5 +14,6 @@ export function formatTransactionDate(date: Date): string {
   if (isYesterday(date)) {
     return `Ayer, ${format(date, 'd MMM', { locale: es })}`;
   }
-  return format(date, 'EEEE, d MMM', { locale: es });
+  const formattedDate = format(date, 'EEEE, d MMM', { locale: es });
+  return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 }

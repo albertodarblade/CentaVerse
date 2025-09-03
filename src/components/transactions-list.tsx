@@ -7,20 +7,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, Tag } from "@/lib/types";
 import { format, isSameDay, isToday, isYesterday } from 'date-fns';
 import { es } from "date-fns/locale";
 import React, { useState, useEffect } from "react";
-import { formatTransactionDate } from '@/lib/utils';
+import { formatTransactionDate, cn } from '@/lib/utils';
 import { Badge } from "@/components/ui/badge";
 
 interface TransactionsListProps {
   transactions: Transaction[];
-  tagIcons: { [key: string]: React.ReactNode };
+  tagMap: { [key: string]: Tag & { iconNode: React.ReactNode } };
   onTransactionClick: (transaction: Transaction) => void;
 }
 
-const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: Transaction, onClick: (transaction: Transaction) => void, tagIcons: { [key: string]: React.ReactNode }}) => {
+const TransactionListItem = ({ transaction, onClick, tagMap }: { transaction: Transaction, onClick: (transaction: Transaction) => void, tagMap: { [key: string]: Tag & { iconNode: React.ReactNode } }}) => {
   const [formattedTime, setFormattedTime] = useState<string | null>(null);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
 
@@ -39,12 +39,25 @@ const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: 
         <div className="flex-1 space-y-1">
             <p className="font-semibold">{transaction.description}</p>
             <div className="flex flex-wrap gap-1">
-                {transaction.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="font-normal flex items-center gap-1">
-                        {tagIcons[tag]}
-                        {tag}
-                    </Badge>
-                ))}
+                {transaction.tags.map((tagName) => {
+                    const tag = tagMap[tagName];
+                    if (!tag) return null;
+                    return (
+                        <div 
+                            key={tagName} 
+                            className={cn(
+                                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                            )}
+                            style={{
+                                backgroundColor: `hsl(var(--tag-${tag.color}))`,
+                                color: `hsl(var(--tag-${tag.color}-foreground))`
+                            }}
+                        >
+                            {tag.iconNode}
+                            <span className="ml-1">{tag.name}</span>
+                        </div>
+                    )
+                })}
             </div>
         </div>
         <div className="text-right ml-4">
@@ -55,7 +68,7 @@ const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: 
   );
 }
 
-export default function TransactionsList({ transactions, tagIcons, onTransactionClick }: TransactionsListProps) {
+export default function TransactionsList({ transactions, tagMap, onTransactionClick }: TransactionsListProps) {
   const [groupedTransactions, setGroupedTransactions] = useState<{ [key: string]: Transaction[] }>({});
 
   useEffect(() => {
@@ -93,7 +106,7 @@ export default function TransactionsList({ transactions, tagIcons, onTransaction
                 <TransactionListItem 
                   transaction={transaction}
                   onClick={onTransactionClick}
-                  tagIcons={tagIcons}
+                  tagMap={tagMap}
                 />
                 {index < transactionsForDate.length - 1 && <div className="border-b" />}
               </React.Fragment>

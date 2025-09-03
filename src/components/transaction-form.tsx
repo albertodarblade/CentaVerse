@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect, useCallback } from "react";
@@ -24,6 +24,7 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { useDebounce } from 'use-debounce';
 import { updateTagOrder } from "@/app/actions";
+import { cn } from "@/lib/utils";
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -51,6 +52,11 @@ const iconList = [
   { name: 'School', component: <School className="h-4 w-4" /> },
   { name: 'Banknote', component: <Banknote className="h-4 w-4" /> },
   { name: 'MoreHorizontal', component: <MoreHorizontal className="h-4 w-4" /> },
+];
+
+const colorList = [
+    'red', 'orange', 'amber', 'yellow', 'lime', 
+    'green', 'cyan', 'blue', 'violet', 'fuchsia'
 ];
 
 const formSchema = z.object({
@@ -90,6 +96,27 @@ const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName:
     </Popover>
 );
 
+const ColorPicker = ({ selectedColor, onSelect }: { selectedColor: string, onSelect: (color: string) => void }) => {
+    return (
+        <div className="flex items-center gap-2">
+            {colorList.map(color => (
+                <button
+                    key={color}
+                    type="button"
+                    className="h-6 w-6 rounded-full border-2"
+                    style={{ 
+                        backgroundColor: `hsl(var(--tag-${color}))`,
+                        borderColor: color === selectedColor ? `hsl(var(--tag-${color}))` : 'hsl(var(--border))'
+                    }}
+                    onClick={() => onSelect(color)}
+                >
+                    {color === selectedColor && <Check className="h-4 w-4 mx-auto text-white" />}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onOpenChange, onReorderTags }: {
   tags: FormTag[];
   onAddTag: () => Promise<void>;
@@ -125,6 +152,14 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
       };
       setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
       onUpdateTag(updatedTag, { icon: iconName });
+    }
+  };
+  
+   const handleUpdateTagColor = (tagToUpdate: FormTag, color: string) => {
+    if (tagToUpdate.color !== color) {
+      const updatedTag = { ...tagToUpdate, color };
+      setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
+      onUpdateTag(updatedTag, { color });
     }
   };
 
@@ -166,46 +201,49 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
           <DialogTitle>Gestionar Etiquetas</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
+          <div className="space-y-4">
             {editingTags.map((tag, index) => (
-              <div key={tag.id} className="flex items-center gap-2">
-                <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
-                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                        {tag.iconNode}
-                    </Button>
-                </IconPicker>
-                <DebouncedInput tag={tag} />
-                <div className="flex flex-col">
-                  <Button
-                    variant="ghost" size="icon" className="h-5 w-5"
-                    onClick={() => handleReorder(tag.id, 'up')}
-                    disabled={index === 0}
-                  ><ArrowUp className="h-4 w-4" /></Button>
-                  <Button
-                    variant="ghost" size="icon" className="h-5 w-5"
-                    onClick={() => handleReorder(tag.id, 'down')}
-                    disabled={index === editingTags.length - 1}
-                  ><ArrowDown className="h-4 w-4" /></Button>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              <div key={tag.id} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
+                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+                            {tag.iconNode}
+                        </Button>
+                    </IconPicker>
+                    <DebouncedInput tag={tag} />
+                    <div className="flex flex-col">
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5"
+                        onClick={() => handleReorder(tag.id, 'up')}
+                        disabled={index === 0}
+                      ><ArrowUp className="h-4 w-4" /></Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5"
+                        onClick={() => handleReorder(tag.id, 'down')}
+                        disabled={index === editingTags.length - 1}
+                      ><ArrowDown className="h-4 w-4" /></Button>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                  <ColorPicker selectedColor={tag.color} onSelect={(color) => handleUpdateTagColor(tag, color)} />
               </div>
             ))}
           </div>
@@ -475,11 +513,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       {tags.map((tag) => {
                         const isSelected = field.value?.includes(tag.name);
                         return (
-                          <Button
+                          <button
                             key={tag.id}
                             type="button"
-                            variant={isSelected ? "default" : "secondary"}
-                            size="sm"
                             onClick={() => {
                               if (isSubmitting) return;
                               const newValue = isSelected
@@ -487,11 +523,20 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                                 : [...(field.value || []), tag.name];
                               field.onChange(newValue);
                             }}
-                            className="rounded-full"
+                            className={cn(
+                                "flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                                isSelected 
+                                    ? 'text-white' 
+                                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                            )}
+                            style={isSelected ? { 
+                                backgroundColor: `hsl(var(--tag-${tag.color}))`,
+                                color: `hsl(var(--tag-${tag.color}-foreground))`
+                            } : {}}
                           >
                             {tag.iconNode}
                             {tag.name}
-                          </Button>
+                          </button>
                         );
                       })}
                     </div>

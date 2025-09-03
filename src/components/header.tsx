@@ -1,10 +1,12 @@
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
+import type { Tag } from "@/lib/types";
 
 interface HeaderProps {
   onSearch: (term: string) => void;
-  tags: { id: string; name: string; iconNode: React.ReactNode }[];
+  tags: (Tag & { iconNode: React.ReactNode })[];
   activeTag: string;
   onSetActiveTag: (tagId: string) => void;
 }
@@ -28,17 +30,28 @@ export default function Header({ onSearch, tags, activeTag, onSetActiveTag }: He
           >
             Todas
         </Button>
-        {tags.map((tag) => (
-          <Button
-            key={tag.id}
-            variant={activeTag === tag.name ? 'default' : 'secondary'}
-            className="rounded-full flex-shrink-0"
-            onClick={() => onSetActiveTag(tag.name)}
-          >
-            {tag.iconNode}
-            {tag.name}
-          </Button>
-        ))}
+        {tags.map((tag) => {
+          const isSelected = activeTag === tag.name;
+          return (
+            <button
+              key={tag.id}
+              onClick={() => onSetActiveTag(tag.name)}
+              className={cn(
+                  "flex-shrink-0 flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                  isSelected 
+                      ? 'text-white' 
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              )}
+              style={isSelected ? { 
+                  backgroundColor: `hsl(var(--tag-${tag.color}))`,
+                  color: `hsl(var(--tag-${tag.color}-foreground))`
+              } : {}}
+            >
+              {tag.iconNode}
+              {tag.name}
+            </button>
+          )
+        })}
       </div>
     </header>
   );

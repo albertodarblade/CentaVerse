@@ -199,11 +199,14 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, searchTerm, activeTag]);
 
-  const tagIcons = useMemo(() => {
+  const tagMap = useMemo(() => {
     return tags.reduce((acc, tag) => {
-      acc[tag.name] = iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />;
+      acc[tag.name] = {
+        ...tag,
+        iconNode: iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />
+      };
       return acc;
-    }, {} as { [key: string]: React.ReactNode });
+    }, {} as { [key: string]: Tag & { iconNode: React.ReactNode } });
   }, [tags]);
 
   const tagsWithIcons = useMemo(() => {
@@ -227,7 +230,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
           <TabsContent value="all-expenses">
             <TransactionsList 
               transactions={filteredTransactions} 
-              tagIcons={tagIcons}
+              tagMap={tagMap}
               onTransactionClick={handleOpenFormForEdit}
             />
           </TabsContent>
