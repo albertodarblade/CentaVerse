@@ -51,12 +51,8 @@ const TransactionListItem = ({ transaction, onClick, tagMap }: { transaction: Tr
                         <div 
                             key={tagName} 
                             className={cn(
-                                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                "inline-flex items-center rounded-full border bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                             )}
-                            style={{
-                                backgroundColor: `hsl(var(--tag-${tag.color}))`,
-                                color: `hsl(var(--tag-${tag.color}-foreground))`
-                            }}
                         >
                             {tag.iconNode}
                             <span className="ml-1">{tag.name}</span>

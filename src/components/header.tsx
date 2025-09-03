@@ -39,13 +39,9 @@ export default function Header({ onSearch, tags, activeTag, onSetActiveTag }: He
               className={cn(
                   "flex-shrink-0 flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium transition-colors",
                   isSelected 
-                      ? 'text-white' 
+                      ? 'bg-primary text-primary-foreground' 
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
               )}
-              style={isSelected ? { 
-                  backgroundColor: `hsl(var(--tag-${tag.color}))`,
-                  color: `hsl(var(--tag-${tag.color}-foreground))`
-              } : {}}
             >
               {tag.iconNode}
               {tag.name}

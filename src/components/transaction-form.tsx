@@ -55,11 +55,6 @@ const iconList = [
   { name: 'MoreHorizontal', component: <MoreHorizontal className="h-4 w-4" /> },
 ];
 
-const colorList = [
-    'black', 'red', 'orange', 'amber', 'yellow', 'lime',
-    'green', 'cyan', 'blue', 'violet', 'fuchsia'
-];
-
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }).int({ message: "La cantidad no puede incluir céntimos." }),
   description: z.string().min(2, {
@@ -98,33 +93,10 @@ const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName:
     </Popover>
 );
 
-const ColorPicker = ({ selectedColor, onSelect }: { selectedColor: string, onSelect: (color: string) => void }) => {
-    return (
-        <div className="flex items-center gap-2">
-            {colorList.map(color => (
-                <button
-                    key={color}
-                    type="button"
-                    className="h-6 w-6 rounded-full border-2"
-                    style={{ 
-                        backgroundColor: `hsl(var(--tag-${color}))`,
-                        borderColor: color === selectedColor ? `hsl(var(--tag-${color}))` : 'hsl(var(--border))'
-                    }}
-                    onClick={() => onSelect(color)}
-                >
-                    {color === selectedColor && <Check className="h-4 w-4 mx-auto text-white" />}
-                </button>
-            ))}
-        </div>
-    );
-};
-
-const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags, onSaveChanges, onOpenChange }: {
+const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onSaveChanges, onOpenChange }: {
   tags: FormTag[];
   onAddTag: () => Promise<void>;
-  onUpdateTag: (tag: FormTag) => void;
   onDeleteTag: (tag: Tag) => void;
-  onReorderTags: (tags: FormTag[]) => void;
   onSaveChanges: (tags: FormTag[]) => void;
   onOpenChange: (open: boolean) => void;
 }) => {
@@ -151,11 +123,6 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
     setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
   };
   
-   const handleUpdateTagColor = (tagToUpdate: FormTag, color: string) => {
-    const updatedTag = { ...tagToUpdate, color };
-    setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
-  };
-
   const handleReorder = (tagId: string, direction: 'up' | 'down') => {
     const newTags = Array.from(editingTags);
     const index = newTags.findIndex(t => t.id === tagId);
@@ -183,49 +150,46 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
            <DialogClose onClick={() => onOpenChange(false)} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-4">
+          <div className="space-y-2">
             {editingTags.map((tag, index) => (
-              <div key={tag.id} className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
-                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                            {tag.iconNode}
-                        </Button>
-                    </IconPicker>
-                    <Input value={tag.name} onChange={(e) => handleUpdateTagName(tag.id, e.target.value)} className="h-10" />
-                    <div className="flex flex-col">
-                      <Button
-                        variant="ghost" size="icon" className="h-5 w-5"
-                        onClick={() => handleReorder(tag.id, 'up')}
-                        disabled={index === 0}
-                      ><ArrowUp className="h-4 w-4" /></Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-5 w-5"
-                        onClick={() => handleReorder(tag.id, 'down')}
-                        disabled={index === editingTags.length - 1}
-                      ><ArrowDown className="h-4 w-4" /></Button>
-                    </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                  <ColorPicker selectedColor={tag.color} onSelect={(color) => handleUpdateTagColor(tag, color)} />
+              <div key={tag.id} className="flex items-center gap-2">
+                <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
+                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+                        {tag.iconNode}
+                    </Button>
+                </IconPicker>
+                <Input value={tag.name} onChange={(e) => handleUpdateTagName(tag.id, e.target.value)} className="h-10" />
+                <div className="flex flex-col">
+                  <Button
+                    variant="ghost" size="icon" className="h-5 w-5"
+                    onClick={() => handleReorder(tag.id, 'up')}
+                    disabled={index === 0}
+                  ><ArrowUp className="h-4 w-4" /></Button>
+                  <Button
+                    variant="ghost" size="icon" className="h-5 w-5"
+                    onClick={() => handleReorder(tag.id, 'down')}
+                    disabled={index === editingTags.length - 1}
+                  ><ArrowDown className="h-4 w-4" /></Button>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
           </div>
@@ -338,17 +302,13 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   };
   
   const handleSaveChangesForTags = (updatedTags: FormTag[]) => {
-    const reorderPromises = onReorderTags(updatedTags);
+    const reorderPromise = onReorderTags(updatedTags);
     const updatePromises = updatedTags.map(tag => onUpdateTag(tag));
-    Promise.all([reorderPromises, ...updatePromises]);
+    Promise.all([reorderPromise, ...updatePromises]);
   }
 
   const handleDeleteTag = (tag: Tag) => {
     onDeleteTag(tag);
-  };
-
-  const handleReorderTags = (tags: FormTag[]) => {
-    onReorderTags(tags);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
@@ -488,9 +448,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <ManageTagsDialogContent
                           tags={tags}
                           onAddTag={handleAddNewTag}
-                          onUpdateTag={onUpdateTag}
                           onDeleteTag={handleDeleteTag}
-                          onReorderTags={onReorderTags}
                           onSaveChanges={handleSaveChangesForTags}
                           onOpenChange={handleSetIsManageTagsOpen}
                       />
@@ -513,13 +471,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                             className={cn(
                                 "flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium transition-colors",
                                 isSelected 
-                                    ? 'text-white' 
+                                    ? 'bg-primary text-primary-foreground' 
                                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                             )}
-                            style={isSelected ? { 
-                                backgroundColor: `hsl(var(--tag-${tag.color}))`,
-                                color: `hsl(var(--tag-${tag.color}-foreground))`
-                            } : {}}
                           >
                             {tag.iconNode}
                             {tag.name}

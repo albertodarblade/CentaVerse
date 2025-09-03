@@ -6,11 +6,6 @@ import { Tag, Transaction, Income } from '@/lib/types';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-const TAG_COLORS = [
-    'red', 'orange', 'amber', 'yellow', 'lime', 
-    'green', 'cyan', 'blue', 'violet', 'fuchsia'
-];
-
 async function getDb() {
   const client = await clientPromise;
   return client.db("centaverse");
@@ -111,14 +106,13 @@ export async function getTags(): Promise<Tag[]> {
     }
 }
 
-export async function addTag(tag: Omit<Tag, 'id' | 'order' | 'color'> & {order?: number}) {
+export async function addTag(tag: Omit<Tag, 'id' | 'order'> & {order?: number}) {
     try {
         const db = await getDb();
         const count = await db.collection('tags').countDocuments();
         const newTag = { 
             ...tag, 
             order: count,
-            color: 'black'
         };
         await db.collection('tags').insertOne(newTag);
         revalidatePath('/');
