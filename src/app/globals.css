@@ -34,28 +34,28 @@ body {
     --chart-5: 43 74% 76%;
     --radius: 0.5rem;
 
-    --tag-red: 0 72% 51%;
-    --tag-red-foreground: 0 86% 97%;
-    --tag-orange: 25 95% 53%;
-    --tag-orange-foreground: 24 95% 98%;
-    --tag-amber: 45 93% 47%;
-    --tag-amber-foreground: 45 93% 98%;
-    --tag-yellow: 60 91% 50%;
-    --tag-yellow-foreground: 60 91% 98%;
-    --tag-lime: 84 81% 44%;
-    --tag-lime-foreground: 84 81% 98%;
-    --tag-green: 142 76% 36%;
-    --tag-green-foreground: 142 76% 97%;
-    --tag-cyan: 180 83% 36%;
-    --tag-cyan-foreground: 180 83% 97%;
-    --tag-blue: 217 91% 60%;
-    --tag-blue-foreground: 217 91% 98%;
-    --tag-violet: 262 84% 60%;
-    --tag-violet-foreground: 262 84% 98%;
-    --tag-fuchsia: 312 84% 60%;
-    --tag-fuchsia-foreground: 312 84% 98%;
-    --tag-black: 240 10% 3.9%;
-    --tag-black-foreground: 0 0% 98%;
+    --tag-red: 0 100% 95%;
+    --tag-red-foreground: 0 100% 20%;
+    --tag-orange: 25 100% 95%;
+    --tag-orange-foreground: 25 100% 20%;
+    --tag-amber: 45 100% 95%;
+    --tag-amber-foreground: 45 100% 20%;
+    --tag-yellow: 60 100% 95%;
+    --tag-yellow-foreground: 60 100% 20%;
+    --tag-lime: 84 100% 95%;
+    --tag-lime-foreground: 84 100% 20%;
+    --tag-green: 142 90% 95%;
+    --tag-green-foreground: 142 76% 20%;
+    --tag-cyan: 180 90% 95%;
+    --tag-cyan-foreground: 180 83% 20%;
+    --tag-blue: 217 100% 95%;
+    --tag-blue-foreground: 217 91% 25%;
+    --tag-violet: 262 100% 95%;
+    --tag-violet-foreground: 262 84% 25%;
+    --tag-fuchsia: 312 100% 95%;
+    --tag-fuchsia-foreground: 312 84% 25%;
+    --tag-black: 240 4.8% 95.9%;
+    --tag-black-foreground: 240 10% 3.9%;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -83,28 +83,28 @@ body {
     --chart-4: 180 30% 60%;
     --chart-5: 43 74% 76%;
 
-    --tag-red: 0 72% 51%;
+    --tag-red: 0 80% 25%;
     --tag-red-foreground: 0 86% 97%;
-    --tag-orange: 25 95% 53%;
+    --tag-orange: 25 80% 25%;
     --tag-orange-foreground: 24 95% 98%;
-    --tag-amber: 45 93% 47%;
+    --tag-amber: 45 80% 25%;
     --tag-amber-foreground: 45 93% 98%;
-    --tag-yellow: 60 91% 50%;
+    --tag-yellow: 60 80% 25%;
     --tag-yellow-foreground: 60 91% 98%;
-    --tag-lime: 84 81% 44%;
+    --tag-lime: 84 80% 25%;
     --tag-lime-foreground: 84 81% 98%;
-    --tag-green: 142 76% 36%;
+    --tag-green: 142 76% 20%;
     --tag-green-foreground: 142 76% 97%;
-    --tag-cyan: 180 83% 36%;
+    --tag-cyan: 180 83% 20%;
     --tag-cyan-foreground: 180 83% 97%;
-    --tag-blue: 217 91% 60%;
+    --tag-blue: 217 91% 25%;
     --tag-blue-foreground: 217 91% 98%;
-    --tag-violet: 262 84% 60%;
+    --tag-violet: 262 84% 30%;
     --tag-violet-foreground: 262 84% 98%;
-    --tag-fuchsia: 312 84% 60%;
+    --tag-fuchsia: 312 84% 30%;
     --tag-fuchsia-foreground: 312 84% 98%;
-    --tag-black: 0 0% 98%;
-    --tag-black-foreground: 240 10% 3.9%;
+    --tag-black: 240 3.7% 15.9%;
+    --tag-black-foreground: 0 0% 98%;
   }
 }
 
