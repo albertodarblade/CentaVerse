@@ -91,15 +91,26 @@ export async function addTag(tag: Omit<Tag, 'id'>) {
     }
 }
 
-export async function updateTag(tag: Tag) {
+export async function updateTag(tag: Tag, oldName: string) {
     try {
         const db = await getDb();
         const { id, _id, ...tagData } = tag;
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+
+        // Update the tag document itself
         await db.collection('tags').updateOne(
             { _id: objectId },
             { $set: tagData }
         );
+
+        // If the name changed, update all transactions that use this tag
+        if (oldName !== tag.name) {
+            await db.collection('transactions').updateMany(
+                { tags: oldName },
+                { $set: { "tags.$": tag.name } }
+            );
+        }
+
         revalidatePath('/');
     } catch (error) {
         console.error("Error updating tag:", error);
@@ -112,7 +123,16 @@ export async function deleteTag(tag: Tag) {
         const db = await getDb();
         const { id, _id } = tag;
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        
+        // First, remove the tag from all transactions
+        await db.collection('transactions').updateMany(
+            { tags: tag.name },
+            { $pull: { tags: tag.name } }
+        );
+
+        // Then, delete the tag itself
         await db.collection('tags').deleteOne({ _id: objectId });
+        
         revalidatePath('/');
     } catch (error) {
         console.error("Error deleting tag:", error);

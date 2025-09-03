@@ -74,7 +74,7 @@ interface TransactionFormProps {
   transactionToEdit: Transaction | null;
   tags: FormTag[];
   onAddTag: (tagName: string, iconName: string) => Promise<void>;
-  onUpdateTag: (tag: Tag) => Promise<void>;
+  onUpdateTag: (tag: Tag, oldName: string) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
 }
@@ -109,8 +109,13 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   
   useEffect(() => {
     if (transactionToEdit) {
-      setInitialValues(transactionToEdit);
-      form.reset(transactionToEdit);
+      const initial = {
+        amount: transactionToEdit.amount,
+        description: transactionToEdit.description,
+        tags: transactionToEdit.tags,
+      };
+      setInitialValues(initial as Transaction);
+      form.reset(initial);
     } else {
       form.reset({
         amount: 0,
@@ -118,7 +123,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         tags: [],
       });
     }
-  }, [transactionToEdit, form.reset]);
+  }, [transactionToEdit, form]);
 
 
   useEffect(() => {
@@ -135,7 +140,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             const updatedTransaction = { ...transactionToEdit, ...debouncedValues };
             await onUpdateTransaction(updatedTransaction, false);
             setInitialValues(updatedTransaction); // Update initial values to current
-            form.reset(updatedTransaction, { keepValues: true }); // Resets dirty state but keeps values
+            form.reset(updatedTransaction, { keepValues: true, keepDirty: false }); // Resets dirty state but keeps values
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
           } else {
@@ -174,25 +179,27 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   
   const handleUpdateTagName = (tagId: string, newName: string) => {
     const tagToUpdate = editingTags.find(t => t.id === tagId);
-    if (tagToUpdate) {
+    if (tagToUpdate && tagToUpdate.name !== newName) {
+      const oldName = tagToUpdate.name;
       const updatedTag = { ...tagToUpdate, name: newName };
       setEditingTags(editingTags.map(t => t.id === tagId ? updatedTag : t));
-      onUpdateTag(updatedTag);
+      onUpdateTag(updatedTag, oldName);
     }
   };
   
   const handleUpdateTagIcon = (tagId: string, iconName: string) => {
     const tagToUpdate = editingTags.find(t => t.id === tagId);
     if (tagToUpdate) {
+      const oldName = tagToUpdate.name;
       const updatedTag = { ...tagToUpdate, icon: iconName };
-       setEditingTags(editingTags.map(t => t.id === tagId ? { ...updatedTag, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t));
-      onUpdateTag(updatedTag);
+      setEditingTags(editingTags.map(t => t.id === tagId ? { ...updatedTag, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t));
+      onUpdateTag(updatedTag, oldName);
     }
   };
 
   const handleDeleteTag = (tag: Tag) => {
     onDeleteTag(tag);
-  }
+  };
 
   const IconPicker = ({ onSelect, children }: { onSelect: (iconName: string) => void, children: React.ReactNode }) => (
     <Popover>
@@ -324,9 +331,25 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                               onBlur={(e) => handleUpdateTagName(tag.id, e.target.value)}
                               className="h-10"
                             />
-                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag)}>
-                              <Trash2 className="h-5 w-5" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-5 w-5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteTag(tag)}>Eliminar</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         ))}
                       </div>

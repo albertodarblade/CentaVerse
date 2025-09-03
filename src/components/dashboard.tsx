@@ -148,9 +148,9 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
     }
   };
 
-  const handleUpdateTag = async (tag: Tag) => {
+  const handleUpdateTag = async (tag: Tag, oldName: string) => {
     try {
-        await updateTag(tag);
+        await updateTag(tag, oldName);
         // No toast for this to avoid being noisy during edits
     } catch (error) {
         toast({
