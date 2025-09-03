@@ -107,7 +107,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues });
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
-            form.reset(debouncedValues); // Reset form with new values, marking it as not dirty
+            form.reset(debouncedValues, { keepValues: true });
           } else {
             setAutosaveStatus('idle');
           }
@@ -140,14 +140,15 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   }, [isManageTagsOpen, tags]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
     if (transactionToEdit) {
-      // Autosave handles updates, so this could just close the form or be disabled
       onClose();
-    } else {
-      await onAddTransaction(values);
+      return;
     }
+
+    setIsSubmitting(true);
+    await onAddTransaction(values);
     setIsSubmitting(false);
+    onClose();
   }
 
   const handleDelete = async () => {
@@ -363,7 +364,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             )}
           />
           <div className="flex items-center justify-between gap-2">
-            {transactionToEdit ? (
+            {transactionToedit ? (
                <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
