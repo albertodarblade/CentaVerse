@@ -21,7 +21,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useDebounce, useDebouncedCallback } from 'use-debounce';
 import { updateTagOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
@@ -121,12 +121,11 @@ const ColorPicker = ({ selectedColor, onSelect }: { selectedColor: string, onSel
     );
 };
 
-const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onOpenChange, onReorderTags }: {
+const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags }: {
   tags: FormTag[];
   onAddTag: () => Promise<void>;
   onUpdateTag: (tag: FormTag, data: Partial<FormTag>) => void;
   onDeleteTag: (tag: Tag) => void;
-  onOpenChange: (open: boolean) => void;
   onReorderTags: (tags: FormTag[]) => void;
 }) => {
   const [editingTags, setEditingTags] = useState<FormTag[]>(initialTags);
@@ -209,10 +208,7 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
   }
 
   return (
-      <DialogContent onOpenChange={(open) => {
-        if (isIconPickerOpen) return;
-        onOpenChange(open);
-      }}>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Gestionar Etiquetas</DialogTitle>
         </DialogHeader>
@@ -290,6 +286,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -334,6 +331,15 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [transactionToEdit, form]);
   
+    useEffect(() => {
+        const amount = form.watch('amount');
+        if (amount > 0) {
+            setFormattedAmount(new Intl.NumberFormat('es-BO').format(amount));
+        } else {
+            setFormattedAmount('');
+        }
+    }, [form.watch('amount')]);
+
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (isManageTagsOpen && event.state?.modal !== 'manage-tags') {
@@ -483,7 +489,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      value={field.value > 0 ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
+                      value={formattedAmount !== null ? formattedAmount : ''}
                       onChange={(e) => handleAmountChange(e, field)}
                       disabled={isSubmitting}
                       className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -557,18 +563,19 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               render={({ field }) => (
                 <FormItem>
                   <Dialog open={isManageTagsOpen} onOpenChange={handleSetIsManageTagsOpen}>
-                      <div className="mb-4 flex items-center justify-between">
-                          <div className="flex cursor-pointer items-center gap-2 group" onClick={() => handleSetIsManageTagsOpen(true)}>
-                              <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
-                              <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                          </div>
-                      </div>
+                      <DialogTrigger asChild>
+                        <div className="mb-4 flex items-center justify-between cursor-pointer group">
+                            <div className="flex items-center gap-2">
+                                <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
+                                <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                            </div>
+                        </div>
+                      </DialogTrigger>
                       <ManageTagsDialogContent
                           tags={tags}
                           onAddTag={handleAddNewTag}
                           onUpdateTag={handleUpdateTag}
                           onDeleteTag={handleDeleteTag}
-                          onOpenChange={handleSetIsManageTagsOpen}
                           onReorderTags={handleReorderTags}
                       />
                   </Dialog>
