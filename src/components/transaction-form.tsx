@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, Tag } from "@/lib/types";
 import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, GripVertical, Plus, Loader2, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -78,7 +78,7 @@ interface TransactionFormProps {
   transactionToEdit: Transaction | null;
   tags: FormTag[];
   onAddTag: (tagName: string, iconName: string) => Promise<void>;
-  onUpdateTag: (tag: {id: string; _id?:string; name: string; icon: string}) => Promise<void>;
+  onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tagId: string) => Promise<void>;
   onClose: () => void;
 }
@@ -99,29 +99,38 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   
   const watchedValues = form.watch();
   const [debouncedValues] = useDebounce(watchedValues, 1000);
-
+  
+  const [initialValues, setInitialValues] = useState(transactionToEdit);
   useEffect(() => {
     if (transactionToEdit) {
+      setInitialValues(transactionToEdit);
+    }
+  }, [transactionToEdit]);
+
+
+  useEffect(() => {
+    if (transactionToEdit && initialValues) {
       const hasChanged = 
-        debouncedValues.amount !== transactionToEdit.amount ||
-        debouncedValues.description !== transactionToEdit.description ||
-        JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(transactionToEdit.tags.sort());
+        debouncedValues.amount !== initialValues.amount ||
+        debouncedValues.description !== initialValues.description ||
+        JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(initialValues.tags.sort());
 
       if (form.formState.isDirty && hasChanged) {
         setAutosaveStatus('saving');
         form.trigger().then(async (isValid) => {
           if (isValid) {
-            await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues }, false);
+            const updatedTransaction = { ...transactionToEdit, ...debouncedValues };
+            await onUpdateTransaction(updatedTransaction, false);
+            setInitialValues(updatedTransaction); // Update initial values to current
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
-            form.reset(debouncedValues, { keepValues: true, keepDirty: false }); 
           } else {
             setAutosaveStatus('idle');
           }
         });
       }
     }
-  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form]);
+  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues]);
 
 
   useEffect(() => {
@@ -143,7 +152,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (transactionToEdit) {
-      await onUpdateTransaction({ ...transactionToEdit, ...values }, true);
+      // When the "Close" button is clicked in edit mode
+      onClose();
     } else {
       setIsSubmitting(true);
       await onAddTransaction(values);
