@@ -16,16 +16,13 @@ interface MonthlySummaryProps {
   transactions: Transaction[];
 }
 
-const COLORS = [
-    'hsl(var(--chart-1))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))',
-];
+const COLORS = {
+    income: 'hsl(var(--chart-1))',
+    expenses: 'hsl(var(--chart-2))',
+};
 
 export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
-  const { income, expenses, chartData, totalIncome } = useMemo(() => {
+  const { totalIncome, totalExpenses, chartData } = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -38,37 +35,25 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
       );
     });
 
-    const incomeTransactions = monthlyTransactions.filter((t) => t.type === 'income');
-    const expenses = monthlyTransactions
+    const totalIncome = monthlyTransactions
+      .filter((t) => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalExpenses = monthlyTransactions
       .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const incomeBySource = incomeTransactions.reduce((acc, t) => {
-        const source = t.description || 'Ingreso';
-        if (!acc[source]) {
-            acc[source] = 0;
-        }
-        acc[source] += t.amount;
-        return acc;
-    }, {} as {[key: string]: number});
-    
-    const totalIncome = Object.values(incomeBySource).reduce((sum, amount) => sum + amount, 0);
-
-    let chartData = [
-        ...Object.entries(incomeBySource).map(([name, value], index) => ({
-            name,
-            value,
-            fill: COLORS[index % COLORS.length]
-        })),
-    ];
-    
-    if (expenses > 0) {
-        chartData.push({ name: 'Gastos', value: expenses, fill: 'hsl(var(--destructive))' });
+    let chartData = [];
+    if (totalIncome > 0) {
+        chartData.push({ name: 'Ingresos', value: totalIncome, fill: COLORS.income });
     }
-
+    if (totalExpenses > 0) {
+        chartData.push({ name: 'Gastos', value: totalExpenses, fill: COLORS.expenses });
+    }
+    
     chartData = chartData.filter(d => d.value > 0);
 
-    return { income: totalIncome, expenses, chartData, totalIncome };
+    return { totalIncome, totalExpenses, chartData };
   }, [transactions]);
 
   return (
@@ -80,7 +65,10 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="h-48 md:h-64">
              <ChartContainer
-                config={{}}
+                config={{
+                    income: { label: 'Ingresos', color: COLORS.income },
+                    expenses: { label: 'Gastos', color: COLORS.expenses },
+                }}
                 className="mx-auto aspect-square h-full"
               >
                 <PieChart>
@@ -119,12 +107,12 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
                 </div>
              ))}
              <div className="border-t border-border mt-4 pt-4 flex justify-between font-bold">
-                <span>Total Ingresos</span>
+                <span>Balance</span>
                 <span>
                      {new Intl.NumberFormat('es-BO', {
                         style: 'currency',
                         currency: 'BOB',
-                    }).format(totalIncome)}
+                    }).format(totalIncome - totalExpenses)}
                 </span>
              </div>
           </div>
