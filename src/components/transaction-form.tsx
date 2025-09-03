@@ -14,18 +14,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, GripVertical, Plus, Loader2, CheckCircle } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { useDebounce } from 'use-debounce';
 import { updateTagOrder } from "@/app/actions";
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -80,18 +78,6 @@ interface TransactionFormProps {
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
 }
-
-const ClientOnly = ({ children }: { children: React.ReactNode }) => {
-  const [hasMounted, setHasMounted] = useState(false);
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-  if (!hasMounted) {
-    return null;
-  }
-  return children;
-};
-
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
@@ -207,21 +193,18 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     onDeleteTag(tag);
   };
 
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source } = result;
-    if (!destination) {
-      return;
-    }
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
+  const handleReorderTags = (tagId: string, direction: 'up' | 'down') => {
     const newTags = Array.from(editingTags);
-    const [reorderedItem] = newTags.splice(source.index, 1);
-    newTags.splice(destination.index, 0, reorderedItem);
+    const index = newTags.findIndex(t => t.id === tagId);
+
+    if (index === -1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (newIndex < 0 || newIndex >= newTags.length) return;
+
+    const [reorderedItem] = newTags.splice(index, 1);
+    newTags.splice(newIndex, 0, reorderedItem);
     
     setEditingTags(newTags);
     updateTagOrder(newTags);
@@ -343,61 +326,64 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <DialogTitle>Gestionar Etiquetas</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      <ClientOnly>
-                       <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId="tags">
-                          {(provided) => (
-                            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                              {editingTags.map((tag, index) => (
-                                <Draggable key={tag.id} draggableId={tag.id} index={index}>
-                                  {(provided) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <div {...provided.dragHandleProps} className="cursor-grab">
-                                        <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                      </div>
-                                      <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
-                                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                                          {tag.iconNode}
-                                        </Button>
-                                      </IconPicker>
-                                      <Input
-                                        defaultValue={tag.name}
-                                        onBlur={(e) => handleUpdateTagName(tag, e.target.value)}
-                                        className="h-10"
-                                      />
-                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
-                                            <Trash2 className="h-5 w-5" />
-                                          </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                          <AlertDialogHeader>
-                                            <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                              Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
-                                            </AlertDialogDescription>
-                                          </AlertDialogHeader>
-                                          <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteTag(tag)}>Eliminar</AlertDialogAction>
-                                          </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                      </AlertDialog>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
+                      <div className="space-y-2">
+                        {editingTags.map((tag, index) => (
+                          <div
+                            key={tag.id}
+                            className="flex items-center gap-2"
+                          >
+                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
+                              <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+                                {tag.iconNode}
+                              </Button>
+                            </IconPicker>
+                            <Input
+                              defaultValue={tag.name}
+                              onBlur={(e) => handleUpdateTagName(tag, e.target.value)}
+                              className="h-10"
+                            />
+                            <div className="flex flex-col">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                onClick={() => handleReorderTags(tag.id, 'up')}
+                                disabled={index === 0}
+                              >
+                                <ArrowUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                onClick={() => handleReorderTags(tag.id, 'down')}
+                                disabled={index === editingTags.length - 1}
+                              >
+                                <ArrowDown className="h-4 w-4" />
+                              </Button>
                             </div>
-                          )}
-                        </Droppable>
-                      </DragDropContext>
-                      </ClientOnly>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-5 w-5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteTag(tag)}>Eliminar</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        ))}
+                      </div>
                       <Button variant="outline" className="w-full" onClick={handleAddNewTag}>
                         <Plus className="mr-2 h-4 w-4" />
                         Añadir nueva etiqueta
