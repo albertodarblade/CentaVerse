@@ -81,16 +81,21 @@ interface TransactionFormProps {
   onClose: () => void;
 }
 
+// This is the fix: A client-side only wrapper for the Droppable component
+const ClientSideDroppable = ({ children, ...props }: any) => {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  return isMounted ? <Droppable {...props}>{children}</Droppable> : null;
+};
+
+
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [editingTags, setEditingTags] = useState<FormTag[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     setEditingTags(tags);
@@ -336,10 +341,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <DialogTitle>Gestionar Etiquetas</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      {isMounted && (
                        <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId="tags">
-                          {(provided) => (
+                        <ClientSideDroppable droppableId="tags">
+                          {(provided: any) => (
                             <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                               {editingTags.map((tag, index) => (
                                 <Draggable key={tag.id} draggableId={tag.id} index={index}>
@@ -388,9 +392,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                               {provided.placeholder}
                             </div>
                           )}
-                        </Droppable>
+                        </ClientSideDroppable>
                       </DragDropContext>
-                      )}
                       <Button variant="outline" className="w-full" onClick={handleAddNewTag}>
                         <Plus className="mr-2 h-4 w-4" />
                         Añadir nueva etiqueta
