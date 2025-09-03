@@ -54,6 +54,8 @@ body {
     --tag-violet-foreground: 262 84% 98%;
     --tag-fuchsia: 312 84% 60%;
     --tag-fuchsia-foreground: 312 84% 98%;
+    --tag-black: 240 10% 3.9%;
+    --tag-black-foreground: 0 0% 98%;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -101,6 +103,8 @@ body {
     --tag-violet-foreground: 262 84% 98%;
     --tag-fuchsia: 312 84% 60%;
     --tag-fuchsia-foreground: 312 84% 98%;
+    --tag-black: 0 0% 98%;
+    --tag-black-foreground: 240 10% 3.9%;
   }
 }
 

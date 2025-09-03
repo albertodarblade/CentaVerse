@@ -92,7 +92,7 @@ export async function addTag(tag: Omit<Tag, 'id' | 'order' | 'color'> & {order?:
         const newTag = { 
             ...tag, 
             order: count,
-            color: TAG_COLORS[count % TAG_COLORS.length] 
+            color: 'black'
         };
         await db.collection('tags').insertOne(newTag);
         revalidatePath('/');

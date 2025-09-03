@@ -55,7 +55,7 @@ const iconList = [
 ];
 
 const colorList = [
-    'red', 'orange', 'amber', 'yellow', 'lime', 
+    'black', 'red', 'orange', 'amber', 'yellow', 'lime',
     'green', 'cyan', 'blue', 'violet', 'fuchsia'
 ];
 
