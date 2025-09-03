@@ -389,7 +389,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               <FormItem>
                 <FormControl>
                   <div className="relative">
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl font-bold text-muted-foreground/30 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-4xl font-bold text-muted-foreground/30 pointer-events-none z-10">
                       Bs.
                     </span>
                     <Input
@@ -399,7 +399,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       value={field.value ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
                       onChange={(e) => handleAmountChange(e, field)}
                       disabled={isSubmitting}
-                      className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent"
+                      className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
                 </FormControl>
