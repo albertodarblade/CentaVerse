@@ -92,20 +92,12 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isFormOpen]);
   
-  const onTransactionUpdate = useCallback((updatedTransaction: Transaction) => {
-    setAllTransactions(currentTransactions =>
-      currentTransactions.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
-    );
-  }, []);
-
   const handleSetIsFormOpen = (open: boolean) => {
     if (open) {
-      // Push a state to history when opening the modal
       if (window.history.state?.modal !== 'transaction-form') {
         window.history.pushState({ modal: 'transaction-form' }, '');
       }
     } else {
-      // Go back in history if the current state is the one we pushed
       if (window.history.state?.modal === 'transaction-form') {
         window.history.back();
       }
@@ -116,7 +108,6 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'type'>) => {
     try {
       await addTransaction(transaction);
-      // This will be revalidated from the server, no need to manually update state
       handleSetIsFormOpen(false);
     } catch (error) {
        toast({
@@ -127,14 +118,11 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     }
   };
   
-  const handleUpdateTransaction = async (transaction: Transaction, closeModal: boolean = true) => {
+  const handleUpdateTransaction = async (transaction: Transaction) => {
     try {
       await updateTransaction(transaction);
-      onTransactionUpdate(transaction);
-      if (closeModal) {
-          handleSetIsFormOpen(false);
-          setEditingTransaction(null);
-      }
+      handleSetIsFormOpen(false);
+      setEditingTransaction(null);
     } catch (error) {
       toast({
         title: "Error",
@@ -174,9 +162,9 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     setEditingTransaction(null);
   }
 
-  const handleAddTag = async (tagName: string, iconName: string) => {
+  const handleAddTag = async (tag: Omit<Tag, 'id' | 'order' | 'color'>) => {
     try {
-      await addTag({ name: tagName, icon: iconName });
+      await addTag(tag);
     } catch (error) {
       toast({
         title: "Error",
@@ -189,7 +177,6 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleUpdateTag = async (tag: Tag) => {
     try {
         await updateTag(tag);
-        // No toast for this to avoid being noisy during edits
     } catch (error) {
         toast({
             title: "Error",
@@ -371,7 +358,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
               </div>
             </DialogTrigger>
         )}
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <TransactionForm 
             onAddTransaction={handleAddTransaction} 
             onUpdateTransaction={handleUpdateTransaction}

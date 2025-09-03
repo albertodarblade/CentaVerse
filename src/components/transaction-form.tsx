@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -22,8 +22,6 @@ import {
   DialogDescription
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useDebounce, useDebouncedCallback } from 'use-debounce';
-import { updateTagOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
 import { Calendar } from "./ui/calendar";
 import { format } from 'date-fns';
@@ -121,76 +119,41 @@ const ColorPicker = ({ selectedColor, onSelect }: { selectedColor: string, onSel
     );
 };
 
-const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags, onOpenChange }: {
+const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags, onSaveChanges, onOpenChange }: {
   tags: FormTag[];
   onAddTag: () => Promise<void>;
-  onUpdateTag: (tag: FormTag, data: Partial<FormTag>) => void;
+  onUpdateTag: (tag: FormTag) => void;
   onDeleteTag: (tag: Tag) => void;
   onReorderTags: (tags: FormTag[]) => void;
+  onSaveChanges: (tags: FormTag[]) => void;
   onOpenChange: (open: boolean) => void;
 }) => {
   const [editingTags, setEditingTags] = useState<FormTag[]>([]);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-  const firstRender = useRef(true);
 
   useEffect(() => {
-    if (firstRender.current) {
-        firstRender.current = false;
-        setEditingTags(initialTags.map(tag => ({
-            ...tag,
-            iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
-        })));
-    } else {
-        setEditingTags(currentTags => {
-            return initialTags.map(initialTag => {
-                const existingTag = currentTags.find(t => t.id === initialTag.id);
-                if (existingTag) {
-                    return {
-                        ...existingTag,
-                        order: initialTag.order, // Update order from props
-                        iconNode: iconList.find(i => i.name === existingTag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
-                    };
-                }
-                return { // New tag added
-                    ...initialTag,
-                    iconNode: iconList.find(i => i.name === initialTag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
-                };
-            }).filter(tag => initialTags.some(it => it.id === tag.id)); // Remove deleted tags
-        });
-    }
-}, [initialTags]);
-
-  const debouncedUpdateTag = useDebouncedCallback((tag: FormTag, data: Partial<FormTag>) => {
-    onUpdateTag(tag, data);
-  }, 1000);
+    setEditingTags(initialTags.map(tag => ({
+        ...tag,
+        iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
+    })));
+  }, [initialTags]);
 
   const handleUpdateTagName = (tagId: string, newName: string) => {
-    const updatedTags = editingTags.map(t => t.id === tagId ? {...t, name: newName } : t);
-    setEditingTags(updatedTags);
-    const tagToUpdate = updatedTags.find(t => t.id === tagId);
-    if(tagToUpdate) {
-        debouncedUpdateTag(tagToUpdate, { name: newName });
-    }
+    setEditingTags(currentTags => currentTags.map(t => t.id === tagId ? { ...t, name: newName } : t));
   };
 
   const handleUpdateTagIcon = (tagToUpdate: FormTag, iconName: string) => {
-    if (tagToUpdate.icon !== iconName) {
-      const updatedTag = {
-          ...tagToUpdate,
-          icon: iconName,
-          iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" />
-      };
-      setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
-      onUpdateTag(updatedTag, { icon: iconName });
-    }
+    const updatedTag = {
+        ...tagToUpdate,
+        icon: iconName,
+        iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" />
+    };
+    setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
   };
   
    const handleUpdateTagColor = (tagToUpdate: FormTag, color: string) => {
-    if (tagToUpdate.color !== color) {
-      const updatedTag = { ...tagToUpdate, color };
-      setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
-      onUpdateTag(updatedTag, { color });
-    }
+    const updatedTag = { ...tagToUpdate, color };
+    setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
   };
 
   const handleReorder = (tagId: string, direction: 'up' | 'down') => {
@@ -202,23 +165,11 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
     const [reorderedItem] = newTags.splice(index, 1);
     newTags.splice(newIndex, 0, reorderedItem);
     setEditingTags(newTags);
-    onReorderTags(newTags);
   };
 
-  const DebouncedInput = ({ tag }: { tag: FormTag }) => {
-      const [value, setValue] = useState(tag.name);
-      
-      useEffect(() => {
-          setValue(tag.name);
-      }, [tag.name]);
-
-      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          const newValue = e.target.value;
-          setValue(newValue);
-          handleUpdateTagName(tag.id, newValue);
-      }
-
-      return <Input value={value} onChange={handleChange} className="h-10" />
+  const handleSaveChangesClick = () => {
+    onSaveChanges(editingTags);
+    onOpenChange(false);
   }
 
   return (
@@ -241,7 +192,7 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
                             {tag.iconNode}
                         </Button>
                     </IconPicker>
-                    <DebouncedInput tag={tag} />
+                    <Input value={tag.name} onChange={(e) => handleUpdateTagName(tag.id, e.target.value)} className="h-10" />
                     <div className="flex flex-col">
                       <Button
                         variant="ghost" size="icon" className="h-5 w-5"
@@ -283,13 +234,16 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
             Añadir nueva etiqueta
           </Button>
         </div>
+        <DialogFooter>
+          <Button onClick={handleSaveChangesClick}>Guardar Cambios</Button>
+        </DialogFooter>
       </DialogContent>
   )
 }
 
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'type'>) => Promise<void>;
-  onUpdateTransaction: (transaction: Transaction, closeModal?: boolean) => Promise<void>;
+  onUpdateTransaction: (transaction: Transaction) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: FormTag[];
@@ -302,9 +256,7 @@ interface TransactionFormProps {
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose, onReorderTags }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
-  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -321,26 +273,16 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       date: new Date(),
     },
   });
-
-  const watchedValues = form.watch();
-  const [debouncedValues] = useDebounce(watchedValues, 1000);
-
-  const [initialValues, setInitialValues] = useState<z.infer<typeof formSchema> | null>(null);
-  
-  const formRef = React.useRef<HTMLFormElement>(null);
   
   useEffect(() => {
     if (transactionToEdit) {
-      const initial = {
+      form.reset({
         amount: transactionToEdit.amount,
         description: transactionToEdit.description,
         tags: transactionToEdit.tags,
         date: new Date(transactionToEdit.date),
-      };
-      setInitialValues(initial);
-      form.reset(initial);
+      });
     } else {
-      setInitialValues(null);
       form.reset({
         amount: 0,
         description: "",
@@ -370,34 +312,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isManageTagsOpen]);
 
-  const onUpdateTransactionStable = useCallback(onUpdateTransaction, []);
-
-  useEffect(() => {
-    if (transactionToEdit && initialValues && !isManageTagsOpen && !isIconPickerOpen) {
-      const hasChanged =
-        debouncedValues.amount !== initialValues.amount ||
-        debouncedValues.description !== initialValues.description ||
-        JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(initialValues.tags.sort()) ||
-        debouncedValues.date?.getTime() !== initialValues.date?.getTime();
-
-      if (form.formState.isDirty && hasChanged && formRef.current?.contains(document.activeElement)) {
-        setAutosaveStatus('saving');
-        form.trigger().then(async (isValid) => {
-          if (isValid) {
-            const updatedTransaction = { ...transactionToEdit, ...debouncedValues };
-            await onUpdateTransactionStable(updatedTransaction, false);
-            setInitialValues(debouncedValues); // Update initial values to current
-            setAutosaveStatus('saved');
-            setTimeout(() => setAutosaveStatus('idle'), 2000);
-          } else {
-            setAutosaveStatus('idle');
-          }
-        });
-      }
-    }
-  }, [debouncedValues, transactionToEdit, onUpdateTransactionStable, form, initialValues, isManageTagsOpen, isIconPickerOpen]);
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     if (transactionToEdit) {
@@ -422,17 +336,19 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     const newTagIcon = 'MoreHorizontal';
     await onAddTag(newTagName, newTagIcon);
   };
-
-  const handleUpdateTag = (tag: Tag, data: Partial<Tag>) => {
-      onUpdateTag({ ...tag, ...data });
-  };
+  
+  const handleSaveChangesForTags = (updatedTags: FormTag[]) => {
+    const reorderPromises = onReorderTags(updatedTags);
+    const updatePromises = updatedTags.map(tag => onUpdateTag(tag));
+    Promise.all([reorderPromises, ...updatePromises]);
+  }
 
   const handleDeleteTag = (tag: Tag) => {
     onDeleteTag(tag);
   };
 
   const handleReorderTags = (tags: FormTag[]) => {
-    updateTagOrder(tags);
+    onReorderTags(tags);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
@@ -459,28 +375,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     setIsManageTagsOpen(open);
   }
 
-  const AutosaveStatus = () => {
-    if (!transactionToEdit) return null;
-
-    if (autosaveStatus === 'saving') {
-      return (
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Guardando...
-        </div>
-      );
-    }
-    if (autosaveStatus === 'saved') {
-      return (
-        <div className="flex items-center text-sm text-green-600">
-          <CheckCircle className="mr-2 h-4 w-4" />
-          Guardado
-        </div>
-      );
-    }
-    return <div className="h-6" />;
-  }
-
   return (
     <>
       <DialogHeader className="relative">
@@ -490,11 +384,11 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         </Button>
         <DialogTitle className="font-headline text-2xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Nuevo Gasto'}</DialogTitle>
         <DialogDescription className="text-center">
-          {transactionToEdit ? 'Los cambios se guardan automáticamente.' : 'Rellena los detalles de tu nuevo gasto.'}
+          {transactionToEdit ? 'Edita los detalles de tu gasto.' : 'Rellena los detalles de tu nuevo gasto.'}
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4" ref={formRef}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4">
           <FormField
             control={form.control}
             name="amount"
@@ -594,9 +488,10 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <ManageTagsDialogContent
                           tags={tags}
                           onAddTag={handleAddNewTag}
-                          onUpdateTag={handleUpdateTag}
+                          onUpdateTag={onUpdateTag}
                           onDeleteTag={handleDeleteTag}
-                          onReorderTags={handleReorderTags}
+                          onReorderTags={onReorderTags}
+                          onSaveChanges={handleSaveChangesForTags}
                           onOpenChange={handleSetIsManageTagsOpen}
                       />
                   </Dialog>
@@ -639,37 +534,40 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             />
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            {transactionToEdit ? (
-               <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Eliminar
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Esto eliminará permanentemente la transacción.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-            ): (
-              <Button type="submit" className="w-full" disabled={isSubmitting || autosaveStatus === 'saving'}>
-                {isSubmitting ? 'Guardando...' : 'Añadir Gasto'}
-              </Button>
-            )}
-            
-            {!transactionToEdit && <div/>}
-          </div>
-           <AutosaveStatus />
+          <div className="flex flex-col gap-4">
+             {transactionToEdit ? (
+               <>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                </Button>
+                <AlertDialog>
+                   <AlertDialogTrigger asChild>
+                     <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
+                       <Trash2 className="mr-2 h-4 w-4" />
+                       Eliminar
+                     </Button>
+                   </AlertDialogTrigger>
+                   <AlertDialogContent>
+                     <AlertDialogHeader>
+                       <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                       <AlertDialogDescription>
+                         Esta acción no se puede deshacer. Esto eliminará permanentemente la transacción.
+                       </AlertDialogDescription>
+                     </AlertDialogHeader>
+                     <AlertDialogFooter>
+                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                       <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
+                     </AlertDialogFooter>
+                   </AlertDialogContent>
+                 </AlertDialog>
+               </>
+             ) : (
+               <Button type="submit" className="w-full" disabled={isSubmitting}>
+                 {isSubmitting ? 'Guardando...' : 'Añadir Gasto'}
+               </Button>
+             )}
+           </div>
+           <div className="h-6" />
         </form>
       </Form>
     </>
