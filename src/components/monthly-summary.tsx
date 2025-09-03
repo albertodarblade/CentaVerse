@@ -56,10 +56,7 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Resumen de {format(new Date(), 'MMMM')}</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="grid grid-cols-2 gap-4 items-center">
           <div className="flex flex-col space-y-6">
             <div>
@@ -117,3 +114,4 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
     </Card>
   );
 }
+
