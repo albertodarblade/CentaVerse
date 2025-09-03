@@ -83,7 +83,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: transactionToEdit || {
+    defaultValues: {
       amount: 0,
       description: "",
       tags: [],
@@ -107,7 +107,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues }, false);
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
-            form.reset(debouncedValues, { keepValues: true });
+            // We only want to reset the 'dirty' state, not the values
+            form.reset(debouncedValues, { keepValues: true, keepDirty: false }); 
           } else {
             setAutosaveStatus('idle');
           }
@@ -131,7 +132,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         tags: [],
       });
     }
-  }, [transactionToEdit, form]);
+  }, [transactionToEdit, form.reset]);
 
   useEffect(() => {
     if (isManageTagsOpen) {
