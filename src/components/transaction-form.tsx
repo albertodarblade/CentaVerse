@@ -83,6 +83,12 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [editingTags, setEditingTags] = useState<FormTag[]>([]);
+
+  useEffect(() => {
+    setEditingTags(tags);
+  }, [tags]);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -304,7 +310,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        {tags.map((tag) => (
+                        {editingTags.map((tag) => (
                           <div key={tag.id} className="flex items-center gap-2">
                             <GripVertical className="h-5 w-5 text-muted-foreground" />
                             <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
