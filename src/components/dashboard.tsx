@@ -11,18 +11,6 @@ import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const initialTransactions: Transaction[] = [
-    { id: '1', type: 'expense', amount: 50, description: 'Salario Mensual', tags: ['Trabajo'], date: new Date('2024-07-01T09:00:00Z') },
-    { id: '2', type: 'expense', amount: 1200, description: 'Alquiler de Apartamento', tags: ['Vivienda'], date: new Date('2024-07-01T10:00:00Z') },
-    { id: '3', type: 'expense', amount: 150.75, description: 'Compras Semanales', tags: ['Comida'], date: new Date('2024-07-03T18:30:00Z') },
-    { id: '4', type: 'expense', amount: 25, description: 'Suscripción a Netflix', tags: ['Entretenimiento'], date: new Date('2024-07-05T12:00:00Z') },
-    { id: '5', type: 'expense', amount: 55.50, description: 'Cena con amigos', tags: ['Comida', 'Entretenimiento'], date: new Date('2024-07-06T20:00:00Z') },
-    { id: '6', type: 'expense', amount: 80, description: 'Gasolina para el coche', tags: ['Transporte'], date: new Date('2024-07-08T08:00:00Z') },
-    { id: '7', type: 'expense', amount: 250, description: 'Auriculares nuevos', tags: ['Compras'], date: new Date('2024-07-10T11:45:00Z') },
-    { id: '8', type: 'expense', amount: 45, description: 'Entradas de cine', tags: ['Entretenimiento'], date: new Date('2024-07-12T19:15:00Z') },
-    { id: '9', type: 'expense', amount: 30, description: 'Farmacia', tags: ['Salud'], date: new Date('2024-07-14T16:00:00Z') },
-];
-
 const initialTags: Tag[] = [
     { id: "trabajo", name: "Trabajo", icon: <Briefcase className="h-4 w-4" /> },
     { id: "personal", name: "Personal", icon: <User className="h-4 w-4" /> },
@@ -38,7 +26,7 @@ const initialTags: Tag[] = [
 ];
 
 export default function Dashboard() {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
