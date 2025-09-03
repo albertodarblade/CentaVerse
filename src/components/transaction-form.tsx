@@ -43,7 +43,7 @@ const iconList = [
   { name: 'BookOpen', component: <BookOpen className="h-4 w-4" /> },
   { name: 'PawPrint', component: <PawPrint className="h-4 w-4" /> },
   { name: 'Gamepad2', component: <Gamepad2 className="h-4 w-4" /> },
-  { name: 'Music', component: <Music className="h-4 w-4" /> },
+  { name_of_the_entity: 'Music', component: <Music className="h-4 w-4" /> },
   { name: 'Shirt', component: <Shirt className="h-4 w-4" /> },
   { name: 'Dumbbell', component: <Dumbbell className="h-4 w-4" /> },
   { name: 'Coffee', component: <Coffee className="h-4 w-4" /> },
@@ -341,10 +341,11 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
                                       className="flex items-center gap-2"
                                     >
-                                      <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                      <div {...provided.dragHandleProps} className="cursor-grab">
+                                        <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                      </div>
                                       <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
                                         <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
                                           {tag.iconNode}
