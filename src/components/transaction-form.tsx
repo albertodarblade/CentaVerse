@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft, Check } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect, useCallback } from "react";
@@ -25,6 +25,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useDebounce } from 'use-debounce';
 import { updateTagOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
+import { Calendar } from "./ui/calendar";
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -67,6 +70,7 @@ const formSchema = z.object({
   tags: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "Tienes que seleccionar al menos una etiqueta.",
   }),
+  date: z.date(),
 });
 
 type FormTag = Tag & {
@@ -257,7 +261,7 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
 }
 
 interface TransactionFormProps {
-  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => Promise<void>;
+  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'type'>) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction, closeModal?: boolean) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
@@ -266,9 +270,10 @@ interface TransactionFormProps {
   onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
+  onReorderTags: (tags: FormTag[]) => void;
 }
 
-export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
+export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose, onReorderTags }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -280,17 +285,19 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       amount: transactionToEdit.amount,
       description: transactionToEdit.description,
       tags: transactionToEdit.tags,
+      date: new Date(transactionToEdit.date),
     } : {
       amount: 0,
       description: "",
       tags: [],
+      date: new Date(),
     },
   });
 
   const watchedValues = form.watch();
   const [debouncedValues] = useDebounce(watchedValues, 1000);
 
-  const [initialValues, setInitialValues] = useState<Omit<Transaction, 'id' | 'date' | 'type' | '_id'> | null>(transactionToEdit);
+  const [initialValues, setInitialValues] = useState<z.infer<typeof formSchema> | null>(null);
   
   const formRef = React.useRef<HTMLFormElement>(null);
   
@@ -300,6 +307,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         amount: transactionToEdit.amount,
         description: transactionToEdit.description,
         tags: transactionToEdit.tags,
+        date: new Date(transactionToEdit.date),
       };
       setInitialValues(initial);
       form.reset(initial);
@@ -309,6 +317,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         amount: 0,
         description: "",
         tags: [],
+        date: new Date(),
       });
     }
   }, [transactionToEdit, form]);
@@ -330,7 +339,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       const hasChanged =
         debouncedValues.amount !== initialValues.amount ||
         debouncedValues.description !== initialValues.description ||
-        JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(initialValues.tags.sort());
+        JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(initialValues.tags.sort()) ||
+        debouncedValues.date?.getTime() !== initialValues.date?.getTime();
 
       if (form.formState.isDirty && hasChanged && formRef.current?.contains(document.activeElement)) {
         setAutosaveStatus('saving');
@@ -483,6 +493,48 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                   <FormControl>
                     <Input placeholder={'p. ej., Cena con amigos'} {...field} disabled={isSubmitting} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Fecha</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-[240px] pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                           disabled={isSubmitting}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP", { locale: es })
+                          ) : (
+                            <span>Elige una fecha</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

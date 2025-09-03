@@ -26,12 +26,11 @@ export async function getAIInsightsAction(input: SpendingInsightsInput) {
   }
 }
 
-export async function addTransaction(transaction: Omit<Transaction, 'id' | 'date' | 'type'>) {
+export async function addTransaction(transaction: Omit<Transaction, 'id' | 'type'>) {
   try {
     const db = await getDb();
     const newTransaction: Omit<Transaction, 'id'> & { type: 'expense' | 'income' } = {
         ...transaction,
-        date: new Date(),
         type: 'expense'
     };
     await db.collection('transactions').insertOne(newTransaction);
@@ -47,9 +46,15 @@ export async function updateTransaction(transaction: Transaction) {
         const db = await getDb();
         const { id, _id, ...transactionData } = transaction;
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        
+        const updateData = {
+          ...transactionData,
+          date: new Date(transactionData.date)
+        };
+
         await db.collection('transactions').updateOne(
             { _id: objectId },
-            { $set: transactionData }
+            { $set: updateData }
         );
         revalidatePath('/');
     } catch (error) {

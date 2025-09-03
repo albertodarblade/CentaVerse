@@ -278,7 +278,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       <Header 
         onSearch={setSearchTerm} 
         tags={tagsWithIcons} 
-        activeTag={activeTag} _id
+        activeTag={activeTag} 
         onSetActiveTag={setActiveTag}
       />
       <main className="flex-1 p-4 md:p-6 space-y-6">
