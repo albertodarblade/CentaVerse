@@ -40,9 +40,10 @@ export async function addTransaction(transaction: Omit<Transaction, 'id' | 'date
 export async function updateTransaction(transaction: Transaction) {
     try {
         const db = await getDb();
-        const { id, ...transactionData } = transaction;
+        const { id, _id, ...transactionData } = transaction;
+        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
         await db.collection('transactions').updateOne(
-            { _id: new ObjectId(id) },
+            { _id: objectId },
             { $set: transactionData }
         );
         revalidatePath('/');
@@ -52,10 +53,12 @@ export async function updateTransaction(transaction: Transaction) {
     }
 }
 
-export async function deleteTransaction(transactionId: string) {
+export async function deleteTransaction(transaction: Transaction) {
     try {
         const db = await getDb();
-        await db.collection('transactions').deleteOne({ _id: new ObjectId(transactionId) });
+        const { id, _id } = transaction;
+        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        await db.collection('transactions').deleteOne({ _id: objectId });
         revalidatePath('/');
     } catch (error) {
         console.error("Error deleting transaction:", error);

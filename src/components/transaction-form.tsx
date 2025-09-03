@@ -65,7 +65,7 @@ const formSchema = z.object({
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction) => Promise<void>;
-  onDeleteTransaction: (transactionId: string) => Promise<void>;
+  onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: Tag[];
   onAddTag: (tagName: string, icon: React.ReactNode) => void;
@@ -125,7 +125,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const handleDelete = async () => {
     if(transactionToEdit) {
       setIsSubmitting(true);
-      await onDeleteTransaction(transactionToEdit.id);
+      await onDeleteTransaction(transactionToEdit);
       setIsSubmitting(false);
     }
   }

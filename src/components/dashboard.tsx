@@ -75,9 +75,9 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
     }
   };
 
-  const handleDeleteTransaction = async (transactionId: string) => {
+  const handleDeleteTransaction = async (transaction: Transaction) => {
     try {
-      await deleteTransaction(transactionId);
+      await deleteTransaction(transaction);
       toast({
         title: "Transacción eliminada",
         variant: "destructive",
