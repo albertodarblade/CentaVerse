@@ -86,6 +86,11 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [editingTags, setEditingTags] = useState<FormTag[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     setEditingTags(tags);
@@ -331,6 +336,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <DialogTitle>Gestionar Etiquetas</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                      {isMounted && (
                        <DragDropContext onDragEnd={onDragEnd}>
                         <Droppable droppableId="tags">
                           {(provided) => (
@@ -341,10 +347,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
                                       className="flex items-center gap-2"
                                     >
-                                      <div className="cursor-grab">
+                                      <div {...provided.dragHandleProps} className="cursor-grab">
                                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                                       </div>
                                       <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
@@ -385,6 +390,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           )}
                         </Droppable>
                       </DragDropContext>
+                      )}
                       <Button variant="outline" className="w-full" onClick={handleAddNewTag}>
                         <Plus className="mr-2 h-4 w-4" />
                         Añadir nueva etiqueta
