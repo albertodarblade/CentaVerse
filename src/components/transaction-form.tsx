@@ -22,7 +22,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
-import { useDebounce } from 'use-debounce';
+import { useDebounce, useDebouncedCallback } from 'use-debounce';
 import { updateTagOrder } from "@/app/actions";
 import { cn } from "@/lib/utils";
 import { Calendar } from "./ui/calendar";
@@ -139,12 +139,16 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
     })));
   }, [initialTags]);
 
-  const handleUpdateTagName = (tag: FormTag, newName: string) => {
+  const debouncedUpdateTag = useDebouncedCallback((tag: FormTag, newName: string) => {
     if (tag.name !== newName) {
-        const updatedTag = { ...tag, name: newName };
-        setEditingTags(currentTags => currentTags.map(t => t.id === tag.id ? updatedTag : t));
-        onUpdateTag(updatedTag, { name: newName });
+      onUpdateTag(tag, { name: newName });
     }
+  }, 1000);
+
+  const handleUpdateTagName = (tag: FormTag, newName: string) => {
+    const updatedTag = { ...tag, name: newName };
+    setEditingTags(currentTags => currentTags.map(t => t.id === tag.id ? updatedTag : t));
+    debouncedUpdateTag(tag, newName);
   };
 
   const handleUpdateTagIcon = (tagToUpdate: FormTag, iconName: string) => {
@@ -181,19 +185,24 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
 
   const DebouncedInput = ({ tag }: { tag: FormTag }) => {
       const [value, setValue] = useState(tag.name);
-      const [debouncedValue] = useDebounce(value, 1000);
+      
+      const debounced = useDebouncedCallback(
+        (newValue) => {
+            onUpdateTag(tag, { name: newValue });
+        },
+        1000
+      );
 
       useEffect(() => {
           setValue(tag.name);
       }, [tag.name]);
 
-      useEffect(() => {
-          if (debouncedValue !== tag.name) {
-            handleUpdateTagName(tag, debouncedValue);
-          }
-      }, [debouncedValue, tag]);
+      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setValue(e.target.value);
+          debounced(e.target.value);
+      }
 
-      return <Input value={value} onChange={e => setValue(e.target.value)} className="h-10" />
+      return <Input value={value} onChange={handleChange} className="h-10" />
   }
 
   return (
