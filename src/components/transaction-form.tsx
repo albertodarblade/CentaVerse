@@ -93,28 +93,29 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const watchedValues = form.watch();
   const [debouncedValues] = useDebounce(watchedValues, 1000);
 
-  const initialValues = useMemo(() => transactionToEdit, [transactionToEdit]);
-
   useEffect(() => {
-    if (transactionToEdit && form.formState.isDirty) {
-      const initial = JSON.stringify({amount: initialValues?.amount, description: initialValues?.description, tags: initialValues?.tags});
-      const current = JSON.stringify({amount: debouncedValues.amount, description: debouncedValues.description, tags: debouncedValues.tags });
+    if (transactionToEdit) {
+      const hasChanged = 
+        debouncedValues.amount !== transactionToEdit.amount ||
+        debouncedValues.description !== transactionToEdit.description ||
+        JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(transactionToEdit.tags.sort());
 
-      if (initial !== current) {
+      if (form.formState.isDirty && hasChanged) {
         setAutosaveStatus('saving');
         form.trigger().then(async (isValid) => {
           if (isValid) {
             await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues });
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
-            form.reset(debouncedValues, { keepValues: true });
+            form.reset(debouncedValues); // Reset form with new values, marking it as not dirty
           } else {
             setAutosaveStatus('idle');
           }
         });
       }
     }
-  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues]);
+  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form]);
+
 
   useEffect(() => {
     if (transactionToEdit) {
@@ -394,5 +395,3 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     </>
   );
 }
-
-    
