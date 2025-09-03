@@ -7,8 +7,8 @@ import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
 import MonthlySummary from './monthly-summary';
-import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag } from '@/app/actions';
-import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote } from "lucide-react";
+import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder } from '@/app/actions';
+import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +39,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
   Film: <Film className="h-4 w-4" />,
   School: <School className="h-4 w-4" />,
   Banknote: <Banknote className="h-4 w-4" />,
+  Calendar: <Calendar className="h-4 w-4" />,
   MoreHorizontal: <MoreHorizontal className="h-4 w-4" />,
 };
 
@@ -96,7 +97,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
     setIsFormOpen(open);
   }
 
-  const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
+  const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'type'>) => {
     try {
       await addTransaction(transaction);
       handleSetIsFormOpen(false);
@@ -191,6 +192,18 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
         });
     }
   };
+
+  const handleReorderTags = async (tags: Tag[]) => {
+    try {
+      await updateTagOrder(tags);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo reordenar las etiquetas.",
+        variant: "destructive"
+      });
+    }
+  };
   
   const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
@@ -216,6 +229,9 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
+      <div className="p-4 md:p-6">
+        <MonthlySummary transactions={transactions} />
+      </div>
       <Header 
         onSearch={setSearchTerm} 
         tags={tagsWithIcons} 
@@ -223,7 +239,6 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
         onSetActiveTag={setActiveTag}
       />
       <main className="flex-1 p-4 md:p-6 space-y-6">
-        <MonthlySummary transactions={transactions} />
         <Tabs defaultValue="all-expenses">
           <TabsList className="mb-4">
             <TabsTrigger value="all-expenses">Todos los gastos</TabsTrigger>
@@ -259,6 +274,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
             onAddTag={handleAddTag}
             onUpdateTag={handleUpdateTag}
             onDeleteTag={handleDeleteTag}
+            onReorderTags={handleReorderTags}
             onClose={handleCloseForm}
           />
         </DialogContent>
