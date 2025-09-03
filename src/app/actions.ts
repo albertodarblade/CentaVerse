@@ -26,6 +26,26 @@ export async function getAIInsightsAction(input: SpendingInsightsInput) {
   }
 }
 
+export async function getTransactions(page: number, limit: number = 20): Promise<Transaction[]> {
+    try {
+        const db = await getDb();
+        const transactions = await db.collection("transactions")
+            .find({})
+            .sort({ date: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .toArray();
+
+        return JSON.parse(JSON.stringify(transactions)).map((t: any) => ({
+            ...t,
+            id: t._id.toString(),
+        }));
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+        return [];
+    }
+}
+
 export async function addTransaction(transaction: Omit<Transaction, 'id' | 'type'>) {
   try {
     const db = await getDb();

@@ -8,7 +8,7 @@ import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
 import MonthlySummary from './monthly-summary';
 import MonthlyIncome from './monthly-income';
-import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder, addIncome, updateIncome, deleteIncome } from '@/app/actions';
+import { getTransactions, addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder, addIncome, updateIncome, deleteIncome } from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
@@ -59,9 +59,16 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
   const { toast } = useToast();
+  
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>(initialTransactions);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setTransactions(initialTransactions);
+    setAllTransactions(initialTransactions);
+    setPage(1);
+    setHasMore(initialTransactions.length > 0);
   }, [initialTransactions]);
 
   useEffect(() => {
@@ -84,7 +91,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   }, [isFormOpen]);
   
   const onTransactionUpdate = useCallback((updatedTransaction: Transaction) => {
-    setTransactions(currentTransactions =>
+    setAllTransactions(currentTransactions =>
       currentTransactions.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
     );
   }, []);
@@ -107,6 +114,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'type'>) => {
     try {
       await addTransaction(transaction);
+      // This will be revalidated from the server, no need to manually update state
       handleSetIsFormOpen(false);
     } catch (error) {
        toast({
@@ -137,6 +145,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleDeleteTransaction = async (transaction: Transaction) => {
     try {
       await deleteTransaction(transaction);
+      setAllTransactions(current => current.filter(t => t.id !== transaction.id));
       handleSetIsFormOpen(false);
       setEditingTransaction(null);
     } catch (error) {
@@ -249,12 +258,12 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
   
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(transaction => {
+    return allTransactions.filter(transaction => {
       const searchTermMatch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
       const tagMatch = activeTag === 'all' || transaction.tags.includes(activeTag);
       return searchTermMatch && tagMatch;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, searchTerm, activeTag]);
+  }, [allTransactions, searchTerm, activeTag]);
 
   const tagMap = useMemo(() => {
     return tags.reduce((acc, tag) => {
@@ -270,10 +279,25 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     return tags.map(tag => ({...tag, iconNode: iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />}));
   }, [tags]);
 
+  const loadMoreTransactions = useCallback(async () => {
+    if (isLoading || !hasMore || searchTerm || activeTag !== 'all') return;
+    setIsLoading(true);
+    const nextPage = page + 1;
+    const newTransactions = await getTransactions(nextPage);
+    if (newTransactions.length > 0) {
+      setAllTransactions(prev => [...prev, ...newTransactions]);
+      setPage(nextPage);
+    } else {
+      setHasMore(false);
+    }
+    setIsLoading(false);
+  }, [page, hasMore, isLoading, searchTerm, activeTag]);
+
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <div className="p-4 md:p-6">
-        <MonthlySummary transactions={transactions} />
+        <MonthlySummary transactions={allTransactions} />
       </div>
       <Header 
         onSearch={setSearchTerm} 
@@ -293,6 +317,10 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
               transactions={filteredTransactions} 
               tagMap={tagMap}
               onTransactionClick={handleOpenFormForEdit}
+              loadMoreTransactions={loadMoreTransactions}
+              hasMore={hasMore}
+              isLoading={isLoading}
+              isFiltered={!!searchTerm || activeTag !== 'all'}
             />
           </TabsContent>
            <TabsContent value="monthly-income">
@@ -304,7 +332,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
             />
           </TabsContent>
           <TabsContent value="ai-insights">
-            <AIInsights transactions={transactions} />
+            <AIInsights transactions={allTransactions} />
           </TabsContent>
         </Tabs>
       </main>
