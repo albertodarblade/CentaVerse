@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import type { Transaction, Income } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import { format } from 'date-fns';
 
 interface MonthlySummaryProps {
@@ -44,10 +44,8 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
       .reduce((sum, t) => sum + t.amount, 0);
 
     let chartData = [];
-    if (totalIncome > 0) {
+    if (totalIncome > 0 || totalExpenses > 0) {
         chartData.push({ name: 'Ingresos', value: totalIncome, fill: COLORS.income });
-    }
-    if (totalExpenses > 0) {
         chartData.push({ name: 'Gastos', value: totalExpenses, fill: COLORS.expenses });
     }
     
@@ -62,8 +60,28 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
         <CardTitle>Resumen de {format(new Date(), 'MMMM')}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="h-48 md:h-64">
+        <div className="grid grid-cols-2 gap-4 items-center">
+          <div className="flex flex-col space-y-6">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-2.5 w-1 rounded-full" style={{ backgroundColor: COLORS.income }}/>
+                Ingresos
+              </div>
+              <p className="text-3xl font-bold">
+                {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncome)}
+              </p>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-2.5 w-1 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
+                Gastado
+              </div>
+              <p className="text-3xl font-bold">
+                {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalExpenses)}
+              </p>
+            </div>
+          </div>
+          <div className="h-40">
              <ChartContainer
                 config={{
                     income: { label: 'Ingresos', color: COLORS.income },
@@ -83,8 +101,9 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
                     data={chartData}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius="60%"
-                    strokeWidth={5}
+                    innerRadius="70%"
+                    outerRadius="100%"
+                    strokeWidth={0}
                   >
                     {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -92,29 +111,6 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
                   </Pie>
                 </PieChart>
               </ChartContainer>
-          </div>
-          <div className="flex flex-col justify-center space-y-4">
-             {chartData.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
-                    <div className="flex-1 text-sm text-muted-foreground">{item.name}</div>
-                    <div className="text-sm font-bold">
-                        {new Intl.NumberFormat('es-BO', {
-                            style: 'currency',
-                            currency: 'BOB',
-                        }).format(item.value)}
-                    </div>
-                </div>
-             ))}
-             <div className="border-t border-border mt-4 pt-4 flex justify-between font-bold">
-                <span>Balance</span>
-                <span>
-                     {new Intl.NumberFormat('es-BO', {
-                        style: 'currency',
-                        currency: 'BOB',
-                    }).format(totalIncome - totalExpenses)}
-                </span>
-             </div>
           </div>
         </div>
       </CardContent>
