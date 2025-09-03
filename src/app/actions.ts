@@ -26,7 +26,7 @@ export async function getAIInsightsAction(input: SpendingInsightsInput) {
   }
 }
 
-export async function getTransactions(page: number, limit: number = 20): Promise<Transaction[]> {
+export async function getTransactions(page: number, limit: number = 10): Promise<Transaction[]> {
     try {
         const db = await getDb();
         const transactions = await db.collection("transactions")

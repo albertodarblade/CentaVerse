@@ -283,7 +283,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     if (isLoading || !hasMore || searchTerm || activeTag !== 'all') return;
     setIsLoading(true);
     const nextPage = page + 1;
-    const newTransactions = await getTransactions(nextPage);
+    const newTransactions = await getTransactions(nextPage, 10);
     if (newTransactions.length > 0) {
       setAllTransactions(prev => [...prev, ...newTransactions]);
       setPage(nextPage);
