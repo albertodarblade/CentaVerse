@@ -16,9 +16,38 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Tag, Transaction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Settings, Trash2, X } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import React, { useState } from "react";
+
+const iconList = [
+  { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
+  { name: 'User', component: <User className="h-4 w-4" /> },
+  { name: 'Lightbulb', component: <Lightbulb className="h-4 w-4" /> },
+  { name: 'AlertTriangle', component: <AlertTriangle className="h-4 w-4" /> },
+  { name: 'Utensils', component: <Utensils className="h-4 w-4" /> },
+  { name: 'Car', component: <Car className="h-4 w-4" /> },
+  { name: 'Home', component: <Home className="h-4 w-4" /> },
+  { name: 'Clapperboard', component: <Clapperboard className="h-4 w-4" /> },
+  { name: 'ShoppingCart', component: <ShoppingCart className="h-4 w-4" /> },
+  { name: 'HeartPulse', component: <HeartPulse className="h-4 w-4" /> },
+  { name: 'Plane', component: <Plane className="h-4 w-4" /> },
+  { name: 'Gift', component: <Gift className="h-4 w-4" /> },
+  { name: 'BookOpen', component: <BookOpen className="h-4 w-4" /> },
+  { name: 'PawPrint', component: <PawPrint className="h-4 w-4" /> },
+  { name: 'Gamepad2', component: <Gamepad2 className="h-4 w-4" /> },
+  { name: 'Music', component: <Music className="h-4 w-4" /> },
+  { name: 'Shirt', component: <Shirt className="h-4 w-4" /> },
+  { name: 'Dumbbell', component: <Dumbbell className="h-4 w-4" /> },
+  { name: 'Coffee', component: <Coffee className="h-4 w-4" /> },
+  { name: 'Phone', component: <Phone className="h-4 w-4" /> },
+  { name: 'Mic', component: <Mic className="h-4 w-4" /> },
+  { name: 'Film', component: <Film className="h-4 w-4" /> },
+  { name: 'School', component: <School className="h-4 w-4" /> },
+  { name: 'Banknote', component: <Banknote className="h-4 w-4" /> },
+  { name: 'MoreHorizontal', component: <MoreHorizontal className="h-4 w-4" /> },
+];
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }),
@@ -33,8 +62,8 @@ const formSchema = z.object({
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => void;
   tags: Tag[];
-  onAddTag: (tagName: string) => void;
-  onUpdateTag: (tagId: string, newName: string) => void;
+  onAddTag: (tagName: string, icon: React.ReactNode) => void;
+  onUpdateTag: (tagId: string, newName: string, newIcon: React.ReactNode) => void;
   onDeleteTag: (tagId: string) => void;
 }
 
@@ -42,7 +71,8 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
   const { toast } = useToast();
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
-  const [editingTag, setEditingTag] = useState<{ id: string, name: string } | null>(null);
+  const [newTagIcon, setNewTagIcon] = useState(iconList[iconList.length - 1].component);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,15 +94,16 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
 
   const handleAddTag = () => {
     if (newTagName.trim() !== "" && !tags.some(t => t.name.toLowerCase() === newTagName.trim().toLowerCase())) {
-      onAddTag(newTagName.trim());
+      onAddTag(newTagName.trim(), newTagIcon);
       setNewTagName("");
+      setNewTagIcon(iconList[iconList.length - 1].component);
       toast({ title: "Etiqueta añadida", description: `La etiqueta "${newTagName.trim()}" ha sido creada.` });
     }
   };
 
   const handleUpdateTag = () => {
     if (editingTag && editingTag.name.trim() !== "") {
-      onUpdateTag(editingTag.id, editingTag.name.trim());
+      onUpdateTag(editingTag.id, editingTag.name.trim(), editingTag.icon);
       setEditingTag(null);
       toast({ title: "Etiqueta actualizada" });
     }
@@ -82,11 +113,27 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
     onDeleteTag(tagId);
     toast({ title: "Etiqueta eliminada", variant: 'destructive' });
   };
-  
-  const tagIcons = tags.reduce((acc, tag) => {
-      acc[tag.name] = tag.icon;
-      return acc;
-    }, {} as { [key: string]: React.ReactNode });
+
+  const IconPicker = ({ onSelect, children }: { onSelect: (icon: React.ReactNode) => void, children: React.ReactNode }) => (
+    <Popover>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent className="w-auto p-2">
+        <div className="grid grid-cols-5 gap-2">
+          {iconList.map(icon => (
+            <Button
+              key={icon.name}
+              variant="ghost"
+              size="icon"
+              onClick={() => onSelect(icon.component)}
+              className="h-8 w-8"
+            >
+              {icon.component}
+            </Button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <>
@@ -132,12 +179,10 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
                   <FormItem>
                     <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
                       <div className="mb-4 flex items-center justify-between">
-                          <DialogTrigger asChild>
-                            <div className="flex cursor-pointer items-center gap-2 group">
-                              <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
-                              <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                            </div>
-                          </DialogTrigger>
+                          <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
+                            <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
+                            <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                          </div>
                       </div>
                       <DialogContent>
                         <DialogHeader>
@@ -145,6 +190,9 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
                         </DialogHeader>
                         <div className="space-y-4">
                           <div className="flex gap-2">
+                            <IconPicker onSelect={setNewTagIcon}>
+                              <Button variant="outline" size="icon" className="h-10 w-10">{newTagIcon}</Button>
+                            </IconPicker>
                             <Input 
                               placeholder="Nueva etiqueta" 
                               value={newTagName}
@@ -157,13 +205,19 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
                             {tags.map(tag => (
                               <div key={tag.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
                                 {editingTag?.id === tag.id ? (
-                                  <Input
-                                    value={editingTag.name}
-                                    onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateTag()}
-                                    onBlur={handleUpdateTag}
-                                    autoFocus
-                                  />
+                                  <>
+                                    <IconPicker onSelect={(icon) => setEditingTag({ ...editingTag, icon })}>
+                                      <Button variant="outline" size="icon" className="h-8 w-8">{editingTag.icon}</Button>
+                                    </IconPicker>
+                                    <Input
+                                      value={editingTag.name}
+                                      onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
+                                      onKeyDown={(e) => e.key === 'Enter' && handleUpdateTag()}
+                                      onBlur={handleUpdateTag}
+                                      autoFocus
+                                      className="h-8"
+                                    />
+                                  </>
                                 ) : (
                                   <span className="flex items-center gap-2">
                                     {tag.icon}
@@ -172,7 +226,7 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
                                 )}
 
                                 <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingTag({ id: tag.id, name: tag.name })}>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingTag(tag)}>
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                   <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>

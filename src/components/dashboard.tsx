@@ -47,20 +47,21 @@ export default function Dashboard() {
     setTransactions((prev) => [newTransaction, ...prev]);
   };
 
-  const addTag = (tagName: string) => {
+  const addTag = (tagName: string, icon: React.ReactNode) => {
     const newTag: Tag = {
       id: tagName.toLowerCase().replace(/\s/g, '-'),
       name: tagName,
-      icon: <MoreHorizontal className="h-4 w-4" />
+      icon: icon
     };
     setTags(prev => [...prev, newTag]);
   }
 
-  const updateTag = (tagId: string, newName: string) => {
-    setTags(prev => prev.map(tag => tag.id === tagId ? { ...tag, name: newName } : tag));
+  const updateTag = (tagId: string, newName: string, newIcon: React.ReactNode) => {
+    const oldName = tags.find(t => t.id === tagId)?.name;
+    setTags(prev => prev.map(tag => tag.id === tagId ? { ...tag, name: newName, icon: newIcon } : tag));
     setTransactions(prev => prev.map(t => ({
       ...t,
-      tags: t.tags.map(tag => tag === tagId ? newName : tag)
+      tags: t.tags.map(tag => tag === oldName ? newName : tag)
     })));
   };
 
