@@ -24,8 +24,14 @@ import {
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { useDebounce } from 'use-debounce';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { updateTagOrder } from "@/app/actions";
+import dynamic from 'next/dynamic';
+
+const DragDropContext = dynamic(() => import('react-beautiful-dnd').then(mod => mod.DragDropContext), { ssr: false });
+const Droppable = dynamic(() => import('react-beautiful-dnd').then(mod => mod.Droppable), { ssr: false });
+const Draggable = dynamic(() => import('react-beautiful-dnd').then(mod => mod.Draggable), { ssr: false });
+import type { DropResult } from 'react-beautiful-dnd';
+
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -80,16 +86,6 @@ interface TransactionFormProps {
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
 }
-
-// This is the fix: A client-side only wrapper for the Droppable component
-const ClientSideDroppable = ({ children, ...props }: any) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  return isMounted ? <Droppable {...props}>{children}</Droppable> : null;
-};
-
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
@@ -342,8 +338,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                        <DragDropContext onDragEnd={onDragEnd}>
-                        <ClientSideDroppable droppableId="tags">
-                          {(provided: any) => (
+                        <Droppable droppableId="tags">
+                          {(provided) => (
                             <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                               {editingTags.map((tag, index) => (
                                 <Draggable key={tag.id} draggableId={tag.id} index={index}>
@@ -392,7 +388,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                               {provided.placeholder}
                             </div>
                           )}
-                        </ClientSideDroppable>
+                        </Droppable>
                       </DragDropContext>
                       <Button variant="outline" className="w-full" onClick={handleAddNewTag}>
                         <Plus className="mr-2 h-4 w-4" />
