@@ -9,12 +9,13 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import type { Transaction, Income } from '@/lib/types';
+import type { Transaction, Income, RecurringExpense } from '@/lib/types';
 import { format } from 'date-fns';
 
 interface MonthlySummaryProps {
   transactions: Transaction[];
   incomes: Income[];
+  recurringExpenses: RecurringExpense[];
 }
 
 const COLORS = {
@@ -22,7 +23,7 @@ const COLORS = {
     expenses: 'hsl(var(--chart-2))',
 };
 
-export default function MonthlySummary({ transactions, incomes }: MonthlySummaryProps) {
+export default function MonthlySummary({ transactions, incomes, recurringExpenses }: MonthlySummaryProps) {
   const [formattedTotalIncome, setFormattedTotalIncome] = useState<string | null>(null);
   const [formattedTotalExpenses, setFormattedTotalExpenses] = useState<string | null>(null);
   
@@ -41,9 +42,10 @@ export default function MonthlySummary({ transactions, incomes }: MonthlySummary
     });
 
     const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
+    const totalRecurringExpenses = recurringExpenses.reduce((sum, e) => sum + e.amount, 0);
 
     const totalExpenses = monthlyTransactions
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0) + totalRecurringExpenses;
 
     let chartData = [];
     if (totalIncome > 0 || totalExpenses > 0) {
@@ -54,7 +56,7 @@ export default function MonthlySummary({ transactions, incomes }: MonthlySummary
     chartData = chartData.filter(d => d.value > 0);
 
     return { totalIncome, totalExpenses, chartData };
-  }, [transactions, incomes]);
+  }, [transactions, incomes, recurringExpenses]);
   
   useEffect(() => {
     setFormattedTotalIncome(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncome));

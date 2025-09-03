@@ -2,7 +2,7 @@
 
 import { getSpendingInsights, SpendingInsightsInput } from '@/ai/flows/spending-insights-from-summary';
 import { revalidatePath } from 'next/cache';
-import { Tag, Transaction, Income } from '@/lib/types';
+import { Tag, Transaction, Income, RecurringExpense } from '@/lib/types';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
@@ -213,15 +213,6 @@ export async function addIncome(income: Omit<Income, 'id'>) {
     try {
         const db = await getDb();
         await db.collection('incomes').insertOne(income);
-
-        const newTransaction: Omit<Transaction, 'id'> = {
-            ...income,
-            type: 'income',
-            tags: ['Ingreso'],
-            date: new Date(),
-        };
-
-        await db.collection('transactions').insertOne(newTransaction);
         revalidatePath('/');
     } catch (error) {
         console.error("Error adding income:", error);
@@ -254,5 +245,58 @@ export async function deleteIncome(incomeId: string) {
     } catch (error) {
         console.error("Error deleting income:", error);
         throw new Error("Failed to delete income.");
+    }
+}
+
+export async function getRecurringExpenses(): Promise<RecurringExpense[]> {
+    try {
+        const db = await getDb();
+        const expenses = await db.collection('recurring_expenses').find({}).toArray();
+        return JSON.parse(JSON.stringify(expenses)).map((e: any) => ({
+            ...e,
+            id: e._id.toString(),
+        }));
+    } catch (error) {
+        console.error("Error fetching recurring expenses:", error);
+        return [];
+    }
+}
+
+export async function addRecurringExpense(expense: Omit<RecurringExpense, 'id'>) {
+    try {
+        const db = await getDb();
+        await db.collection('recurring_expenses').insertOne(expense);
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error adding recurring expense:", error);
+        throw new Error("Failed to add recurring expense.");
+    }
+}
+
+export async function updateRecurringExpense(expense: RecurringExpense) {
+    try {
+        const db = await getDb();
+        const { id, _id, ...expenseData } = expense;
+        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        await db.collection('recurring_expenses').updateOne(
+            { _id: objectId },
+            { $set: expenseData }
+        );
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error updating recurring expense:", error);
+        throw new Error("Failed to update recurring expense.");
+    }
+}
+
+export async function deleteRecurringExpense(expenseId: string) {
+    try {
+        const db = await getDb();
+        const objectId = new ObjectId(expenseId);
+        await db.collection('recurring_expenses').deleteOne({ _id: objectId });
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error deleting recurring expense:", error);
+        throw new Error("Failed to delete recurring expense.");
     }
 }

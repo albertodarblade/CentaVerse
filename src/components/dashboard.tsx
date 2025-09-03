@@ -1,15 +1,31 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import type { Tag, Transaction, Income } from '@/lib/types';
+import type { Tag, Transaction, Income, RecurringExpense } from '@/lib/types';
 import Header from './header';
 import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
 import MonthlySummary from './monthly-summary';
-import MonthlyIncome from './monthly-income';
+import RecurringTransactions from './recurring-transactions';
 import BottomNavbar from './bottom-navbar';
-import { getTransactions, addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder, addIncome, updateIncome, deleteIncome } from '@/app/actions';
+import { 
+  getTransactions, 
+  addTransaction, 
+  updateTransaction, 
+  deleteTransaction, 
+  addTag, 
+  updateTag, 
+  deleteTag, 
+  updateTagOrder, 
+  addIncome, 
+  updateIncome, 
+  deleteIncome,
+  getRecurringExpenses,
+  addRecurringExpense,
+  updateRecurringExpense,
+  deleteRecurringExpense
+} from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
@@ -49,12 +65,14 @@ interface DashboardProps {
   initialTransactions: Transaction[];
   initialTags: Tag[];
   initialIncomes: Income[];
+  initialRecurringExpenses: RecurringExpense[];
 }
 
-export default function Dashboard({ initialTransactions, initialTags, initialIncomes }: DashboardProps) {
+export default function Dashboard({ initialTransactions, initialTags, initialIncomes, initialRecurringExpenses }: DashboardProps) {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(initialRecurringExpenses);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,6 +100,10 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   }, [initialIncomes]);
 
   useEffect(() => {
+    setRecurringExpenses(initialRecurringExpenses);
+  }, [initialRecurringExpenses]);
+
+  useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (isFormOpen && event.state?.modal !== 'transaction-form') {
         setIsFormOpen(false);
@@ -106,11 +128,26 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   }
 
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'type'>) => {
+    const tempId = `temp-${Date.now()}`;
+    const newTransactionOptimistic: Transaction = {
+      ...transaction,
+      id: tempId,
+      _id: tempId,
+      type: 'expense',
+      date: new Date(transaction.date)
+    };
+
+    setAllTransactions(current => [newTransactionOptimistic, ...current]);
+    handleSetIsFormOpen(false);
+
     try {
-      await addTransaction(transaction);
-      handleSetIsFormOpen(false);
+      const savedTransaction = await addTransaction(transaction);
+      setAllTransactions(current => 
+        current.map(t => t.id === tempId ? savedTransaction : t)
+      );
     } catch (error) {
-       toast({
+      setAllTransactions(current => current.filter(t => t.id !== tempId));
+      toast({
         title: "Error",
         description: "No se pudo añadir la transacción.",
         variant: "destructive"
@@ -119,11 +156,15 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
   
   const handleUpdateTransaction = async (transaction: Transaction) => {
+    const originalTransactions = [...allTransactions];
+    setAllTransactions(current => current.map(t => t.id === transaction.id ? transaction : t));
+    handleSetIsFormOpen(false);
+    setEditingTransaction(null);
+
     try {
       await updateTransaction(transaction);
-      handleSetIsFormOpen(false);
-      setEditingTransaction(null);
     } catch (error) {
+      setAllTransactions(originalTransactions);
       toast({
         title: "Error",
         description: "No se pudo actualizar la transacción.",
@@ -162,7 +203,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     setEditingTransaction(null);
   }
 
-  const handleAddTag = async (tag: Omit<Tag, 'id' | 'order' | 'color'>) => {
+  const handleAddTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
     try {
       await addTag(tag);
     } catch (error) {
@@ -213,6 +254,8 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleAddIncome = async (income: Omit<Income, 'id'>) => {
     try {
       await addIncome(income);
+      const updatedIncomes = await getIncomes();
+      setIncomes(updatedIncomes);
     } catch (error) {
       toast({
         title: "Error",
@@ -225,6 +268,8 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleUpdateIncome = async (income: Income) => {
     try {
       await updateIncome(income);
+       const updatedIncomes = await getIncomes();
+      setIncomes(updatedIncomes);
     } catch (error) {
       toast({
         title: "Error",
@@ -237,10 +282,54 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleDeleteIncome = async (incomeId: string) => {
     try {
       await deleteIncome(incomeId);
+      const updatedIncomes = await getIncomes();
+      setIncomes(updatedIncomes);
     } catch (error) {
       toast({
         title: "Error",
         description: "No se pudo eliminar el ingreso.",
+        variant: "destructive"
+      });
+    }
+  };
+
+    const handleAddRecurringExpense = async (expense: Omit<RecurringExpense, 'id'>) => {
+    try {
+      await addRecurringExpense(expense);
+      const updatedExpenses = await getRecurringExpenses();
+      setRecurringExpenses(updatedExpenses);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo añadir el gasto recurrente.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleUpdateRecurringExpense = async (expense: RecurringExpense) => {
+    try {
+      await updateRecurringExpense(expense);
+      const updatedExpenses = await getRecurringExpenses();
+      setRecurringExpenses(updatedExpenses);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el gasto recurrente.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteRecurringExpense = async (expenseId: string) => {
+    try {
+      await deleteRecurringExpense(expenseId);
+      const updatedExpenses = await getRecurringExpenses();
+      setRecurringExpenses(updatedExpenses);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el gasto recurrente.",
         variant: "destructive"
       });
     }
@@ -300,13 +389,17 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
             isFiltered={false}
           />
         );
-      case 'monthly-income':
+      case 'recurring':
         return (
-          <MonthlyIncome 
+          <RecurringTransactions
             incomes={incomes}
             onAddIncome={handleAddIncome}
             onUpdateIncome={handleUpdateIncome}
             onDeleteIncome={handleDeleteIncome}
+            recurringExpenses={recurringExpenses}
+            onAddRecurringExpense={handleAddRecurringExpense}
+            onUpdateRecurringExpense={handleUpdateRecurringExpense}
+            onDeleteRecurringExpense={handleDeleteRecurringExpense}
           />
         );
       case 'ai-insights':
@@ -340,7 +433,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <div className="p-4 md:p-6">
-        <MonthlySummary transactions={allTransactions} incomes={incomes} />
+        <MonthlySummary transactions={allTransactions} incomes={incomes} recurringExpenses={recurringExpenses} />
       </div>
       
       <main className="flex-1 p-4 md:p-6 space-y-6 mb-24">

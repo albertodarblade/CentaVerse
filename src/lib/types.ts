@@ -22,3 +22,10 @@ export type Income = {
   amount: number;
   description: string;
 };
+
+export type RecurringExpense = {
+  id: string;
+  _id?: string;
+  amount: number;
+  description: string;
+}
