@@ -81,6 +81,7 @@ interface TransactionFormProps {
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [editingTags, setEditingTags] = useState<FormTag[]>([]);
@@ -128,7 +129,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
 
 
   useEffect(() => {
-    if (transactionToEdit && initialValues) {
+    if (transactionToEdit && initialValues && !isManageTagsOpen && !isIconPickerOpen) {
       const hasChanged = 
         debouncedValues.amount !== initialValues.amount ||
         debouncedValues.description !== initialValues.description ||
@@ -149,7 +150,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         });
       }
     }
-  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues]);
+  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues, isManageTagsOpen, isIconPickerOpen]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -210,8 +211,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     updateTagOrder(newTags);
   };
 
-  const IconPicker = ({ onSelect, children }: { onSelect: (iconName: string) => void, children: React.ReactNode }) => (
-    <Popover>
+  const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName: string) => void, children: React.ReactNode, onOpenChange: (open: boolean) => void }) => (
+    <Popover onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-auto p-2 bg-background border-border">
         <div className="grid grid-cols-5 gap-2">
@@ -332,7 +333,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                             key={tag.id}
                             className="flex items-center gap-2"
                           >
-                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
+                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
                               <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
                                 {tag.iconNode}
                               </Button>

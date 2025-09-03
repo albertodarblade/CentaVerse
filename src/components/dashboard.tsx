@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Tag, Transaction } from '@/lib/types';
 import Header from './header';
 import TransactionForm from './transaction-form';
@@ -62,6 +62,12 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   useEffect(() => {
     setTags(initialTags.sort((a, b) => a.order - b.order));
   }, [initialTags]);
+  
+  const onTransactionUpdate = useCallback((updatedTransaction: Transaction) => {
+    setTransactions(currentTransactions =>
+      currentTransactions.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
+    );
+  }, []);
 
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
     try {
@@ -79,6 +85,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   const handleUpdateTransaction = async (transaction: Transaction, closeModal: boolean = true) => {
     try {
       await updateTransaction(transaction);
+      onTransactionUpdate(transaction);
       if (closeModal) {
           setIsFormOpen(false);
           setEditingTransaction(null);
