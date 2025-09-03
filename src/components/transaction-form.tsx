@@ -15,9 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
 import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
@@ -121,33 +121,56 @@ const ColorPicker = ({ selectedColor, onSelect }: { selectedColor: string, onSel
     );
 };
 
-const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags }: {
+const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags, onOpenChange }: {
   tags: FormTag[];
   onAddTag: () => Promise<void>;
   onUpdateTag: (tag: FormTag, data: Partial<FormTag>) => void;
   onDeleteTag: (tag: Tag) => void;
   onReorderTags: (tags: FormTag[]) => void;
+  onOpenChange: (open: boolean) => void;
 }) => {
-  const [editingTags, setEditingTags] = useState<FormTag[]>(initialTags);
+  const [editingTags, setEditingTags] = useState<FormTag[]>([]);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const firstRender = useRef(true);
 
   useEffect(() => {
-    setEditingTags(initialTags.map(tag => ({
-        ...tag,
-        iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
-    })));
-  }, [initialTags]);
-
-  const debouncedUpdateTag = useDebouncedCallback((tag: FormTag, newName: string) => {
-    if (tag.name !== newName) {
-      onUpdateTag(tag, { name: newName });
+    if (firstRender.current) {
+        firstRender.current = false;
+        setEditingTags(initialTags.map(tag => ({
+            ...tag,
+            iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
+        })));
+    } else {
+        setEditingTags(currentTags => {
+            return initialTags.map(initialTag => {
+                const existingTag = currentTags.find(t => t.id === initialTag.id);
+                if (existingTag) {
+                    return {
+                        ...existingTag,
+                        order: initialTag.order, // Update order from props
+                        iconNode: iconList.find(i => i.name === existingTag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
+                    };
+                }
+                return { // New tag added
+                    ...initialTag,
+                    iconNode: iconList.find(i => i.name === initialTag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
+                };
+            }).filter(tag => initialTags.some(it => it.id === tag.id)); // Remove deleted tags
+        });
     }
+}, [initialTags]);
+
+  const debouncedUpdateTag = useDebouncedCallback((tag: FormTag, data: Partial<FormTag>) => {
+    onUpdateTag(tag, data);
   }, 1000);
 
-  const handleUpdateTagName = (tag: FormTag, newName: string) => {
-    const updatedTag = { ...tag, name: newName };
-    setEditingTags(currentTags => currentTags.map(t => t.id === tag.id ? updatedTag : t));
-    debouncedUpdateTag(tag, newName);
+  const handleUpdateTagName = (tagId: string, newName: string) => {
+    const updatedTags = editingTags.map(t => t.id === tagId ? {...t, name: newName } : t);
+    setEditingTags(updatedTags);
+    const tagToUpdate = updatedTags.find(t => t.id === tagId);
+    if(tagToUpdate) {
+        debouncedUpdateTag(tagToUpdate, { name: newName });
+    }
   };
 
   const handleUpdateTagIcon = (tagToUpdate: FormTag, iconName: string) => {
@@ -185,13 +208,6 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
   const DebouncedInput = ({ tag }: { tag: FormTag }) => {
       const [value, setValue] = useState(tag.name);
       
-      const debounced = useDebouncedCallback(
-        (newValue) => {
-            onUpdateTag(tag, { name: newValue });
-        },
-        1000
-      );
-
       useEffect(() => {
           setValue(tag.name);
       }, [tag.name]);
@@ -199,18 +215,21 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
       const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           const newValue = e.target.value;
           setValue(newValue);
-          const updatedTags = editingTags.map(t => t.id === tag.id ? {...t, name: newValue } : t);
-          setEditingTags(updatedTags);
-          debounced(newValue);
+          handleUpdateTagName(tag.id, newValue);
       }
 
       return <Input value={value} onChange={handleChange} className="h-10" />
   }
 
   return (
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => {
+        if (isIconPickerOpen) {
+          e.preventDefault();
+        }
+      }}>
         <DialogHeader>
           <DialogTitle>Gestionar Etiquetas</DialogTitle>
+           <DialogClose onClick={() => onOpenChange(false)} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-4">
@@ -331,14 +350,15 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [transactionToEdit, form]);
   
-    useEffect(() => {
-        const amount = form.watch('amount');
-        if (amount > 0) {
-            setFormattedAmount(new Intl.NumberFormat('es-BO').format(amount));
-        } else {
-            setFormattedAmount('');
-        }
-    }, [form.watch('amount')]);
+  const watchedAmount = form.watch('amount');
+  useEffect(() => {
+    if (watchedAmount > 0) {
+        setFormattedAmount(new Intl.NumberFormat('es-BO').format(watchedAmount));
+    } else {
+        setFormattedAmount('');
+    }
+  }, [watchedAmount]);
+
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -577,6 +597,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           onUpdateTag={handleUpdateTag}
                           onDeleteTag={handleDeleteTag}
                           onReorderTags={handleReorderTags}
+                          onOpenChange={handleSetIsManageTagsOpen}
                       />
                   </Dialog>
                   <FormControl>
