@@ -56,8 +56,13 @@ export default function Dashboard() {
     setEditingTransaction(null);
   }
 
-  const handleOpenForm = (transaction?: Transaction) => {
-    setEditingTransaction(transaction || null);
+  const handleOpenFormForCreate = () => {
+    setEditingTransaction(null);
+    setIsFormOpen(true);
+  }
+
+  const handleOpenFormForEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
     setIsFormOpen(true);
   }
   
@@ -126,7 +131,7 @@ export default function Dashboard() {
             <TransactionsList 
               transactions={filteredTransactions} 
               tagIcons={tagIcons}
-              onTransactionClick={handleOpenForm}
+              onTransactionClick={handleOpenFormForEdit}
             />
           </TabsContent>
           <TabsContent value="ai-insights">
@@ -135,9 +140,9 @@ export default function Dashboard() {
         </Tabs>
       </main>
 
-      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogTrigger asChild>
-          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={() => handleOpenForm()}>
+          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
             <Plus className="h-8 w-8" />
             <span className="sr-only">Añadir Gasto</span>
           </Button>
