@@ -129,19 +129,37 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       setIsSubmitting(false);
     }
   }
-
+  
   const handleAddNewTag = () => {
-    const newTagId = `new-${Date.now()}`;
-    onAddTag("Nueva etiqueta", iconList[iconList.length - 1].component);
+    const newTag: Tag = {
+      id: `new-${Date.now()}`,
+      name: 'Nueva etiqueta',
+      icon: iconList[iconList.length - 1].component,
+    };
+    onAddTag(newTag.name, newTag.icon);
+    setEditingTags(prev => [...prev, newTag]);
   };
   
   const handleUpdateTagName = (tagId: string, newName: string) => {
-    onUpdateTag(tagId, newName, tags.find(t => t.id === tagId)!.icon);
+    const tagToUpdate = editingTags.find(t => t.id === tagId);
+    if (tagToUpdate) {
+      onUpdateTag(tagId, newName, tagToUpdate.icon);
+      setEditingTags(prev => prev.map(t => t.id === tagId ? { ...t, name: newName } : t));
+    }
   };
   
   const handleUpdateTagIcon = (tagId: string, newIcon: React.ReactNode) => {
-    onUpdateTag(tagId, tags.find(t => t.id === tagId)!.name, newIcon);
+    const tagToUpdate = editingTags.find(t => t.id === tagId);
+    if (tagToUpdate) {
+      onUpdateTag(tagId, tagToUpdate.name, newIcon);
+      setEditingTags(prev => prev.map(t => t.id === tagId ? { ...t, icon: newIcon } : t));
+    }
   };
+
+  const handleDeleteTag = (tagId: string) => {
+    onDeleteTag(tagId);
+    setEditingTags(prev => prev.filter(t => t.id !== tagId));
+  }
 
   const IconPicker = ({ onSelect, children }: { onSelect: (icon: React.ReactNode) => void, children: React.ReactNode }) => (
     <Popover>
@@ -238,7 +256,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        {tags.map((tag) => (
+                        {editingTags.map((tag) => (
                           <div key={tag.id} className="flex items-center gap-2">
                             <GripVertical className="h-5 w-5 text-muted-foreground" />
                             <IconPicker onSelect={(icon) => handleUpdateTagIcon(tag.id, icon)}>
@@ -251,7 +269,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                               onChange={(e) => handleUpdateTagName(tag.id, e.target.value)}
                               className="h-10"
                             />
-                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive" onClick={() => onDeleteTag(tag.id)}>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
                               <Trash2 className="h-5 w-5" />
                             </Button>
                           </div>
