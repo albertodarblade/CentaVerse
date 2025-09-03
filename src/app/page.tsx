@@ -1,7 +1,7 @@
 import Dashboard from "@/components/dashboard";
 import clientPromise from "@/lib/mongodb";
-import type { Transaction, Tag } from "@/lib/types";
-import { getTags } from "@/app/actions";
+import type { Transaction, Tag, Income } from "@/lib/types";
+import { getTags, getIncomes } from "@/app/actions";
 
 async function getTransactions() {
   try {
@@ -22,8 +22,9 @@ async function getTransactions() {
 export default async function Home() {
   const transactions: Transaction[] = await getTransactions();
   const tags: Tag[] = await getTags();
+  const incomes: Income[] = await getIncomes();
   
   return (
-    <Dashboard initialTransactions={transactions} initialTags={tags} />
+    <Dashboard initialTransactions={transactions} initialTags={tags} initialIncomes={incomes} />
   );
 }

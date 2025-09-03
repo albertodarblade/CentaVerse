@@ -2,7 +2,7 @@
 
 import { getSpendingInsights, SpendingInsightsInput } from '@/ai/flows/spending-insights-from-summary';
 import { revalidatePath } from 'next/cache';
-import { Tag, Transaction } from '@/lib/types';
+import { Tag, Transaction, Income } from '@/lib/types';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
@@ -170,5 +170,67 @@ export async function updateTagOrder(tags: Tag[]) {
     } catch (error) {
         console.error("Error updating tag order:", error);
         throw new Error("Failed to update tag order.");
+    }
+}
+
+export async function getIncomes(): Promise<Income[]> {
+    try {
+        const db = await getDb();
+        const incomes = await db.collection('incomes').find({}).toArray();
+        return JSON.parse(JSON.stringify(incomes)).map((i: any) => ({
+            ...i,
+            id: i._id.toString(),
+        }));
+    } catch (error) {
+        console.error("Error fetching incomes:", error);
+        return [];
+    }
+}
+
+export async function addIncome(income: Omit<Income, 'id'>) {
+    try {
+        const db = await getDb();
+        await db.collection('incomes').insertOne(income);
+
+        const newTransaction: Omit<Transaction, 'id'> = {
+            ...income,
+            type: 'income',
+            tags: ['Ingreso'],
+            date: new Date(),
+        };
+
+        await db.collection('transactions').insertOne(newTransaction);
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error adding income:", error);
+        throw new Error("Failed to add income.");
+    }
+}
+
+export async function updateIncome(income: Income) {
+    try {
+        const db = await getDb();
+        const { id, _id, ...incomeData } = income;
+        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        await db.collection('incomes').updateOne(
+            { _id: objectId },
+            { $set: incomeData }
+        );
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error updating income:", error);
+        throw new Error("Failed to update income.");
+    }
+}
+
+export async function deleteIncome(incomeId: string) {
+    try {
+        const db = await getDb();
+        const objectId = new ObjectId(incomeId);
+        await db.collection('incomes').deleteOne({ _id: objectId });
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error deleting income:", error);
+        throw new Error("Failed to delete income.");
     }
 }

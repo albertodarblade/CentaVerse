@@ -16,3 +16,10 @@ export type Tag = {
   color: string;
   order: number;
 }
+
+export type Income = {
+  id: string;
+  _id?: string;
+  amount: number;
+  description: string;
+};

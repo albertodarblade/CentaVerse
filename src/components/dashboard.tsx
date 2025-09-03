@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import type { Tag, Transaction } from '@/lib/types';
+import type { Tag, Transaction, Income } from '@/lib/types';
 import Header from './header';
 import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
 import MonthlySummary from './monthly-summary';
-import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder } from '@/app/actions';
+import MonthlyIncome from './monthly-income';
+import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder, addIncome, updateIncome, deleteIncome } from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
@@ -46,11 +47,13 @@ const iconMap: { [key: string]: React.ReactNode } = {
 interface DashboardProps {
   initialTransactions: Transaction[];
   initialTags: Tag[];
+  initialIncomes: Income[];
 }
 
-export default function Dashboard({ initialTransactions, initialTags }: DashboardProps) {
+export default function Dashboard({ initialTransactions, initialTags, initialIncomes }: DashboardProps) {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [tags, setTags] = useState<Tag[]>(initialTags);
+  const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,6 +67,10 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   useEffect(() => {
     setTags(initialTags.sort((a, b) => a.order - b.order));
   }, [initialTags]);
+  
+  useEffect(() => {
+    setIncomes(initialIncomes);
+  }, [initialIncomes]);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -204,6 +211,42 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
       });
     }
   };
+
+  const handleAddIncome = async (income: Omit<Income, 'id'>) => {
+    try {
+      await addIncome(income);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo añadir el ingreso.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleUpdateIncome = async (income: Income) => {
+    try {
+      await updateIncome(income);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el ingreso.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteIncome = async (incomeId: string) => {
+    try {
+      await deleteIncome(incomeId);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el ingreso.",
+        variant: "destructive"
+      });
+    }
+  };
   
   const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
@@ -235,13 +278,14 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
       <Header 
         onSearch={setSearchTerm} 
         tags={tagsWithIcons} 
-        activeTag={activeTag} 
+        activeTag={activeTag} _id
         onSetActiveTag={setActiveTag}
       />
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Tabs defaultValue="all-expenses">
           <TabsList className="mb-4">
             <TabsTrigger value="all-expenses">Todos los gastos</TabsTrigger>
+            <TabsTrigger value="monthly-income">Ingresos</TabsTrigger>
             <TabsTrigger value="ai-insights">Perspectivas de la IA</TabsTrigger>
           </TabsList>
           <TabsContent value="all-expenses">
@@ -249,6 +293,14 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
               transactions={filteredTransactions} 
               tagMap={tagMap}
               onTransactionClick={handleOpenFormForEdit}
+            />
+          </TabsContent>
+           <TabsContent value="monthly-income">
+            <MonthlyIncome 
+              incomes={incomes}
+              onAddIncome={handleAddIncome}
+              onUpdateIncome={handleUpdateIncome}
+              onDeleteIncome={handleDeleteIncome}
             />
           </TabsContent>
           <TabsContent value="ai-insights">
