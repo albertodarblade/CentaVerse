@@ -43,7 +43,7 @@ const iconList = [
   { name: 'BookOpen', component: <BookOpen className="h-4 w-4" /> },
   { name: 'PawPrint', component: <PawPrint className="h-4 w-4" /> },
   { name: 'Gamepad2', component: <Gamepad2 className="h-4 w-4" /> },
-  { name_of_the_entity: 'Music', component: <Music className="h-4 w-4" /> },
+  { name: 'Music', component: <Music className="h-4 w-4" /> },
   { name: 'Shirt', component: <Shirt className="h-4 w-4" /> },
   { name: 'Dumbbell', component: <Dumbbell className="h-4 w-4" /> },
   { name: 'Coffee', component: <Coffee className="h-4 w-4" /> },
@@ -435,7 +435,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                       <AlertDialogDescription>
                         Esta acción no se puede deshacer. Esto eliminará permanentemente la transacción.
-                      </AlertDialogDescription>
+                      </Aler tDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
