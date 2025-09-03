@@ -47,7 +47,8 @@ const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: 
             <p className="font-semibold">{transaction.description}</p>
             <div className="flex flex-wrap gap-1">
                 {transaction.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="font-normal">
+                    <Badge key={tag} variant="secondary" className="font-normal flex items-center gap-1">
+                        {tagIcons[tag]}
                         {tag}
                     </Badge>
                 ))}
