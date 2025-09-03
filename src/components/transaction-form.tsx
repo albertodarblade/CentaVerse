@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, Loader2, CheckCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
@@ -90,33 +90,41 @@ const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName:
     </Popover>
 );
 
-const ManageTagsDialogContent = ({ tags, onAddTag, onUpdateTag, onDeleteTag, onOpenChange, onReorderTags }: {
+const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onDeleteTag, onOpenChange, onReorderTags }: {
   tags: FormTag[];
   onAddTag: () => Promise<void>;
-  onUpdateTag: (tag: Tag, data: Partial<Tag>) => void;
+  onUpdateTag: (tag: FormTag, data: Partial<FormTag>) => void;
   onDeleteTag: (tag: Tag) => void;
   onOpenChange: (open: boolean) => void;
   onReorderTags: (tags: FormTag[]) => void;
 }) => {
-  const [editingTags, setEditingTags] = useState<FormTag[]>(tags);
+  const [editingTags, setEditingTags] = useState<FormTag[]>(initialTags);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   useEffect(() => {
-    setEditingTags(tags);
-  }, [tags]);
+    setEditingTags(initialTags.map(tag => ({
+        ...tag,
+        iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
+    })));
+  }, [initialTags]);
 
   const handleUpdateTagName = (tag: FormTag, newName: string) => {
     if (tag.name !== newName) {
-      onUpdateTag(tag, { name: newName });
+        const updatedTag = { ...tag, name: newName };
+        setEditingTags(currentTags => currentTags.map(t => t.id === tag.id ? updatedTag : t));
+        onUpdateTag(updatedTag, { name: newName });
     }
   };
 
   const handleUpdateTagIcon = (tagToUpdate: FormTag, iconName: string) => {
     if (tagToUpdate.icon !== iconName) {
-      setEditingTags(currentTags => currentTags.map(t =>
-        t.id === tagToUpdate.id ? { ...t, icon: iconName, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t
-      ));
-      onUpdateTag(tagToUpdate, { icon: iconName });
+      const updatedTag = {
+          ...tagToUpdate,
+          icon: iconName,
+          iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" />
+      };
+      setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
+      onUpdateTag(updatedTag, { icon: iconName });
     }
   };
 
@@ -131,7 +139,24 @@ const ManageTagsDialogContent = ({ tags, onAddTag, onUpdateTag, onDeleteTag, onO
     setEditingTags(newTags);
     onReorderTags(newTags);
   };
-  
+
+  const DebouncedInput = ({ tag }: { tag: FormTag }) => {
+      const [value, setValue] = useState(tag.name);
+      const [debouncedValue] = useDebounce(value, 1000);
+
+      useEffect(() => {
+          setValue(tag.name);
+      }, [tag.name]);
+
+      useEffect(() => {
+          if (debouncedValue !== tag.name) {
+            handleUpdateTagName(tag, debouncedValue);
+          }
+      }, [debouncedValue, tag]);
+
+      return <Input value={value} onChange={e => setValue(e.target.value)} className="h-10" />
+  }
+
   return (
       <DialogContent onOpenChange={(open) => {
         if (isIconPickerOpen) return;
@@ -149,11 +174,7 @@ const ManageTagsDialogContent = ({ tags, onAddTag, onUpdateTag, onDeleteTag, onO
                         {tag.iconNode}
                     </Button>
                 </IconPicker>
-                <Input
-                  defaultValue={tag.name}
-                  onBlur={(e) => handleUpdateTagName(tag, e.target.value)}
-                  className="h-10"
-                />
+                <DebouncedInput tag={tag} />
                 <div className="flex flex-col">
                   <Button
                     variant="ghost" size="icon" className="h-5 w-5"
@@ -214,7 +235,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -228,11 +248,13 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       tags: [],
     },
   });
-  
+
   const watchedValues = form.watch();
   const [debouncedValues] = useDebounce(watchedValues, 1000);
+
+  const [initialValues, setInitialValues] = useState<Omit<Transaction, 'id' | 'date' | 'type' | '_id'> | null>(transactionToEdit);
   
-  const [initialValues, setInitialValues] = useState(transactionToEdit);
+  const formRef = React.useRef<HTMLFormElement>(null);
   
   useEffect(() => {
     if (transactionToEdit) {
@@ -241,9 +263,10 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         description: transactionToEdit.description,
         tags: transactionToEdit.tags,
       };
-      setInitialValues(initial as Transaction);
+      setInitialValues(initial);
       form.reset(initial);
     } else {
+      setInitialValues(null);
       form.reset({
         amount: 0,
         description: "",
@@ -252,21 +275,22 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [transactionToEdit, form]);
 
+  const onUpdateTransactionStable = useCallback(onUpdateTransaction, []);
 
   useEffect(() => {
     if (transactionToEdit && initialValues && !isManageTagsOpen && !isIconPickerOpen) {
-      const hasChanged = 
+      const hasChanged =
         debouncedValues.amount !== initialValues.amount ||
         debouncedValues.description !== initialValues.description ||
         JSON.stringify(debouncedValues.tags.sort()) !== JSON.stringify(initialValues.tags.sort());
 
-      if (form.formState.isDirty && hasChanged) {
+      if (form.formState.isDirty && hasChanged && formRef.current?.contains(document.activeElement)) {
         setAutosaveStatus('saving');
         form.trigger().then(async (isValid) => {
           if (isValid) {
             const updatedTransaction = { ...transactionToEdit, ...debouncedValues };
-            await onUpdateTransaction(updatedTransaction, false);
-            setInitialValues(updatedTransaction); // Update initial values to current
+            await onUpdateTransactionStable(updatedTransaction, false);
+            setInitialValues(debouncedValues); // Update initial values to current
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
           } else {
@@ -275,7 +299,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         });
       }
     }
-  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues, isManageTagsOpen, isIconPickerOpen]);
+  }, [debouncedValues, transactionToEdit, onUpdateTransactionStable, form, initialValues, isManageTagsOpen, isIconPickerOpen]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -296,17 +320,17 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       setIsSubmitting(false);
     }
   }
-  
+
   const handleAddNewTag = async () => {
     const newTagName = 'Nueva etiqueta';
     const newTagIcon = 'MoreHorizontal';
     await onAddTag(newTagName, newTagIcon);
   };
-  
+
   const handleUpdateTag = (tag: Tag, data: Partial<Tag>) => {
       onUpdateTag({ ...tag, ...data });
   };
-  
+
   const handleDeleteTag = (tag: Tag) => {
     onDeleteTag(tag);
   };
@@ -314,7 +338,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const handleReorderTags = (tags: FormTag[]) => {
     updateTagOrder(tags);
   };
-  
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
     const digitsOnly = value.replace(/[^0-9]/g, '');
@@ -357,28 +381,34 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-          <div className="grid grid-cols-1 gap-4">
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Monto (Bs.)</FormLabel>
-                  <FormControl>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4" ref={formRef}>
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl font-bold text-muted-foreground/30 pointer-events-none">
+                      Bs.
+                    </span>
                     <Input
                       type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      value={new Intl.NumberFormat('es-BO').format(field.value || 0)}
+                      value={field.value ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
                       onChange={(e) => handleAmountChange(e, field)}
                       disabled={isSubmitting}
+                      className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent"
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </div>
+                </FormControl>
+                <FormMessage className="text-center" />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="description"
@@ -392,58 +422,59 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                 </FormItem>
               )}
             />
-          </div>
-          <FormField
-            control={form.control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                 <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
-                    <div className="mb-4 flex items-center justify-between">
-                        <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
-                            <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
-                            <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                        </div>
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+                      <div className="mb-4 flex items-center justify-between">
+                          <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
+                              <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
+                              <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                          </div>
+                      </div>
+                      <ManageTagsDialogContent
+                          tags={tags}
+                          onAddTag={handleAddNewTag}
+                          onUpdateTag={handleUpdateTag}
+                          onDeleteTag={handleDeleteTag}
+                          onOpenChange={setIsManageTagsOpen}
+                          onReorderTags={handleReorderTags}
+                      />
+                  </Dialog>
+                  <FormControl>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => {
+                        const isSelected = field.value?.includes(tag.name);
+                        return (
+                          <Button
+                            key={tag.id}
+                            type="button"
+                            variant={isSelected ? "default" : "secondary"}
+                            size="sm"
+                            onClick={() => {
+                              if (isSubmitting) return;
+                              const newValue = isSelected
+                                ? field.value?.filter((value) => value !== tag.name)
+                                : [...(field.value || []), tag.name];
+                              field.onChange(newValue);
+                            }}
+                            className="rounded-full"
+                          >
+                            {tag.iconNode}
+                            {tag.name}
+                          </Button>
+                        );
+                      })}
                     </div>
-                    <ManageTagsDialogContent
-                        tags={tags}
-                        onAddTag={handleAddNewTag}
-                        onUpdateTag={handleUpdateTag}
-                        onDeleteTag={handleDeleteTag}
-                        onOpenChange={setIsManageTagsOpen}
-                        onReorderTags={handleReorderTags}
-                    />
-                </Dialog>
-                <FormControl>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => {
-                      const isSelected = field.value?.includes(tag.name);
-                      return (
-                        <Button
-                          key={tag.id}
-                          type="button"
-                          variant={isSelected ? "default" : "secondary"}
-                          size="sm"
-                          onClick={() => {
-                            if (isSubmitting) return;
-                            const newValue = isSelected
-                              ? field.value?.filter((value) => value !== tag.name)
-                              : [...(field.value || []), tag.name];
-                            field.onChange(newValue);
-                          }}
-                          className="rounded-full"
-                        >
-                          {tag.iconNode}
-                          {tag.name}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <div className="flex items-center justify-between gap-2">
             {transactionToEdit ? (
                <AlertDialog>
