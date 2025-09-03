@@ -91,11 +91,14 @@ export async function addTag(tag: Omit<Tag, 'id'>) {
     }
 }
 
-export async function updateTag(tag: Tag) {
+export async function updateTag(tag: any) {
     try {
         const db = await getDb();
-        const { id, _id, ...tagData } = tag;
-        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        // The incoming tag object from the client might have extra fields like 'id' and 'iconNode'.
+        // We only need _id, name, and icon for the database.
+        const { _id, name, icon } = tag;
+        const objectId = new ObjectId(_id);
+        const tagData = { name, icon };
 
         const oldTag = await db.collection('tags').findOne({ _id: objectId });
         if (!oldTag) {
@@ -108,10 +111,10 @@ export async function updateTag(tag: Tag) {
             { $set: tagData }
         );
 
-        if (oldName !== tag.name) {
+        if (oldName !== name) {
              await db.collection('transactions').updateMany(
                 { tags: oldName },
-                { $set: { "tags.$[elem]": tag.name } },
+                { $set: { "tags.$[elem]": name } },
                 { arrayFilters: [{ "elem": oldName }] }
             );
         }
