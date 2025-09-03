@@ -31,18 +31,11 @@ const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: 
     );
   }, [transaction.date, transaction.amount]);
   
-  // Get the first tag to determine the icon.
-  const firstTag = transaction.tags.length > 0 ? transaction.tags[0] : 'default';
-  const icon = tagIcons[firstTag] || null;
-
   return (
     <div
       className="flex items-center p-4 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
       onClick={() => onClick(transaction)}
     >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted mr-4 shrink-0">
-            {icon}
-        </div>
         <div className="flex-1 space-y-1">
             <p className="font-semibold">{transaction.description}</p>
             <div className="flex flex-wrap gap-1">
