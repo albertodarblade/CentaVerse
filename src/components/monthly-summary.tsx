@@ -9,11 +9,12 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, Income } from '@/lib/types';
 import { format } from 'date-fns';
 
 interface MonthlySummaryProps {
   transactions: Transaction[];
+  incomes: Income[];
 }
 
 const COLORS = {
@@ -21,7 +22,7 @@ const COLORS = {
     expenses: 'hsl(var(--chart-2))',
 };
 
-export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
+export default function MonthlySummary({ transactions, incomes }: MonthlySummaryProps) {
   const { totalIncome, totalExpenses, chartData } = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -30,17 +31,15 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
     const monthlyTransactions = transactions.filter((t) => {
       const transactionDate = new Date(t.date);
       return (
+        t.type === 'expense' &&
         transactionDate.getMonth() === currentMonth &&
         transactionDate.getFullYear() === currentYear
       );
     });
 
-    const totalIncome = monthlyTransactions
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
 
     const totalExpenses = monthlyTransactions
-      .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     let chartData = [];
@@ -52,7 +51,7 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
     chartData = chartData.filter(d => d.value > 0);
 
     return { totalIncome, totalExpenses, chartData };
-  }, [transactions]);
+  }, [transactions, incomes]);
 
   return (
     <Card>

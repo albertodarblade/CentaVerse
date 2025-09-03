@@ -353,7 +353,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <div className="p-4 md:p-6">
-        <MonthlySummary transactions={allTransactions} />
+        <MonthlySummary transactions={allTransactions} incomes={incomes} />
       </div>
       
       <main className="flex-1 p-4 md:p-6 space-y-6 mb-24">
