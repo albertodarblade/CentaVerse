@@ -25,13 +25,7 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { useDebounce } from 'use-debounce';
 import { updateTagOrder } from "@/app/actions";
-import dynamic from 'next/dynamic';
-
-const DragDropContext = dynamic(() => import('react-beautiful-dnd').then(mod => mod.DragDropContext), { ssr: false });
-const Droppable = dynamic(() => import('react-beautiful-dnd').then(mod => mod.Droppable), { ssr: false });
-const Draggable = dynamic(() => import('react-beautiful-dnd').then(mod => mod.Draggable), { ssr: false });
-import type { DropResult } from 'react-beautiful-dnd';
-
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -86,6 +80,18 @@ interface TransactionFormProps {
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
 }
+
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+  if (!hasMounted) {
+    return null;
+  }
+  return children;
+};
+
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
@@ -337,6 +343,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <DialogTitle>Gestionar Etiquetas</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                      <ClientOnly>
                        <DragDropContext onDragEnd={onDragEnd}>
                         <Droppable droppableId="tags">
                           {(provided) => (
@@ -390,6 +397,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           )}
                         </Droppable>
                       </DragDropContext>
+                      </ClientOnly>
                       <Button variant="outline" className="w-full" onClick={handleAddNewTag}>
                         <Plus className="mr-2 h-4 w-4" />
                         Añadir nueva etiqueta
