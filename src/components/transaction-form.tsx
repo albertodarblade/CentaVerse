@@ -54,7 +54,7 @@ const iconList = [
 ];
 
 const formSchema = z.object({
-  amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }),
+  amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }).int({ message: "La cantidad no puede incluir céntimos." }),
   description: z.string().min(2, {
     message: "La descripción debe tener al menos 2 caracteres.",
   }),
@@ -182,7 +182,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     const value = e.target.value;
     const digitsOnly = value.replace(/[^0-9]/g, '');
     if (digitsOnly) {
-      const numberValue = parseInt(digitsOnly, 10) / 100;
+      const numberValue = parseInt(digitsOnly, 10);
       field.onChange(numberValue);
     } else {
       field.onChange(0);
@@ -209,9 +209,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                   <FormControl>
                     <Input
                       type="text"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      value={new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(field.value || 0)}
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={new Intl.NumberFormat('es-BO').format(field.value || 0)}
                       onChange={(e) => handleAmountChange(e, field)}
                     />
                   </FormControl>
