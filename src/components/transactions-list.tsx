@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Transaction } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import React, { useState, useEffect } from "react";
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -26,14 +27,47 @@ const cardColors = [
   "bg-yellow-100/60 border-yellow-300/80",
 ];
 
-export default function TransactionsList({ transactions, tagIcons, onTransactionClick }: TransactionsListProps) {
+const TransactionCard = ({ transaction, color, onClick, tagIcons }: { transaction: Transaction, color: string, onClick: (transaction: Transaction) => void, tagIcons: { [key: string]: React.ReactNode }}) => {
+  const [formattedDate, setFormattedDate] = useState("");
+
+  useEffect(() => {
+    setFormattedDate(formatDistanceToNow(new Date(transaction.date), { addSuffix: true, locale: es }));
+  }, [transaction.date]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount);
   };
 
-  const formatDate = (date: Date) => {
-    return formatDistanceToNow(date, { addSuffix: true, locale: es });
-  };
+  return (
+    <Card
+      className={`cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${color}`}
+      onClick={() => onClick(transaction)}
+    >
+      <CardHeader>
+        <CardTitle className="text-lg font-bold">{transaction.description}</CardTitle>
+        <CardDescription className="text-xs text-muted-foreground h-4">
+          {formattedDate}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="text-2xl font-bold text-foreground">
+          {formatCurrency(transaction.amount)}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {transaction.tags.map(tag => (
+            <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+               {tagIcons[tag] || null}
+               <span>{tag}</span>
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+}
+
+export default function TransactionsList({ transactions, tagIcons, onTransactionClick }: TransactionsListProps) {
   
   if (transactions.length === 0) {
     return (
@@ -47,31 +81,13 @@ export default function TransactionsList({ transactions, tagIcons, onTransaction
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {transactions.map((transaction, index) => (
-        <Card 
+        <TransactionCard 
           key={transaction.id} 
-          className={`cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${cardColors[index % cardColors.length]}`}
-          onClick={() => onTransactionClick(transaction)}
-        >
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">{transaction.description}</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">
-              {formatDate(transaction.date)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-2xl font-bold text-foreground">
-              {formatCurrency(transaction.amount)}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {transaction.tags.map(tag => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                   {tagIcons[tag] || null}
-                   <span>{tag}</span>
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          transaction={transaction}
+          color={cardColors[index % cardColors.length]}
+          onClick={onTransactionClick}
+          tagIcons={tagIcons}
+        />
       ))}
     </div>
   );
