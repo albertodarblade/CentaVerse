@@ -91,11 +91,17 @@ export async function addTag(tag: Omit<Tag, 'id'>) {
     }
 }
 
-export async function updateTag(tag: Tag, oldName: string) {
+export async function updateTag(tag: Tag) {
     try {
         const db = await getDb();
         const { id, _id, ...tagData } = tag;
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+
+        const oldTag = await db.collection('tags').findOne({ _id: objectId });
+        if (!oldTag) {
+            throw new Error("Tag not found.");
+        }
+        const oldName = oldTag.name;
 
         // Update the tag document itself
         await db.collection('tags').updateOne(

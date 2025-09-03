@@ -74,7 +74,7 @@ interface TransactionFormProps {
   transactionToEdit: Transaction | null;
   tags: FormTag[];
   onAddTag: (tagName: string, iconName: string) => Promise<void>;
-  onUpdateTag: (tag: Tag, oldName: string) => Promise<void>;
+  onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
 }
@@ -140,7 +140,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             const updatedTransaction = { ...transactionToEdit, ...debouncedValues };
             await onUpdateTransaction(updatedTransaction, false);
             setInitialValues(updatedTransaction); // Update initial values to current
-            form.reset(updatedTransaction, { keepValues: true, keepDirty: false }); // Resets dirty state but keeps values
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
           } else {
@@ -180,20 +179,18 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const handleUpdateTagName = (tagId: string, newName: string) => {
     const tagToUpdate = editingTags.find(t => t.id === tagId);
     if (tagToUpdate && tagToUpdate.name !== newName) {
-      const oldName = tagToUpdate.name;
       const updatedTag = { ...tagToUpdate, name: newName };
       setEditingTags(editingTags.map(t => t.id === tagId ? updatedTag : t));
-      onUpdateTag(updatedTag, oldName);
+      onUpdateTag(updatedTag);
     }
   };
   
   const handleUpdateTagIcon = (tagId: string, iconName: string) => {
     const tagToUpdate = editingTags.find(t => t.id === tagId);
     if (tagToUpdate) {
-      const oldName = tagToUpdate.name;
       const updatedTag = { ...tagToUpdate, icon: iconName };
       setEditingTags(editingTags.map(t => t.id === tagId ? { ...updatedTag, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t));
-      onUpdateTag(updatedTag, oldName);
+      onUpdateTag(updatedTag);
     }
   };
 
