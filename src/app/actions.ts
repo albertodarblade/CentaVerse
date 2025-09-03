@@ -105,9 +105,10 @@ export async function updateTag(tag: Tag, oldName: string) {
 
         // If the name changed, update all transactions that use this tag
         if (oldName !== tag.name) {
-            await db.collection('transactions').updateMany(
+             await db.collection('transactions').updateMany(
                 { tags: oldName },
-                { $set: { "tags.$": tag.name } }
+                { $set: { "tags.$[elem]": tag.name } },
+                { arrayFilters: [{ "elem": oldName }] }
             );
         }
 
