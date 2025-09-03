@@ -12,6 +12,7 @@ import { format, isSameDay, isToday, isYesterday } from 'date-fns';
 import { es } from "date-fns/locale";
 import React, { useState, useEffect } from "react";
 import { formatTransactionDate } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge";
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -39,14 +40,23 @@ const TransactionListItem = ({ transaction, onClick, tagIcons }: { transaction: 
       className="flex items-center p-4 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
       onClick={() => onClick(transaction)}
     >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted mr-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted mr-4 shrink-0">
             {icon}
         </div>
-        <div className="flex-1">
+        <div className="flex-1 space-y-1">
             <p className="font-semibold">{transaction.description}</p>
+            <div className="flex flex-wrap gap-1">
+                {transaction.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="font-normal">
+                        {tag}
+                    </Badge>
+                ))}
+            </div>
+        </div>
+        <div className="text-right ml-4">
+            <p className="font-bold text-lg">{formattedAmount}</p>
             <p className="text-sm text-muted-foreground">{formattedTime}</p>
         </div>
-        <p className="font-bold text-lg">{formattedAmount}</p>
     </div>
   );
 }
