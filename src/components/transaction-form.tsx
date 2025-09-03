@@ -364,7 +364,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             )}
           />
           <div className="flex items-center justify-between gap-2">
-            {transactionToedit ? (
+            {transactionToEdit ? (
                <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
