@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -95,12 +95,17 @@ const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName:
 
 const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onSaveChanges, onOpenChange }: {
   tags: FormTag[];
-  onAddTag: () => Promise<void>;
+  onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
   onDeleteTag: (tag: Tag) => void;
   onSaveChanges: (tags: FormTag[]) => void;
   onOpenChange: (open: boolean) => void;
 }) => {
   const [editingTags, setEditingTags] = useState<FormTag[]>([]);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [tagToEditCache, setTagToEditCache] = useState<FormTag | null>(null);
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagIcon, setNewTagIcon] = useState('MoreHorizontal');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -110,17 +115,36 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onS
     })));
   }, [initialTags]);
 
-  const handleUpdateTagName = (tagId: string, newName: string) => {
-    setEditingTags(currentTags => currentTags.map(t => t.id === tagId ? { ...t, name: newName } : t));
+  const handleStartEdit = (tag: FormTag) => {
+    setEditingTagId(tag.id);
+    setTagToEditCache(tag);
+  };
+  
+  const handleCancelEdit = () => {
+    if (tagToEditCache) {
+        setEditingTags(currentTags => currentTags.map(t => t.id === tagToEditCache.id ? tagToEditCache : t));
+    }
+    setEditingTagId(null);
+    setTagToEditCache(null);
   };
 
-  const handleUpdateTagIcon = (tagToUpdate: FormTag, iconName: string) => {
-    const updatedTag = {
-        ...tagToUpdate,
-        icon: iconName,
-        iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" />
-    };
-    setEditingTags(currentTags => currentTags.map(t => t.id === tagToUpdate.id ? updatedTag : t));
+  const handleSaveEdit = () => {
+    setEditingTagId(null);
+    setTagToEditCache(null);
+  }
+
+  const handleUpdateTag = (tagId: string, updates: Partial<FormTag>) => {
+    setEditingTags(currentTags => currentTags.map(t => {
+      if (t.id === tagId) {
+        const newIcon = updates.icon || t.icon;
+        return { 
+          ...t, 
+          ...updates,
+          iconNode: iconList.find(i => i.name === newIcon)?.component || <MoreHorizontal className="h-4 w-4" />
+        };
+      }
+      return t;
+    }));
   };
   
   const handleReorder = (tagId: string, direction: 'up' | 'down') => {
@@ -133,6 +157,14 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onS
     newTags.splice(newIndex, 0, reorderedItem);
     setEditingTags(newTags);
   };
+  
+  const handleCreateTag = async () => {
+    if (newTagName.trim() === '') return;
+    await onAddTag({ name: newTagName, icon: newTagIcon });
+    setNewTagName('');
+    setNewTagIcon('MoreHorizontal');
+    setIsAddingTag(false);
+  }
 
   const handleSaveChangesClick = () => {
     onSaveChanges(editingTags);
@@ -153,50 +185,90 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onS
           <div className="space-y-2">
             {editingTags.map((tag, index) => (
               <div key={tag.id} className="flex items-center gap-2">
-                <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)} onOpenChange={setIsIconPickerOpen}>
-                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                        {tag.iconNode}
+                {editingTagId === tag.id ? (
+                   <>
+                    <IconPicker onSelect={(iconName) => handleUpdateTag(tag.id, { icon: iconName })} onOpenChange={setIsIconPickerOpen}>
+                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+                            {tag.iconNode}
+                        </Button>
+                    </IconPicker>
+                    <Input value={tag.name} onChange={(e) => handleUpdateTag(tag.id, { name: e.target.value })} className="h-10" />
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleSaveEdit}><Check className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleCancelEdit}><X className="h-5 w-5" /></Button>
+                   </>
+                ) : (
+                  <>
+                    <div className="h-10 w-10 shrink-0 flex items-center justify-center border rounded-md">
+                      {tag.iconNode}
+                    </div>
+                    <span className="flex-1 px-3 py-2 h-10 flex items-center">{tag.name}</span>
+                    <div className="flex flex-col">
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5"
+                        onClick={() => handleReorder(tag.id, 'up')}
+                        disabled={index === 0}
+                      ><ArrowUp className="h-4 w-4" /></Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-5 w-5"
+                        onClick={() => handleReorder(tag.id, 'down')}
+                        disabled={index === editingTags.length - 1}
+                      ><ArrowDown className="h-4 w-4" /></Button>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => handleStartEdit(tag)}>
+                      <Pencil className="h-5 w-5" />
                     </Button>
-                </IconPicker>
-                <Input value={tag.name} onChange={(e) => handleUpdateTagName(tag.id, e.target.value)} className="h-10" />
-                <div className="flex flex-col">
-                  <Button
-                    variant="ghost" size="icon" className="h-5 w-5"
-                    onClick={() => handleReorder(tag.id, 'up')}
-                    disabled={index === 0}
-                  ><ArrowUp className="h-4 w-4" /></Button>
-                  <Button
-                    variant="ghost" size="icon" className="h-5 w-5"
-                    onClick={() => handleReorder(tag.id, 'down')}
-                    disabled={index === editingTags.length - 1}
-                  ><ArrowDown className="h-4 w-4" /></Button>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
               </div>
             ))}
           </div>
-          <Button variant="outline" className="w-full" onClick={onAddTag}>
-            <Plus className="mr-2 h-4 w-4" />
-            Añadir nueva etiqueta
-          </Button>
+          {isAddingTag ? (
+            <div className="p-4 border rounded-lg space-y-4">
+              <h4 className="font-medium">Nueva Etiqueta</h4>
+              <div className="flex items-center gap-2">
+                  <IconPicker onSelect={setNewTagIcon} onOpenChange={setIsIconPickerOpen}>
+                      <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+                          {iconList.find(i => i.name === newTagIcon)?.component || <MoreHorizontal className="h-4 w-4" />}
+                      </Button>
+                  </IconPicker>
+                  <Input 
+                      placeholder="Nombre de la etiqueta" 
+                      value={newTagName} 
+                      onChange={(e) => setNewTagName(e.target.value)} 
+                      className="h-10" 
+                  />
+              </div>
+              <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setIsAddingTag(false)}>Cancelar</Button>
+                  <Button onClick={handleCreateTag}>Crear</Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="outline" className="w-full" onClick={() => setIsAddingTag(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Añadir nueva etiqueta
+            </Button>
+          )}
+
         </div>
         <DialogFooter>
           <Button onClick={handleSaveChangesClick}>Guardar Cambios</Button>
@@ -211,7 +283,7 @@ interface TransactionFormProps {
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: FormTag[];
-  onAddTag: (tagName: string, iconName: string) => Promise<void>;
+  onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
   onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
@@ -295,10 +367,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }
 
-  const handleAddNewTag = async () => {
-    const newTagName = 'Nueva etiqueta';
-    const newTagIcon = 'MoreHorizontal';
-    await onAddTag(newTagName, newTagIcon);
+  const handleAddNewTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
+    await onAddTag(tag);
   };
   
   const handleSaveChangesForTags = (updatedTags: FormTag[]) => {
