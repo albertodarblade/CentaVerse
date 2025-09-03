@@ -341,9 +341,10 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
                                       className="flex items-center gap-2"
                                     >
-                                      <div {...provided.dragHandleProps} className="cursor-grab">
+                                      <div className="cursor-grab">
                                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                                       </div>
                                       <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
@@ -435,7 +436,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                       <AlertDialogDescription>
                         Esta acción no se puede deshacer. Esto eliminará permanentemente la transacción.
-                      </Aler tDialogDescription>
+                      </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
