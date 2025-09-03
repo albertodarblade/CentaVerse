@@ -501,10 +501,13 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-            ): <div/>}
-            <Button type="submit" className="w-full" disabled={isSubmitting || autosaveStatus === 'saving'}>
-              {isSubmitting ? 'Guardando...' : (transactionToEdit ? 'Guardar Cambios' : 'Añadir Gasto')}
-            </Button>
+            ): (
+              <Button type="submit" className="w-full" disabled={isSubmitting || autosaveStatus === 'saving'}>
+                {isSubmitting ? 'Guardando...' : 'Añadir Gasto'}
+              </Button>
+            )}
+            
+            {!transactionToEdit && <div/>}
           </div>
            <AutosaveStatus />
         </form>
