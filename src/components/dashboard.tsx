@@ -66,10 +66,6 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
     try {
       await addTransaction(transaction);
-      toast({
-        title: "Transacción añadida",
-        description: `Tu gasto de Bs. ${transaction.amount} ha sido registrado.`,
-      });
       setIsFormOpen(false);
     } catch (error) {
        toast({
@@ -84,10 +80,6 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
     try {
       await updateTransaction(transaction);
       if (closeModal) {
-          toast({
-            title: "Transacción actualizada",
-            description: `Tu gasto de Bs. ${transaction.amount} ha sido actualizado.`,
-          });
           setIsFormOpen(false);
           setEditingTransaction(null);
       }
@@ -103,10 +95,6 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   const handleDeleteTransaction = async (transaction: Transaction) => {
     try {
       await deleteTransaction(transaction);
-      toast({
-        title: "Transacción eliminada",
-        variant: "destructive",
-      });
       setIsFormOpen(false);
       setEditingTransaction(null);
     } catch (error) {
@@ -136,9 +124,6 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   const handleAddTag = async (tagName: string, iconName: string) => {
     try {
       await addTag({ name: tagName, icon: iconName });
-      toast({
-        title: "Etiqueta añadida",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -164,10 +149,6 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   const handleDeleteTag = async (tag: Tag) => {
     try {
         await deleteTag(tag);
-        toast({
-            title: "Etiqueta eliminada",
-            variant: "destructive",
-        });
     } catch (error) {
         toast({
             title: "Error",
