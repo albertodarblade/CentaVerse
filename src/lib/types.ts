@@ -10,6 +10,7 @@ export type Transaction = {
 
 export type Tag = {
   id: string;
+  _id?: string;
   name: string;
-  icon: React.ReactNode;
+  icon: string;
 }

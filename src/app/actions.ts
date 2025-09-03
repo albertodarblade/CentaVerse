@@ -2,7 +2,7 @@
 
 import { getSpendingInsights, SpendingInsightsInput } from '@/ai/flows/spending-insights-from-summary';
 import { revalidatePath } from 'next/cache';
-import { Transaction } from '@/lib/types';
+import { Tag, Transaction } from '@/lib/types';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
@@ -63,5 +63,58 @@ export async function deleteTransaction(transaction: Transaction) {
     } catch (error) {
         console.error("Error deleting transaction:", error);
         throw new Error("Failed to delete transaction.");
+    }
+}
+
+export async function getTags(): Promise<Tag[]> {
+    try {
+        const db = await getDb();
+        const tags = await db.collection('tags').find({}).toArray();
+        return JSON.parse(JSON.stringify(tags)).map((t: any) => ({
+            ...t,
+            id: t._id.toString(),
+        }));
+    } catch (error) {
+        console.error("Error fetching tags:", error);
+        return [];
+    }
+}
+
+export async function addTag(tag: Omit<Tag, 'id'>) {
+    try {
+        const db = await getDb();
+        await db.collection('tags').insertOne(tag);
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error adding tag:", error);
+        throw new Error("Failed to add tag.");
+    }
+}
+
+export async function updateTag(tag: Tag) {
+    try {
+        const db = await getDb();
+        const { id, _id, ...tagData } = tag;
+        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
+        await db.collection('tags').updateOne(
+            { _id: objectId },
+            { $set: tagData }
+        );
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error updating tag:", error);
+        throw new Error("Failed to update tag.");
+    }
+}
+
+export async function deleteTag(tagId: string) {
+    try {
+        const db = await getDb();
+        const objectId = new ObjectId(tagId);
+        await db.collection('tags').deleteOne({ _id: objectId });
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error deleting tag:", error);
+        throw new Error("Failed to delete tag.");
     }
 }

@@ -1,11 +1,10 @@
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import type { Tag } from "@/lib/types";
 
 interface HeaderProps {
   onSearch: (term: string) => void;
-  tags: Tag[];
+  tags: { id: string; name: string; iconNode: React.ReactNode }[];
   activeTag: string;
   onSetActiveTag: (tagId: string) => void;
 }
@@ -36,7 +35,7 @@ export default function Header({ onSearch, tags, activeTag, onSetActiveTag }: He
             className="rounded-full flex-shrink-0"
             onClick={() => onSetActiveTag(tag.name)}
           >
-            {tag.icon}
+            {tag.iconNode}
             {tag.name}
           </Button>
         ))}

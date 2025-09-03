@@ -6,28 +6,47 @@ import Header from './header';
 import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
-import { addTransaction, updateTransaction, deleteTransaction } from '@/app/actions';
-import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus } from "lucide-react";
+import { addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag } from '@/app/actions';
+import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
-const initialTags: Tag[] = [
-    { id: "trabajo", name: "Trabajo", icon: <Briefcase className="h-4 w-4" /> },
-    { id: "personal", name: "Personal", icon: <User className="h-4 w-4" /> },
-    { id: "ideas", name: "Ideas", icon: <Lightbulb className="h-4 w-4" /> },
-    { id: "urgente", name: "Urgente", icon: <AlertTriangle className="h-4 w-4" /> },
-    { id: "comida", name: "Comida", icon: <Utensils className="h-4 w-4" /> },
-    { id: "transporte", name: "Transporte", icon: <Car className="h-4 w-4" /> },
-    { id: "vivienda", name: "Vivienda", icon: <Home className="h-4 w-4" /> },
-    { id: "entretenimiento", name: "Entretenimiento", icon: <Clapperboard className="h-4 w-4" /> },
-    { id: "compras", name: "Compras", icon: <ShoppingCart className="h-4 w-4" /> },
-    { id: "salud", name: "Salud", icon: <HeartPulse className="h-4 w-4" /> },
-    { id: "otro", name: "Otro", icon: <MoreHorizontal className="h-4 w-4" /> },
-];
+const iconMap: { [key: string]: React.ReactNode } = {
+  Briefcase: <Briefcase className="h-4 w-4" />,
+  User: <User className="h-4 w-4" />,
+  Lightbulb: <Lightbulb className="h-4 w-4" />,
+  AlertTriangle: <AlertTriangle className="h-4 w-4" />,
+  Utensils: <Utensils className="h-4 w-4" />,
+  Car: <Car className="h-4 w-4" />,
+  Home: <Home className="h-4 w-4" />,
+  Clapperboard: <Clapperboard className="h-4 w-4" />,
+  ShoppingCart: <ShoppingCart className="h-4 w-4" />,
+  HeartPulse: <HeartPulse className="h-4 w-4" />,
+  Plane: <Plane className="h-4 w-4" />,
+  Gift: <Gift className="h-4 w-4" />,
+  BookOpen: <BookOpen className="h-4 w-4" />,
+  PawPrint: <PawPrint className="h-4 w-4" />,
+  Gamepad2: <Gamepad2 className="h-4 w-4" />,
+  Music: <Music className="h-4 w-4" />,
+  Shirt: <Shirt className="h-4 w-4" />,
+  Dumbbell: <Dumbbell className="h-4 w-4" />,
+  Coffee: <Coffee className="h-4 w-4" />,
+  Phone: <Phone className="h-4 w-4" />,
+  Mic: <Mic className="h-4 w-4" />,
+  Film: <Film className="h-4 w-4" />,
+  School: <School className="h-4 w-4" />,
+  Banknote: <Banknote className="h-4 w-4" />,
+  MoreHorizontal: <MoreHorizontal className="h-4 w-4" />,
+};
 
-export default function Dashboard({ initialTransactions }: { initialTransactions: Transaction[] }) {
+interface DashboardProps {
+  initialTransactions: Transaction[];
+  initialTags: Tag[];
+}
+
+export default function Dashboard({ initialTransactions, initialTags }: DashboardProps) {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -39,6 +58,10 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
   useEffect(() => {
     setTransactions(initialTransactions);
   }, [initialTransactions]);
+
+  useEffect(() => {
+    setTags(initialTags);
+  }, [initialTags]);
 
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
     try {
@@ -110,31 +133,48 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
     setEditingTransaction(null);
   }
 
-  const addTag = (tagName: string, icon: React.ReactNode) => {
-    const newTag: Tag = {
-      id: tagName.toLowerCase().replace(/\s/g, '-'),
-      name: tagName,
-      icon: icon
-    };
-    setTags(prev => [...prev, newTag]);
-  }
-
-  const updateTag = (tagId: string, newName: string, newIcon: React.ReactNode) => {
-    const oldName = tags.find(t => t.id === tagId)?.name;
-    setTags(prev => prev.map(tag => tag.id === tagId ? { ...tag, name: newName, icon: newIcon } : tag));
-    setTransactions(prev => prev.map(t => ({
-      ...t,
-      tags: t.tags.map(tag => tag === oldName ? newName : tag)
-    })));
+  const handleAddTag = async (tagName: string, iconName: string) => {
+    try {
+      await addTag({ name: tagName, icon: iconName });
+      toast({
+        title: "Etiqueta añadida",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo añadir la etiqueta.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteTag = (tagId: string) => {
-    const tagName = tags.find(t => t.id === tagId)?.name;
-    setTags(prev => prev.filter(tag => tag.id !== tagId));
-    setTransactions(prev => prev.map(t => ({
-      ...t,
-      tags: t.tags.filter(tag => tag !== tagName)
-    })));
+  const handleUpdateTag = async (tag: Tag) => {
+    try {
+        await updateTag(tag);
+        // No toast for this to avoid being noisy during edits
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "No se pudo actualizar la etiqueta.",
+            variant: "destructive"
+        });
+    }
+  };
+
+  const handleDeleteTag = async (tagId: string) => {
+    try {
+        await deleteTag(tagId);
+        toast({
+            title: "Etiqueta eliminada",
+            variant: "destructive",
+        });
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "No se pudo eliminar la etiqueta.",
+            variant: "destructive"
+        });
+    }
   };
   
   const filteredTransactions = useMemo(() => {
@@ -147,16 +187,20 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
 
   const tagIcons = useMemo(() => {
     return tags.reduce((acc, tag) => {
-      acc[tag.name] = tag.icon;
+      acc[tag.name] = iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />;
       return acc;
     }, {} as { [key: string]: React.ReactNode });
+  }, [tags]);
+
+  const tagsWithIcons = useMemo(() => {
+    return tags.map(tag => ({...tag, iconNode: iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />}));
   }, [tags]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <Header 
         onSearch={setSearchTerm} 
-        tags={tags} 
+        tags={tagsWithIcons} 
         activeTag={activeTag} 
         onSetActiveTag={setActiveTag}
       />
@@ -192,10 +236,10 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
             onUpdateTransaction={handleUpdateTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             transactionToEdit={editingTransaction}
-            tags={tags}
-            onAddTag={addTag}
-            onUpdateTag={updateTag}
-            onDeleteTag={deleteTag}
+            tags={tagsWithIcons}
+            onAddTag={handleAddTag}
+            onUpdateTag={handleUpdateTag}
+            onDeleteTag={handleDeleteTag}
             onClose={handleCloseForm}
           />
         </DialogContent>

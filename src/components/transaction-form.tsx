@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { Tag, Transaction } from "@/lib/types";
+import type { Transaction } from "@/lib/types";
 import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, GripVertical, Plus, Loader2, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -63,22 +63,29 @@ const formSchema = z.object({
   }),
 });
 
+type FormTag = {
+  id: string;
+  _id?: string;
+  name: string;
+  icon: string;
+  iconNode: React.ReactNode;
+};
+
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction, closeModal?: boolean) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
-  tags: Tag[];
-  onAddTag: (tagName: string, icon: React.ReactNode) => void;
-  onUpdateTag: (tagId: string, newName: string, newIcon: React.ReactNode) => void;
-  onDeleteTag: (tagId: string) => void;
+  tags: FormTag[];
+  onAddTag: (tagName: string, iconName: string) => Promise<void>;
+  onUpdateTag: (tag: {id: string; _id?:string; name: string; icon: string}) => Promise<void>;
+  onDeleteTag: (tagId: string) => Promise<void>;
   onClose: () => void;
 }
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingTags, setEditingTags] = useState<Tag[]>([]);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -107,7 +114,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues }, false);
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
-            // We only want to reset the 'dirty' state, not the values
             form.reset(debouncedValues, { keepValues: true, keepDirty: false }); 
           } else {
             setAutosaveStatus('idle');
@@ -134,22 +140,15 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [transactionToEdit, form.reset]);
 
-  useEffect(() => {
-    if (isManageTagsOpen) {
-      setEditingTags([...tags]);
-    }
-  }, [isManageTagsOpen, tags]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (transactionToEdit) {
-      onClose();
-      return;
+      await onUpdateTransaction({ ...transactionToEdit, ...values }, true);
+    } else {
+      setIsSubmitting(true);
+      await onAddTransaction(values);
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(true);
-    await onAddTransaction(values);
-    setIsSubmitting(false);
-    onClose();
   }
 
   const handleDelete = async () => {
@@ -160,38 +159,31 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }
   
-  const handleAddNewTag = () => {
-    const newTag: Tag = {
-      id: `new-${Date.now()}`,
-      name: 'Nueva etiqueta',
-      icon: iconList[iconList.length - 1].component,
-    };
-    onAddTag(newTag.name, newTag.icon);
-    setEditingTags(prev => [...prev, newTag]);
+  const handleAddNewTag = async () => {
+    const newTagName = 'Nueva etiqueta';
+    const newTagIcon = 'MoreHorizontal';
+    await onAddTag(newTagName, newTagIcon);
   };
   
   const handleUpdateTagName = (tagId: string, newName: string) => {
-    const tagToUpdate = editingTags.find(t => t.id === tagId);
+    const tagToUpdate = tags.find(t => t.id === tagId);
     if (tagToUpdate) {
-      onUpdateTag(tagId, newName, tagToUpdate.icon);
-      setEditingTags(prev => prev.map(t => t.id === tagId ? { ...t, name: newName } : t));
+      onUpdateTag({ ...tagToUpdate, name: newName });
     }
   };
   
-  const handleUpdateTagIcon = (tagId: string, newIcon: React.ReactNode) => {
-    const tagToUpdate = editingTags.find(t => t.id === tagId);
+  const handleUpdateTagIcon = (tagId: string, iconName: string) => {
+    const tagToUpdate = tags.find(t => t.id === tagId);
     if (tagToUpdate) {
-      onUpdateTag(tagId, tagToUpdate.name, newIcon);
-      setEditingTags(prev => prev.map(t => t.id === tagId ? { ...t, icon: newIcon } : t));
+      onUpdateTag({ ...tagToUpdate, icon: iconName });
     }
   };
 
   const handleDeleteTag = (tagId: string) => {
     onDeleteTag(tagId);
-    setEditingTags(prev => prev.filter(t => t.id !== tagId));
   }
 
-  const IconPicker = ({ onSelect, children }: { onSelect: (icon: React.ReactNode) => void, children: React.ReactNode }) => (
+  const IconPicker = ({ onSelect, children }: { onSelect: (iconName: string) => void, children: React.ReactNode }) => (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-auto p-2 bg-background border-border">
@@ -201,7 +193,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               key={icon.name}
               variant="ghost"
               size="icon"
-              onClick={() => onSelect(icon.component)}
+              onClick={() => onSelect(icon.name)}
               className="h-8 w-8"
             >
               {icon.component}
@@ -242,7 +234,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         </div>
       );
     }
-    return <div className="h-6" />; // Placeholder to prevent layout shift
+    return <div className="h-6" />;
   }
 
   return (
@@ -308,17 +300,17 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        {editingTags.map((tag) => (
+                        {tags.map((tag) => (
                           <div key={tag.id} className="flex items-center gap-2">
                             <GripVertical className="h-5 w-5 text-muted-foreground" />
-                            <IconPicker onSelect={(icon) => handleUpdateTagIcon(tag.id, icon)}>
+                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag.id, iconName)}>
                               <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                                {tag.icon}
+                                {tag.iconNode}
                               </Button>
                             </IconPicker>
                             <Input
-                              value={tag.name}
-                              onChange={(e) => handleUpdateTagName(tag.id, e.target.value)}
+                              defaultValue={tag.name}
+                              onBlur={(e) => handleUpdateTagName(tag.id, e.target.value)}
                               className="h-10"
                             />
                             <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
@@ -353,7 +345,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           }}
                           className="rounded-full"
                         >
-                          {tag.icon}
+                          {tag.iconNode}
                           {tag.name}
                         </Button>
                       );
