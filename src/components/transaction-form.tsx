@@ -130,65 +130,61 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FormLabel>Etiquetas</FormLabel>
-                        <Pencil className="h-4 w-4 text-muted-foreground" />
+                    <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+                      <div className="mb-4 flex items-center justify-between">
+                          <DialogTrigger asChild>
+                            <div className="flex cursor-pointer items-center gap-2 group">
+                              <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
+                              <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                            </div>
+                          </DialogTrigger>
                       </div>
-                      <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Gestionar Etiquetas
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Gestionar Etiquetas</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="flex gap-2">
-                              <Input 
-                                placeholder="Nueva etiqueta" 
-                                value={newTagName}
-                                onChange={(e) => setNewTagName(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                              />
-                              <Button onClick={handleAddTag}>Añadir</Button>
-                            </div>
-                            <div className="space-y-2">
-                              {tags.map(tag => (
-                                <div key={tag.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
-                                  {editingTag?.id === tag.id ? (
-                                    <Input
-                                      value={editingTag.name}
-                                      onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
-                                      onKeyDown={(e) => e.key === 'Enter' && handleUpdateTag()}
-                                      onBlur={handleUpdateTag}
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    <span className="flex items-center gap-2">
-                                      {tag.icon}
-                                      {tag.name}
-                                    </span>
-                                  )}
-
-                                  <div className="flex items-center gap-2">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingTag({ id: tag.id, name: tag.name })}>
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Gestionar Etiquetas</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder="Nueva etiqueta" 
+                              value={newTagName}
+                              onChange={(e) => setNewTagName(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                            />
+                            <Button onClick={handleAddTag}>Añadir</Button>
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+                          <div className="space-y-2">
+                            {tags.map(tag => (
+                              <div key={tag.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
+                                {editingTag?.id === tag.id ? (
+                                  <Input
+                                    value={editingTag.name}
+                                    onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateTag()}
+                                    onBlur={handleUpdateTag}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span className="flex items-center gap-2">
+                                    {tag.icon}
+                                    {tag.name}
+                                  </span>
+                                )}
+
+                                <div className="flex items-center gap-2">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingTag({ id: tag.id, name: tag.name })}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     <FormControl>
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag) => {
