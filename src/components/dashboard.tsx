@@ -60,7 +60,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   }, [initialTransactions]);
 
   useEffect(() => {
-    setTags(initialTags);
+    setTags(initialTags.sort((a, b) => a.order - b.order));
   }, [initialTags]);
 
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {

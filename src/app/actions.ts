@@ -69,7 +69,7 @@ export async function deleteTransaction(transaction: Transaction) {
 export async function getTags(): Promise<Tag[]> {
     try {
         const db = await getDb();
-        const tags = await db.collection('tags').find({}).toArray();
+        const tags = await db.collection('tags').find({}).sort({ order: 1 }).toArray();
         return JSON.parse(JSON.stringify(tags)).map((t: any) => ({
             ...t,
             id: t._id.toString(),
@@ -80,10 +80,12 @@ export async function getTags(): Promise<Tag[]> {
     }
 }
 
-export async function addTag(tag: Omit<Tag, 'id'>) {
+export async function addTag(tag: Omit<Tag, 'id' | 'order'> & {order?: number}) {
     try {
         const db = await getDb();
-        await db.collection('tags').insertOne(tag);
+        const count = await db.collection('tags').countDocuments();
+        const newTag = { ...tag, order: count };
+        await db.collection('tags').insertOne(newTag);
         revalidatePath('/');
     } catch (error) {
         console.error("Error adding tag:", error);
@@ -94,12 +96,9 @@ export async function addTag(tag: Omit<Tag, 'id'>) {
 export async function updateTag(tag: any) {
     try {
         const db = await getDb();
-        // The incoming tag object from the client might have extra fields like 'id' and 'iconNode'.
-        // We only need _id, name, and icon for the database.
-        const { _id, name, icon } = tag;
+        const { _id, id, iconNode, ...tagData } = tag;
         const objectId = new ObjectId(_id);
-        const tagData = { name, icon };
-
+        
         const oldTag = await db.collection('tags').findOne({ _id: objectId });
         if (!oldTag) {
             throw new Error("Tag not found.");
@@ -111,10 +110,10 @@ export async function updateTag(tag: any) {
             { $set: tagData }
         );
 
-        if (oldName !== name) {
+        if (oldName !== tagData.name) {
              await db.collection('transactions').updateMany(
                 { tags: oldName },
-                { $set: { "tags.$[elem]": name } },
+                { $set: { "tags.$[elem]": tagData.name } },
                 { arrayFilters: [{ "elem": oldName }] }
             );
         }
@@ -143,5 +142,24 @@ export async function deleteTag(tag: Tag) {
     } catch (error) {
         console.error("Error deleting tag:", error);
         throw new Error("Failed to delete tag.");
+    }
+}
+
+export async function updateTagOrder(tags: Tag[]) {
+    try {
+        const db = await getDb();
+        const bulkOps = tags.map((tag, index) => ({
+            updateOne: {
+                filter: { _id: new ObjectId(tag._id) },
+                update: { $set: { order: index } }
+            }
+        }));
+        if (bulkOps.length > 0) {
+            await db.collection('tags').bulkWrite(bulkOps);
+        }
+        revalidatePath('/');
+    } catch (error) {
+        console.error("Error updating tag order:", error);
+        throw new Error("Failed to update tag order.");
     }
 }
