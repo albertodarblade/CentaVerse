@@ -8,11 +8,11 @@ import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
 import MonthlySummary from './monthly-summary';
 import MonthlyIncome from './monthly-income';
+import BottomNavbar from './bottom-navbar';
 import { getTransactions, addTransaction, updateTransaction, deleteTransaction, addTag, updateTag, deleteTag, updateTagOrder, addIncome, updateIncome, deleteIncome } from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -59,6 +59,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
+  const [activeView, setActiveView] = useState('all-expenses');
   const { toast } = useToast();
   
   const [allTransactions, setAllTransactions] = useState<Transaction[]>(initialTransactions);
@@ -298,6 +299,56 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     setIsLoading(false);
   }, 500);
 
+  const renderContent = () => {
+    switch (activeView) {
+      case 'all-expenses':
+        return (
+          <TransactionsList 
+            transactions={unFilteredTransactions} 
+            tagMap={tagMap}
+            onTransactionClick={handleOpenFormForEdit}
+            loadMoreTransactions={loadMoreTransactions}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            isFiltered={false}
+          />
+        );
+      case 'monthly-income':
+        return (
+          <MonthlyIncome 
+            incomes={incomes}
+            onAddIncome={handleAddIncome}
+            onUpdateIncome={handleUpdateIncome}
+            onDeleteIncome={handleDeleteIncome}
+          />
+        );
+      case 'ai-insights':
+        return <AIInsights transactions={allTransactions} />;
+      case 'advanced':
+        return (
+          <div className="space-y-4">
+            <Header 
+              onSearch={setSearchTerm} 
+              tags={tagsWithIcons} 
+              activeTag={activeTag} 
+              onSetActiveTag={setActiveTag}
+            />
+            <TransactionsList 
+              transactions={filteredTransactions} 
+              tagMap={tagMap}
+              onTransactionClick={handleOpenFormForEdit}
+              loadMoreTransactions={() => {}}
+              hasMore={false}
+              isLoading={false}
+              isFiltered={true}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
@@ -305,64 +356,18 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
         <MonthlySummary transactions={allTransactions} />
       </div>
       
-      <main className="flex-1 p-4 md:p-6 space-y-6">
-        <Tabs defaultValue="all-expenses">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all-expenses">Todos los gastos</TabsTrigger>
-            <TabsTrigger value="monthly-income">Ingresos</TabsTrigger>
-            <TabsTrigger value="ai-insights">Perspectivas de la IA</TabsTrigger>
-            <TabsTrigger value="advanced">Avanzado</TabsTrigger>
-          </TabsList>
-          <TabsContent value="all-expenses">
-            <TransactionsList 
-              transactions={unFilteredTransactions} 
-              tagMap={tagMap}
-              onTransactionClick={handleOpenFormForEdit}
-              loadMoreTransactions={loadMoreTransactions}
-              hasMore={hasMore}
-              isLoading={isLoading}
-              isFiltered={false}
-            />
-          </TabsContent>
-           <TabsContent value="monthly-income">
-            <MonthlyIncome 
-              incomes={incomes}
-              onAddIncome={handleAddIncome}
-              onUpdateIncome={handleUpdateIncome}
-              onDeleteIncome={handleDeleteIncome}
-            />
-          </TabsContent>
-          <TabsContent value="ai-insights">
-            <AIInsights transactions={allTransactions} />
-          </TabsContent>
-          <TabsContent value="advanced">
-            <div className="space-y-4">
-              <Header 
-                onSearch={setSearchTerm} 
-                tags={tagsWithIcons} 
-                activeTag={activeTag} 
-                onSetActiveTag={setActiveTag}
-              />
-              <TransactionsList 
-                transactions={filteredTransactions} 
-                tagMap={tagMap}
-                onTransactionClick={handleOpenFormForEdit}
-                loadMoreTransactions={() => {}}
-                hasMore={false}
-                isLoading={false}
-                isFiltered={true}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
+      <main className="flex-1 p-4 md:p-6 space-y-6 mb-24">
+        {renderContent()}
       </main>
 
       <Dialog open={isFormOpen} onOpenChange={handleSetIsFormOpen}>
         <DialogTrigger asChild>
-          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
-            <Plus className="h-8 w-8" />
-            <span className="sr-only">Añadir Gasto</span>
-          </Button>
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+            <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
+              <Plus className="h-8 w-8" />
+              <span className="sr-only">Añadir Gasto</span>
+            </Button>
+          </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <TransactionForm 
@@ -379,6 +384,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
           />
         </DialogContent>
       </Dialog>
+      <BottomNavbar activeView={activeView} setActiveView={setActiveView} />
     </div>
   );
 }
