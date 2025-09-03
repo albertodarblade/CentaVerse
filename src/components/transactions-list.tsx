@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -13,6 +15,7 @@ import { es } from "date-fns/locale";
 interface TransactionsListProps {
   transactions: Transaction[];
   tagIcons: { [key: string]: React.ReactNode };
+  onTransactionClick: (transaction: Transaction) => void;
 }
 
 const cardColors = [
@@ -23,7 +26,7 @@ const cardColors = [
   "bg-yellow-100/60 border-yellow-300/80",
 ];
 
-export default function TransactionsList({ transactions, tagIcons }: TransactionsListProps) {
+export default function TransactionsList({ transactions, tagIcons, onTransactionClick }: TransactionsListProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
   };
@@ -44,7 +47,11 @@ export default function TransactionsList({ transactions, tagIcons }: Transaction
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {transactions.map((transaction, index) => (
-        <Card key={transaction.id} className={`${cardColors[index % cardColors.length]}`}>
+        <Card 
+          key={transaction.id} 
+          className={`cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${cardColors[index % cardColors.length]}`}
+          onClick={() => onTransactionClick(transaction)}
+        >
           <CardHeader>
             <CardTitle className="text-lg font-bold">{transaction.description}</CardTitle>
             <CardDescription className="text-xs text-muted-foreground">

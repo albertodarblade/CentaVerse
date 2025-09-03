@@ -13,17 +13,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Tag, Transaction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -65,13 +65,17 @@ const formSchema = z.object({
 
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => void;
+  onUpdateTransaction: (transaction: Transaction) => void;
+  onDeleteTransaction: (transactionId: string) => void;
+  transactionToEdit: Transaction | null;
   tags: Tag[];
   onAddTag: (tagName: string, icon: React.ReactNode) => void;
   onUpdateTag: (tagId: string, newName: string, newIcon: React.ReactNode) => void;
   onDeleteTag: (tagId: string) => void;
+  onClose: () => void;
 }
 
-export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUpdateTag, onDeleteTag }: TransactionFormProps) {
+export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const { toast } = useToast();
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
@@ -87,13 +91,48 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
     },
   });
 
+  useEffect(() => {
+    if (transactionToEdit) {
+      form.reset({
+        amount: transactionToEdit.amount,
+        description: transactionToEdit.description,
+        tags: transactionToEdit.tags,
+      });
+    } else {
+      form.reset({
+        amount: 0,
+        description: "",
+        tags: [],
+      });
+    }
+  }, [transactionToEdit, form]);
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onAddTransaction(values);
-    toast({
-      title: "Transacción añadida",
-      description: `Tu gasto de ${values.amount}€ ha sido registrado.`,
-    });
-    form.reset();
+    if (transactionToEdit) {
+      onUpdateTransaction({ ...transactionToEdit, ...values });
+      toast({
+        title: "Transacción actualizada",
+        description: `Tu gasto de ${values.amount}€ ha sido actualizado.`,
+      });
+    } else {
+      onAddTransaction(values);
+      toast({
+        title: "Transacción añadida",
+        description: `Tu gasto de ${values.amount}€ ha sido registrado.`,
+      });
+    }
+    onClose();
+  }
+
+  const handleDelete = () => {
+    if(transactionToEdit) {
+      onDeleteTransaction(transactionToEdit.id);
+      toast({
+        title: "Transacción eliminada",
+        variant: "destructive",
+      });
+      onClose();
+    }
   }
 
   const handleAddTag = () => {
@@ -142,9 +181,9 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="font-headline text-2xl">Añadir Nuevo Gasto</DialogTitle>
+        <DialogTitle className="font-headline text-2xl">{transactionToEdit ? 'Editar Gasto' : 'Añadir Nuevo Gasto'}</DialogTitle>
         <DialogDescription>
-          Rellena los detalles de tu nuevo gasto.
+          {transactionToEdit ? 'Modifica los detalles de tu gasto.' : 'Rellena los detalles de tu nuevo gasto.'}
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -206,7 +245,7 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
                         />
                         <Button onClick={handleAddTag}>Añadir</Button>
                       </div>
-                      <div className="space-y-2">
+                      <div className="max-h-64 space-y-2 overflow-y-auto">
                         {tags.map(tag => (
                           <div key={tag.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
                             {editingTag?.id === tag.id ? (
@@ -273,7 +312,31 @@ export default function TransactionForm({ onAddTransaction, tags, onAddTag, onUp
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">Añadir Gasto</Button>
+          <div className="flex justify-between gap-2">
+            {transactionToEdit && (
+               <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive" className="w-full">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente la transacción.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+            )}
+            <Button type="submit" className="w-full">{transactionToEdit ? 'Guardar Cambios' : 'Añadir Gasto'}</Button>
+          </div>
         </form>
       </Form>
     </>

@@ -41,10 +41,11 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
 
-  const addTransaction = (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
+  const handleAddTransaction = (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
     const newTransaction: Transaction = {
       ...transaction,
       id: new Date().getTime().toString(),
@@ -54,6 +55,28 @@ export default function Dashboard() {
     setTransactions((prev) => [newTransaction, ...prev]);
     setIsFormOpen(false);
   };
+  
+  const handleUpdateTransaction = (transaction: Transaction) => {
+    setTransactions(prev => prev.map(t => t.id === transaction.id ? transaction : t));
+    setIsFormOpen(false);
+    setEditingTransaction(null);
+  };
+
+  const handleDeleteTransaction = (transactionId: string) => {
+    setTransactions(prev => prev.filter(t => t.id !== transactionId));
+    setIsFormOpen(false);
+    setEditingTransaction(null);
+  }
+
+  const handleOpenForm = (transaction?: Transaction) => {
+    setEditingTransaction(transaction || null);
+    setIsFormOpen(true);
+  }
+  
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingTransaction(null);
+  }
 
   const addTag = (tagName: string, icon: React.ReactNode) => {
     const newTag: Tag = {
@@ -87,7 +110,7 @@ export default function Dashboard() {
       const searchTermMatch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
       const tagMatch = activeTag === 'all' || transaction.tags.includes(activeTag);
       return searchTermMatch && tagMatch;
-    });
+    }).sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [transactions, searchTerm, activeTag]);
 
   const tagIcons = useMemo(() => {
@@ -112,7 +135,11 @@ export default function Dashboard() {
             <TabsTrigger value="ai-insights">Perspectivas de la IA</TabsTrigger>
           </TabsList>
           <TabsContent value="all-expenses">
-            <TransactionsList transactions={filteredTransactions} tagIcons={tagIcons} />
+            <TransactionsList 
+              transactions={filteredTransactions} 
+              tagIcons={tagIcons}
+              onTransactionClick={handleOpenForm}
+            />
           </TabsContent>
           <TabsContent value="ai-insights">
             <AIInsights transactions={transactions} />
@@ -120,20 +147,24 @@ export default function Dashboard() {
         </Tabs>
       </main>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
         <DialogTrigger asChild>
-          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={() => setIsFormOpen(true)}>
+          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={() => handleOpenForm()}>
             <Plus className="h-8 w-8" />
             <span className="sr-only">Añadir Gasto</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <TransactionForm 
-            onAddTransaction={addTransaction} 
+            onAddTransaction={handleAddTransaction} 
+            onUpdateTransaction={handleUpdateTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+            transactionToEdit={editingTransaction}
             tags={tags}
             onAddTag={addTag}
             onUpdateTag={updateTag}
             onDeleteTag={deleteTag}
+            onClose={handleCloseForm}
           />
         </DialogContent>
       </Dialog>
