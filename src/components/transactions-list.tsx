@@ -16,11 +16,11 @@ interface TransactionsListProps {
 }
 
 const cardColors = [
-  "bg-pink-900/20 border-pink-700/40",
-  "bg-blue-900/20 border-blue-700/40",
-  "bg-green-900/20 border-green-700/40",
-  "bg-purple-900/20 border-purple-700/40",
-  "bg-yellow-900/20 border-yellow-700/40",
+  "bg-pink-100/60 border-pink-300/80",
+  "bg-blue-100/60 border-blue-300/80",
+  "bg-green-100/60 border-green-300/80",
+  "bg-purple-100/60 border-purple-300/80",
+  "bg-yellow-100/60 border-yellow-300/80",
 ];
 
 export default function TransactionsList({ transactions, tagIcons }: TransactionsListProps) {

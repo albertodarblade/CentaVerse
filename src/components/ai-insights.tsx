@@ -48,7 +48,7 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
     <Card className="bg-transparent border-0 shadow-none">
       <CardHeader className="px-2">
         <CardTitle className="font-headline flex items-center gap-2 text-xl">
-          <Sparkles className="h-5 w-5 text-primary" />
+          <Sparkles className="h-5 w-5 text-primary-foreground" />
           Asesor Financiero IA
         </CardTitle>
         <CardDescription>
@@ -56,7 +56,7 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 px-2">
-        <Button onClick={handleGenerateInsights} disabled={isLoading} variant="secondary">
+        <Button onClick={handleGenerateInsights} disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
