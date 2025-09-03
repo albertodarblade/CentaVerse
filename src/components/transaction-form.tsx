@@ -82,12 +82,7 @@ interface TransactionFormProps {
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingTags, setEditingTags] = useState<FormTag[]>(tags);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-
-  useEffect(() => {
-    setEditingTags(tags);
-  }, [tags]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -176,21 +171,15 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     await onAddTag(newTagName, newTagIcon);
   };
   
-  const handleUpdateTagName = (tagId: string, newName: string) => {
-    const tagToUpdate = editingTags.find(t => t.id === tagId);
-    if (tagToUpdate && tagToUpdate.name !== newName) {
-      const updatedTag = { ...tagToUpdate, name: newName };
-      setEditingTags(editingTags.map(t => t.id === tagId ? updatedTag : t));
-      onUpdateTag(updatedTag);
+  const handleUpdateTagName = (tag: FormTag, newName: string) => {
+    if (tag.name !== newName) {
+      onUpdateTag({ ...tag, name: newName });
     }
   };
   
-  const handleUpdateTagIcon = (tagId: string, iconName: string) => {
-    const tagToUpdate = editingTags.find(t => t.id === tagId);
-    if (tagToUpdate) {
-      const updatedTag = { ...tagToUpdate, icon: iconName };
-      setEditingTags(editingTags.map(t => t.id === tagId ? { ...updatedTag, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t));
-      onUpdateTag(updatedTag);
+  const handleUpdateTagIcon = (tag: FormTag, iconName: string) => {
+    if (tag.icon !== iconName) {
+      onUpdateTag({ ...tag, icon: iconName });
     }
   };
 
@@ -315,17 +304,17 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        {editingTags.map((tag) => (
+                        {tags.map((tag) => (
                           <div key={tag.id} className="flex items-center gap-2">
                             <GripVertical className="h-5 w-5 text-muted-foreground" />
-                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag.id, iconName)}>
+                            <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag, iconName)}>
                               <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
                                 {tag.iconNode}
                               </Button>
                             </IconPicker>
                             <Input
                               defaultValue={tag.name}
-                              onBlur={(e) => handleUpdateTagName(tag.id, e.target.value)}
+                              onBlur={(e) => handleUpdateTagName(tag, e.target.value)}
                               className="h-10"
                             />
                             <AlertDialog>

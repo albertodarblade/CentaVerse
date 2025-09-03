@@ -103,13 +103,11 @@ export async function updateTag(tag: Tag) {
         }
         const oldName = oldTag.name;
 
-        // Update the tag document itself
         await db.collection('tags').updateOne(
             { _id: objectId },
             { $set: tagData }
         );
 
-        // If the name changed, update all transactions that use this tag
         if (oldName !== tag.name) {
              await db.collection('transactions').updateMany(
                 { tags: oldName },
@@ -131,13 +129,11 @@ export async function deleteTag(tag: Tag) {
         const { id, _id } = tag;
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
         
-        // First, remove the tag from all transactions
         await db.collection('transactions').updateMany(
             { tags: tag.name },
             { $pull: { tags: tag.name } }
         );
 
-        // Then, delete the tag itself
         await db.collection('tags').deleteOne({ _id: objectId });
         
         revalidatePath('/');
