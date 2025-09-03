@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, BarChartBig, CreditCard, User } from 'lucide-react';
+import { Landmark, TrendingUp, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavbarProps {
@@ -10,10 +10,10 @@ interface BottomNavbarProps {
 
 export default function BottomNavbar({ activeView, setActiveView }: BottomNavbarProps) {
     const navItems = [
-        { id: 'all-expenses', label: 'Gastos', icon: <Home className="h-6 w-6" /> },
-        { id: 'monthly-income', label: 'Ingresos', icon: <BarChartBig className="h-6 w-6" /> },
-        { id: 'ai-insights', label: 'IA', icon: <CreditCard className="h-6 w-6" /> },
-        { id: 'advanced', label: 'Avanzado', icon: <User className="h-6 w-6" /> },
+        { id: 'all-expenses', label: 'Gastos', icon: <Landmark className="h-6 w-6" /> },
+        { id: 'monthly-income', label: 'Ingresos', icon: <TrendingUp className="h-6 w-6" /> },
+        { id: 'ai-insights', label: 'IA', icon: <Sparkles className="h-6 w-6" /> },
+        { id: 'advanced', label: 'Avanzado', icon: <SlidersHorizontal className="h-6 w-6" /> },
     ];
 
     return (
