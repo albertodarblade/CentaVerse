@@ -48,8 +48,11 @@ export async function addTransaction(transaction: Omit<Transaction, 'id' | 'type
         ...transaction,
         type: 'expense'
     };
-    await db.collection('transactions').insertOne(newTransaction);
-    revalidatePath('/');
+    const result = await db.collection('transactions').insertOne(newTransaction);
+    
+    const insertedDoc = await db.collection('transactions').findOne({ _id: result.insertedId });
+    return JSON.parse(JSON.stringify({ ...insertedDoc, id: insertedDoc?._id.toString() }));
+
   } catch (error) {
     console.error("Error adding transaction:", error);
     throw new Error("Failed to add transaction.");
@@ -71,7 +74,6 @@ export async function updateTransaction(transaction: Transaction) {
             { _id: objectId },
             { $set: updateData }
         );
-        revalidatePath('/');
     } catch (error) {
         console.error("Error updating transaction:", error);
         throw new Error("Failed to update transaction.");
