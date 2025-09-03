@@ -28,7 +28,7 @@ const cardColors = [
 
 export default function TransactionsList({ transactions, tagIcons, onTransactionClick }: TransactionsListProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+    return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount);
   };
 
   const formatDate = (date: Date) => {

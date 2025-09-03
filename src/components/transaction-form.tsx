@@ -112,13 +112,13 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       onUpdateTransaction({ ...transactionToEdit, ...values });
       toast({
         title: "Transacción actualizada",
-        description: `Tu gasto de ${values.amount}€ ha sido actualizado.`,
+        description: `Tu gasto de Bs. ${values.amount} ha sido actualizado.`,
       });
     } else {
       onAddTransaction(values);
       toast({
         title: "Transacción añadida",
-        description: `Tu gasto de ${values.amount}€ ha sido registrado.`,
+        description: `Tu gasto de Bs. ${values.amount} ha sido registrado.`,
       });
     }
     onClose();
@@ -177,6 +177,16 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       </PopoverContent>
     </Popover>
   );
+  
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+    const value = e.target.value;
+    const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+    if (!isNaN(numberValue)) {
+      field.onChange(numberValue);
+    } else {
+      field.onChange(0);
+    }
+  };
 
   return (
     <>
@@ -194,9 +204,15 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cantidad (€)</FormLabel>
+                  <FormLabel>Monto (Bs.)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} />
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2 }).format(field.value || 0)}
+                      onChange={(e) => handleAmountChange(e, field)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
