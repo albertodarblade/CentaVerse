@@ -107,10 +107,11 @@ export async function updateTag(tag: Tag) {
     }
 }
 
-export async function deleteTag(tagId: string) {
+export async function deleteTag(tag: Tag) {
     try {
         const db = await getDb();
-        const objectId = new ObjectId(tagId);
+        const { id, _id } = tag;
+        const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
         await db.collection('tags').deleteOne({ _id: objectId });
         revalidatePath('/');
     } catch (error) {

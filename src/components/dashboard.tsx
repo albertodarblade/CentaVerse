@@ -161,9 +161,9 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
     }
   };
 
-  const handleDeleteTag = async (tagId: string) => {
+  const handleDeleteTag = async (tag: Tag) => {
     try {
-        await deleteTag(tagId);
+        await deleteTag(tag);
         toast({
             title: "Etiqueta eliminada",
             variant: "destructive",

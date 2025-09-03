@@ -63,11 +63,7 @@ const formSchema = z.object({
   }),
 });
 
-type FormTag = {
-  id: string;
-  _id?: string;
-  name: string;
-  icon: string;
+type FormTag = Tag & {
   iconNode: React.ReactNode;
 };
 
@@ -79,18 +75,27 @@ interface TransactionFormProps {
   tags: FormTag[];
   onAddTag: (tagName: string, iconName: string) => Promise<void>;
   onUpdateTag: (tag: Tag) => Promise<void>;
-  onDeleteTag: (tagId: string) => Promise<void>;
+  onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
 }
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTags, setEditingTags] = useState<FormTag[]>(tags);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  useEffect(() => {
+    setEditingTags(tags);
+  }, [tags]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: transactionToEdit ? {
+      amount: transactionToEdit.amount,
+      description: transactionToEdit.description,
+      tags: transactionToEdit.tags,
+    } : {
       amount: 0,
       description: "",
       tags: [],
@@ -101,11 +106,19 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   const [debouncedValues] = useDebounce(watchedValues, 1000);
   
   const [initialValues, setInitialValues] = useState(transactionToEdit);
+  
   useEffect(() => {
     if (transactionToEdit) {
       setInitialValues(transactionToEdit);
+      form.reset(transactionToEdit);
+    } else {
+      form.reset({
+        amount: 0,
+        description: "",
+        tags: [],
+      });
     }
-  }, [transactionToEdit]);
+  }, [transactionToEdit, form.reset]);
 
 
   useEffect(() => {
@@ -122,6 +135,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             const updatedTransaction = { ...transactionToEdit, ...debouncedValues };
             await onUpdateTransaction(updatedTransaction, false);
             setInitialValues(updatedTransaction); // Update initial values to current
+            form.reset(updatedTransaction, { keepValues: true }); // Resets dirty state but keeps values
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
           } else {
@@ -131,23 +145,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       }
     }
   }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues]);
-
-
-  useEffect(() => {
-    if (transactionToEdit) {
-      form.reset({
-        amount: transactionToEdit.amount,
-        description: transactionToEdit.description,
-        tags: transactionToEdit.tags,
-      });
-    } else {
-      form.reset({
-        amount: 0,
-        description: "",
-        tags: [],
-      });
-    }
-  }, [transactionToEdit, form.reset]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -176,21 +173,25 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   };
   
   const handleUpdateTagName = (tagId: string, newName: string) => {
-    const tagToUpdate = tags.find(t => t.id === tagId);
+    const tagToUpdate = editingTags.find(t => t.id === tagId);
     if (tagToUpdate) {
-      onUpdateTag({ ...tagToUpdate, name: newName });
+      const updatedTag = { ...tagToUpdate, name: newName };
+      setEditingTags(editingTags.map(t => t.id === tagId ? updatedTag : t));
+      onUpdateTag(updatedTag);
     }
   };
   
   const handleUpdateTagIcon = (tagId: string, iconName: string) => {
-    const tagToUpdate = tags.find(t => t.id === tagId);
+    const tagToUpdate = editingTags.find(t => t.id === tagId);
     if (tagToUpdate) {
-      onUpdateTag({ ...tagToUpdate, icon: iconName });
+      const updatedTag = { ...tagToUpdate, icon: iconName };
+       setEditingTags(editingTags.map(t => t.id === tagId ? { ...updatedTag, iconNode: iconList.find(i => i.name === iconName)?.component || <MoreHorizontal className="h-4 w-4" /> } : t));
+      onUpdateTag(updatedTag);
     }
   };
 
-  const handleDeleteTag = (tagId: string) => {
-    onDeleteTag(tagId);
+  const handleDeleteTag = (tag: Tag) => {
+    onDeleteTag(tag);
   }
 
   const IconPicker = ({ onSelect, children }: { onSelect: (iconName: string) => void, children: React.ReactNode }) => (
@@ -310,7 +311,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        {tags.map((tag) => (
+                        {editingTags.map((tag) => (
                           <div key={tag.id} className="flex items-center gap-2">
                             <GripVertical className="h-5 w-5 text-muted-foreground" />
                             <IconPicker onSelect={(iconName) => handleUpdateTagIcon(tag.id, iconName)}>
@@ -323,7 +324,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                               onBlur={(e) => handleUpdateTagName(tag.id, e.target.value)}
                               className="h-10"
                             />
-                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag.id)}>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive" onClick={() => handleDeleteTag(tag)}>
                               <Trash2 className="h-5 w-5" />
                             </Button>
                           </div>
