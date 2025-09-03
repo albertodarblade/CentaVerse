@@ -29,14 +29,15 @@ const cardColors = [
 
 const TransactionCard = ({ transaction, color, onClick, tagIcons }: { transaction: Transaction, color: string, onClick: (transaction: Transaction) => void, tagIcons: { [key: string]: React.ReactNode }}) => {
   const [formattedDate, setFormattedDate] = useState("");
+  const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
+
 
   useEffect(() => {
     setFormattedDate(formatDistanceToNow(new Date(transaction.date), { addSuffix: true, locale: es }));
-  }, [transaction.date]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount);
-  };
+    setFormattedAmount(
+        new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(transaction.amount)
+    );
+  }, [transaction.date, transaction.amount]);
 
   return (
     <Card
@@ -51,7 +52,7 @@ const TransactionCard = ({ transaction, color, onClick, tagIcons }: { transactio
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-2xl font-bold text-foreground">
-          {formatCurrency(transaction.amount)}
+          {formattedAmount}
         </div>
         <div className="flex flex-wrap gap-2">
           {transaction.tags.map(tag => (
