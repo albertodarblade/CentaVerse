@@ -57,15 +57,17 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
     }
   };
   
-  const handleUpdateTransaction = async (transaction: Transaction) => {
+  const handleUpdateTransaction = async (transaction: Transaction, closeModal: boolean = true) => {
     try {
       await updateTransaction(transaction);
-      toast({
-        title: "Transacción actualizada",
-        description: `Tu gasto de Bs. ${transaction.amount} ha sido actualizado.`,
-      });
-      setIsFormOpen(false);
-      setEditingTransaction(null);
+      if (closeModal) {
+          toast({
+            title: "Transacción actualizada",
+            description: `Tu gasto de Bs. ${transaction.amount} ha sido actualizado.`,
+          });
+          setIsFormOpen(false);
+          setEditingTransaction(null);
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -179,7 +181,7 @@ export default function Dashboard({ initialTransactions }: { initialTransactions
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogTrigger asChild>
-          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg">
+          <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
             <Plus className="h-8 w-8" />
             <span className="sr-only">Añadir Gasto</span>
           </Button>

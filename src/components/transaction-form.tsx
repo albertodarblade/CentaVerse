@@ -65,7 +65,7 @@ const formSchema = z.object({
 
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => Promise<void>;
-  onUpdateTransaction: (transaction: Transaction) => Promise<void>;
+  onUpdateTransaction: (transaction: Transaction, closeModal?: boolean) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: Tag[];
@@ -104,7 +104,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
         setAutosaveStatus('saving');
         form.trigger().then(async (isValid) => {
           if (isValid) {
-            await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues });
+            await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues }, false);
             setAutosaveStatus('saved');
             setTimeout(() => setAutosaveStatus('idle'), 2000);
             form.reset(debouncedValues, { keepValues: true });
