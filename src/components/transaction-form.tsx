@@ -198,8 +198,11 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onUpdateTag, onD
       }, [tag.name]);
 
       const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          setValue(e.target.value);
-          debounced(e.target.value);
+          const newValue = e.target.value;
+          setValue(newValue);
+          const updatedTags = editingTags.map(t => t.id === tag.id ? {...t, name: newValue } : t);
+          setEditingTags(updatedTags);
+          debounced(newValue);
       }
 
       return <Input value={value} onChange={handleChange} className="h-10" />
@@ -480,7 +483,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      value={field.value ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
+                      value={field.value > 0 ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
                       onChange={(e) => handleAmountChange(e, field)}
                       disabled={isSubmitting}
                       className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"

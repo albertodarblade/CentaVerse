@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartContainer,
@@ -23,6 +23,9 @@ const COLORS = {
 };
 
 export default function MonthlySummary({ transactions, incomes }: MonthlySummaryProps) {
+  const [formattedTotalIncome, setFormattedTotalIncome] = useState<string | null>(null);
+  const [formattedTotalExpenses, setFormattedTotalExpenses] = useState<string | null>(null);
+  
   const { totalIncome, totalExpenses, chartData } = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -52,6 +55,11 @@ export default function MonthlySummary({ transactions, incomes }: MonthlySummary
 
     return { totalIncome, totalExpenses, chartData };
   }, [transactions, incomes]);
+  
+  useEffect(() => {
+    setFormattedTotalIncome(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncome));
+    setFormattedTotalExpenses(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalExpenses));
+  }, [totalIncome, totalExpenses]);
 
   return (
     <Card>
@@ -64,7 +72,7 @@ export default function MonthlySummary({ transactions, incomes }: MonthlySummary
                 Ingresos
               </div>
               <p className="text-xl font-bold">
-                {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncome)}
+                {formattedTotalIncome}
               </p>
             </div>
             <div>
@@ -73,7 +81,7 @@ export default function MonthlySummary({ transactions, incomes }: MonthlySummary
                 Gastado
               </div>
               <p className="text-xl font-bold">
-                {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalExpenses)}
+                {formattedTotalExpenses}
               </p>
             </div>
           </div>
@@ -89,7 +97,7 @@ export default function MonthlySummary({ transactions, incomes }: MonthlySummary
                   <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent 
-                        formatter={(value, name) => `${name}: ${new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(value as number)}`}
+                        formatter={(value) => new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(value as number)}
                         hideLabel 
                     />}
                   />

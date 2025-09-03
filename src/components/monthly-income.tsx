@@ -59,6 +59,11 @@ export default function MonthlyIncome({ incomes, onAddIncome, onUpdateIncome, on
     const [editedAmount, setEditedAmount] = useState(income.amount.toString());
     const [debouncedDescription] = useDebounce(editedDescription, 500);
     const [debouncedAmount] = useDebounce(editedAmount, 500);
+    const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
+
+    useEffect(() => {
+        setFormattedAmount(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(income.amount));
+    }, [income.amount]);
 
     const handleUpdate = async () => {
         const amountNumber = parseInt(debouncedAmount, 10);
@@ -87,7 +92,7 @@ export default function MonthlyIncome({ incomes, onAddIncome, onUpdateIncome, on
                 <>
                     <span className="flex-1">{income.description}</span>
                     <span className="font-bold mr-4">
-                        {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(income.amount)}
+                        {formattedAmount}
                     </span>
                     <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4"/></Button>
                      <AlertDialog>
@@ -152,7 +157,7 @@ export default function MonthlyIncome({ incomes, onAddIncome, onUpdateIncome, on
                             type="text"
                             inputMode="numeric"
                             placeholder="0"
-                            value={field.value ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
+                            value={field.value > 0 ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
                             onChange={(e) => handleAmountChange(e, field)}
                             className="pl-10"
                             />
