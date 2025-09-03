@@ -14,15 +14,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Tag, Transaction } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, GripVertical, Plus } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, GripVertical, Plus, Loader2, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
+import { useDebounce } from 'use-debounce';
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -77,24 +78,43 @@ interface TransactionFormProps {
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const [editingTags, setEditingTags] = useState<Tag[]>([]);
-
-  useEffect(() => {
-    if (isManageTagsOpen) {
-      setEditingTags([...tags]);
-    }
-  }, [isManageTagsOpen, tags]);
-
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: transactionToEdit || {
       amount: 0,
       description: "",
       tags: [],
     },
   });
+  
+  const watchedValues = form.watch();
+  const [debouncedValues] = useDebounce(watchedValues, 1000);
+
+  const initialValues = useMemo(() => transactionToEdit, [transactionToEdit]);
+
+  useEffect(() => {
+    if (transactionToEdit && form.formState.isDirty) {
+      const initial = JSON.stringify({amount: initialValues?.amount, description: initialValues?.description, tags: initialValues?.tags});
+      const current = JSON.stringify({amount: debouncedValues.amount, description: debouncedValues.description, tags: debouncedValues.tags });
+
+      if (initial !== current) {
+        setAutosaveStatus('saving');
+        form.trigger().then(async (isValid) => {
+          if (isValid) {
+            await onUpdateTransaction({ ...transactionToEdit, ...debouncedValues });
+            setAutosaveStatus('saved');
+            setTimeout(() => setAutosaveStatus('idle'), 2000);
+            form.reset(debouncedValues, { keepValues: true });
+          } else {
+            setAutosaveStatus('idle');
+          }
+        });
+      }
+    }
+  }, [debouncedValues, transactionToEdit, onUpdateTransaction, form, initialValues]);
 
   useEffect(() => {
     if (transactionToEdit) {
@@ -112,10 +132,17 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [transactionToEdit, form]);
 
+  useEffect(() => {
+    if (isManageTagsOpen) {
+      setEditingTags([...tags]);
+    }
+  }, [isManageTagsOpen, tags]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     if (transactionToEdit) {
-      await onUpdateTransaction({ ...transactionToEdit, ...values });
+      // Autosave handles updates, so this could just close the form or be disabled
+      onClose();
     } else {
       await onAddTransaction(values);
     }
@@ -193,12 +220,34 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   };
 
+  const AutosaveStatus = () => {
+    if (!transactionToEdit) return null;
+
+    if (autosaveStatus === 'saving') {
+      return (
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Guardando...
+        </div>
+      );
+    }
+    if (autosaveStatus === 'saved') {
+      return (
+        <div className="flex items-center text-sm text-green-600">
+          <CheckCircle className="mr-2 h-4 w-4" />
+          Guardado
+        </div>
+      );
+    }
+    return <div className="h-6" />; // Placeholder to prevent layout shift
+  }
+
   return (
     <>
       <DialogHeader>
         <DialogTitle className="font-headline text-2xl">{transactionToEdit ? 'Editar Gasto' : 'Añadir Nuevo Gasto'}</DialogTitle>
         <DialogDescription>
-          {transactionToEdit ? 'Modifica los detalles de tu gasto.' : 'Rellena los detalles de tu nuevo gasto.'}
+          {transactionToEdit ? 'Los cambios se guardan automáticamente.' : 'Rellena los detalles de tu nuevo gasto.'}
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -312,8 +361,8 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               </FormItem>
             )}
           />
-          <div className="flex justify-between gap-2">
-            {transactionToEdit && (
+          <div className="flex items-center justify-between gap-2">
+            {transactionToEdit ? (
                <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
@@ -334,13 +383,16 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-            )}
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : (transactionToEdit ? 'Guardar Cambios' : 'Añadir Gasto')}
+            ): <div/>}
+            <Button type="submit" className="w-full" disabled={isSubmitting || autosaveStatus === 'saving'}>
+              {isSubmitting ? 'Guardando...' : (transactionToEdit ? 'Cerrar' : 'Añadir Gasto')}
             </Button>
           </div>
+           <AutosaveStatus />
         </form>
       </Form>
     </>
   );
 }
+
+    
