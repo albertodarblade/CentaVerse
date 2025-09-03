@@ -361,14 +361,16 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       </main>
 
       <Dialog open={isFormOpen} onOpenChange={handleSetIsFormOpen}>
-        <DialogTrigger asChild>
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-            <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
-              <Plus className="h-8 w-8" />
-              <span className="sr-only">Añadir Gasto</span>
-            </Button>
-          </div>
-        </DialogTrigger>
+        {(activeView === 'all-expenses' || activeView === 'advanced') && (
+            <DialogTrigger asChild>
+              <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+                <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
+                  <Plus className="h-8 w-8" />
+                  <span className="sr-only">Añadir Gasto</span>
+                </Button>
+              </div>
+            </DialogTrigger>
+        )}
         <DialogContent className="sm:max-w-[425px]">
           <TransactionForm 
             onAddTransaction={handleAddTransaction} 
