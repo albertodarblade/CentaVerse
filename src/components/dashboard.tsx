@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useDebouncedCallback } from 'use-debounce';
 
 const iconMap: { [key: string]: React.ReactNode } = {
   Briefcase: <Briefcase className="h-4 w-4" />,
@@ -279,7 +280,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     return tags.map(tag => ({...tag, iconNode: iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />}));
   }, [tags]);
 
-  const loadMoreTransactions = useCallback(async () => {
+  const loadMoreTransactions = useDebouncedCallback(async () => {
     if (isLoading || !hasMore || searchTerm || activeTag !== 'all') return;
     setIsLoading(true);
     const nextPage = page + 1;
@@ -291,7 +292,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       setHasMore(false);
     }
     setIsLoading(false);
-  }, [page, hasMore, isLoading, searchTerm, activeTag]);
+  }, 500);
 
 
   return (
