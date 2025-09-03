@@ -64,7 +64,7 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
                 <span className="h-2.5 w-1 rounded-full" style={{ backgroundColor: COLORS.income }}/>
                 Ingresos
               </div>
-              <p className="text-3xl font-bold">
+              <p className="text-xl font-bold">
                 {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncome)}
               </p>
             </div>
@@ -73,7 +73,7 @@ export default function MonthlySummary({ transactions }: MonthlySummaryProps) {
                 <span className="h-2.5 w-1 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
                 Gastado
               </div>
-              <p className="text-3xl font-bold">
+              <p className="text-xl font-bold">
                 {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalExpenses)}
               </p>
             </div>
