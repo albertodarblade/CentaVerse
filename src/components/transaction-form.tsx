@@ -180,8 +180,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
-    const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
-    if (!isNaN(numberValue)) {
+    const digitsOnly = value.replace(/[^0-9]/g, '');
+    if (digitsOnly) {
+      const numberValue = parseInt(digitsOnly, 10) / 100;
       field.onChange(numberValue);
     } else {
       field.onChange(0);
@@ -210,7 +211,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       type="text"
                       inputMode="decimal"
                       placeholder="0.00"
-                      value={new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2 }).format(field.value || 0)}
+                      value={new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(field.value || 0)}
                       onChange={(e) => handleAmountChange(e, field)}
                     />
                   </FormControl>
