@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export default function Header({ onSearch, tags, activeTag, onSetActiveTag }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-auto flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-10 flex h-auto flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur-sm sm:px-6 rounded-lg">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input

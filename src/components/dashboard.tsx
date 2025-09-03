@@ -258,6 +258,10 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     }
   };
   
+  const unFilteredTransactions = useMemo(() => {
+    return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [allTransactions]);
+
   const filteredTransactions = useMemo(() => {
     return allTransactions.filter(transaction => {
       const searchTermMatch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -281,7 +285,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   }, [tags]);
 
   const loadMoreTransactions = useDebouncedCallback(async () => {
-    if (isLoading || !hasMore || searchTerm || activeTag !== 'all') return;
+    if (isLoading || !hasMore) return;
     setIsLoading(true);
     const nextPage = page + 1;
     const newTransactions = await getTransactions(nextPage, 30);
@@ -300,28 +304,24 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       <div className="p-4 md:p-6">
         <MonthlySummary transactions={allTransactions} />
       </div>
-      <Header 
-        onSearch={setSearchTerm} 
-        tags={tagsWithIcons} 
-        activeTag={activeTag} 
-        onSetActiveTag={setActiveTag}
-      />
+      
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Tabs defaultValue="all-expenses">
           <TabsList className="mb-4">
             <TabsTrigger value="all-expenses">Todos los gastos</TabsTrigger>
             <TabsTrigger value="monthly-income">Ingresos</TabsTrigger>
             <TabsTrigger value="ai-insights">Perspectivas de la IA</TabsTrigger>
+            <TabsTrigger value="advanced">Avanzado</TabsTrigger>
           </TabsList>
           <TabsContent value="all-expenses">
             <TransactionsList 
-              transactions={filteredTransactions} 
+              transactions={unFilteredTransactions} 
               tagMap={tagMap}
               onTransactionClick={handleOpenFormForEdit}
               loadMoreTransactions={loadMoreTransactions}
               hasMore={hasMore}
               isLoading={isLoading}
-              isFiltered={!!searchTerm || activeTag !== 'all'}
+              isFiltered={false}
             />
           </TabsContent>
            <TabsContent value="monthly-income">
@@ -334,6 +334,25 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
           </TabsContent>
           <TabsContent value="ai-insights">
             <AIInsights transactions={allTransactions} />
+          </TabsContent>
+          <TabsContent value="advanced">
+            <div className="space-y-4">
+              <Header 
+                onSearch={setSearchTerm} 
+                tags={tagsWithIcons} 
+                activeTag={activeTag} 
+                onSetActiveTag={setActiveTag}
+              />
+              <TransactionsList 
+                transactions={filteredTransactions} 
+                tagMap={tagMap}
+                onTransactionClick={handleOpenFormForEdit}
+                loadMoreTransactions={() => {}}
+                hasMore={false}
+                isLoading={false}
+                isFiltered={true}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </main>
