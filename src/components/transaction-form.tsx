@@ -274,6 +274,16 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       });
     }
   }, [transactionToEdit, form]);
+  
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (isManageTagsOpen && event.state?.modal !== 'manage-tags') {
+        setIsManageTagsOpen(false);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isManageTagsOpen]);
 
   const onUpdateTransactionStable = useCallback(onUpdateTransaction, []);
 
@@ -349,6 +359,19 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       field.onChange(0);
     }
   };
+
+  const handleSetIsManageTagsOpen = (open: boolean) => {
+    if (open) {
+      if (window.history.state?.modal !== 'manage-tags') {
+        window.history.pushState({ modal: 'manage-tags' }, '');
+      }
+    } else {
+      if (window.history.state?.modal === 'manage-tags') {
+        window.history.back();
+      }
+    }
+    setIsManageTagsOpen(open);
+  }
 
   const AutosaveStatus = () => {
     if (!transactionToEdit) return null;
@@ -431,9 +454,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+                  <Dialog open={isManageTagsOpen} onOpenChange={handleSetIsManageTagsOpen}>
                       <div className="mb-4 flex items-center justify-between">
-                          <div className="flex cursor-pointer items-center gap-2 group" onClick={() => setIsManageTagsOpen(true)}>
+                          <div className="flex cursor-pointer items-center gap-2 group" onClick={() => handleSetIsManageTagsOpen(true)}>
                               <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
                               <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
                           </div>
@@ -443,7 +466,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           onAddTag={handleAddNewTag}
                           onUpdateTag={handleUpdateTag}
                           onDeleteTag={handleDeleteTag}
-                          onOpenChange={setIsManageTagsOpen}
+                          onOpenChange={handleSetIsManageTagsOpen}
                           onReorderTags={handleReorderTags}
                       />
                   </Dialog>

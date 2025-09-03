@@ -62,6 +62,17 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   useEffect(() => {
     setTags(initialTags.sort((a, b) => a.order - b.order));
   }, [initialTags]);
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (isFormOpen && event.state?.modal !== 'transaction-form') {
+        setIsFormOpen(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isFormOpen]);
   
   const onTransactionUpdate = useCallback((updatedTransaction: Transaction) => {
     setTransactions(currentTransactions =>
@@ -69,10 +80,25 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
     );
   }, []);
 
+  const handleSetIsFormOpen = (open: boolean) => {
+    if (open) {
+      // Push a state to history when opening the modal
+      if (window.history.state?.modal !== 'transaction-form') {
+        window.history.pushState({ modal: 'transaction-form' }, '');
+      }
+    } else {
+      // Go back in history if the current state is the one we pushed
+      if (window.history.state?.modal === 'transaction-form') {
+        window.history.back();
+      }
+    }
+    setIsFormOpen(open);
+  }
+
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => {
     try {
       await addTransaction(transaction);
-      setIsFormOpen(false);
+      handleSetIsFormOpen(false);
     } catch (error) {
        toast({
         title: "Error",
@@ -87,7 +113,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
       await updateTransaction(transaction);
       onTransactionUpdate(transaction);
       if (closeModal) {
-          setIsFormOpen(false);
+          handleSetIsFormOpen(false);
           setEditingTransaction(null);
       }
     } catch (error) {
@@ -102,7 +128,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
   const handleDeleteTransaction = async (transaction: Transaction) => {
     try {
       await deleteTransaction(transaction);
-      setIsFormOpen(false);
+      handleSetIsFormOpen(false);
       setEditingTransaction(null);
     } catch (error) {
       toast({
@@ -115,16 +141,16 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
 
   const handleOpenFormForCreate = () => {
     setEditingTransaction(null);
-    setIsFormOpen(true);
+    handleSetIsFormOpen(true);
   }
 
   const handleOpenFormForEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    setIsFormOpen(true);
+    handleSetIsFormOpen(true);
   }
   
   const handleCloseForm = () => {
-    setIsFormOpen(false);
+    handleSetIsFormOpen(false);
     setEditingTransaction(null);
   }
 
@@ -211,7 +237,7 @@ export default function Dashboard({ initialTransactions, initialTags }: Dashboar
         </Tabs>
       </main>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Dialog open={isFormOpen} onOpenChange={handleSetIsFormOpen}>
         <DialogTrigger asChild>
           <Button variant="default" className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
             <Plus className="h-8 w-8" />
