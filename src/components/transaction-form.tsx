@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Tag, Transaction } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -64,9 +63,9 @@ const formSchema = z.object({
 });
 
 interface TransactionFormProps {
-  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => void;
-  onUpdateTransaction: (transaction: Transaction) => void;
-  onDeleteTransaction: (transactionId: string) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'type'>) => Promise<void>;
+  onUpdateTransaction: (transaction: Transaction) => Promise<void>;
+  onDeleteTransaction: (transactionId: string) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: Tag[];
   onAddTag: (tagName: string, icon: React.ReactNode) => void;
@@ -76,11 +75,11 @@ interface TransactionFormProps {
 }
 
 export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose }: TransactionFormProps) {
-  const { toast } = useToast();
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagIcon, setNewTagIcon] = useState(iconList[iconList.length - 1].component);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -107,31 +106,21 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [transactionToEdit, form]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
     if (transactionToEdit) {
-      onUpdateTransaction({ ...transactionToEdit, ...values });
-      toast({
-        title: "Transacción actualizada",
-        description: `Tu gasto de Bs. ${values.amount} ha sido actualizado.`,
-      });
+      await onUpdateTransaction({ ...transactionToEdit, ...values });
     } else {
-      onAddTransaction(values);
-      toast({
-        title: "Transacción añadida",
-        description: `Tu gasto de Bs. ${values.amount} ha sido registrado.`,
-      });
+      await onAddTransaction(values);
     }
-    onClose();
+    setIsSubmitting(false);
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if(transactionToEdit) {
-      onDeleteTransaction(transactionToEdit.id);
-      toast({
-        title: "Transacción eliminada",
-        variant: "destructive",
-      });
-      onClose();
+      setIsSubmitting(true);
+      await onDeleteTransaction(transactionToEdit.id);
+      setIsSubmitting(false);
     }
   }
 
@@ -140,7 +129,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
       onAddTag(newTagName.trim(), newTagIcon);
       setNewTagName("");
       setNewTagIcon(iconList[iconList.length - 1].component);
-      toast({ title: "Etiqueta añadida", description: `La etiqueta "${newTagName.trim()}" ha sido creada.` });
     }
   };
 
@@ -148,13 +136,11 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     if (editingTag && editingTag.name.trim() !== "") {
       onUpdateTag(editingTag.id, editingTag.name.trim(), editingTag.icon);
       setEditingTag(null);
-      toast({ title: "Etiqueta actualizada" });
     }
   };
   
   const handleDeleteTag = (tagId: string) => {
     onDeleteTag(tagId);
-    toast({ title: "Etiqueta eliminada", variant: 'destructive' });
   };
 
   const IconPicker = ({ onSelect, children }: { onSelect: (icon: React.ReactNode) => void, children: React.ReactNode }) => (
@@ -213,6 +199,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       placeholder="0"
                       value={new Intl.NumberFormat('es-BO').format(field.value || 0)}
                       onChange={(e) => handleAmountChange(e, field)}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormMessage />
@@ -226,7 +213,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                 <FormItem>
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
-                    <Input placeholder={'p. ej., Cena con amigos'} {...field} />
+                    <Input placeholder={'p. ej., Cena con amigos'} {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -311,6 +298,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           variant={isSelected ? "default" : "secondary"}
                           size="sm"
                           onClick={() => {
+                            if (isSubmitting) return;
                             const newValue = isSelected
                               ? field.value?.filter((value) => value !== tag.name)
                               : [...(field.value || []), tag.name];
@@ -333,7 +321,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             {transactionToEdit && (
                <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button type="button" variant="destructive" className="w-full">
+                    <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       Eliminar
                     </Button>
@@ -352,7 +340,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                   </AlertDialogContent>
                 </AlertDialog>
             )}
-            <Button type="submit" className="w-full">{transactionToEdit ? 'Guardar Cambios' : 'Añadir Gasto'}</Button>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Guardando...' : (transactionToEdit ? 'Guardar Cambios' : 'Añadir Gasto')}
+            </Button>
           </div>
         </form>
       </Form>
