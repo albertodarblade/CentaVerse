@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Tag, Transaction, Income, RecurringExpense } from '@/lib/types';
 import Header from './header';
-import TransactionForm from './transaction-form';
 import TransactionsList from './transactions-list';
 import AIInsights from './ai-insights';
 import MonthlySummary from './monthly-summary';
@@ -29,10 +28,12 @@ import {
   deleteRecurringExpense
 } from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from 'use-debounce';
+import CategoryStep from './category-step';
+import DetailsStep from './details-step';
 
 const iconMap: { [key: string]: React.ReactNode } = {
   Briefcase: <Briefcase />,
@@ -70,13 +71,19 @@ interface DashboardProps {
   initialRecurringExpenses: RecurringExpense[];
 }
 
+type FormStep = 'category' | 'details' | 'edit';
+
 export default function Dashboard({ initialTransactions, initialTags, initialIncomes, initialRecurringExpenses }: DashboardProps) {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
   const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(initialRecurringExpenses);
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [formStep, setFormStep] = useState<FormStep>('category');
+  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
   const [activeView, setActiveView] = useState('all-expenses');
@@ -104,31 +111,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   useEffect(() => {
     setRecurringExpenses(initialRecurringExpenses);
   }, [initialRecurringExpenses]);
-
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (isFormOpen && event.state?.modal !== 'transaction-form') {
-        setIsFormOpen(false);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isFormOpen]);
   
-  const handleSetIsFormOpen = (open: boolean) => {
-    if (open) {
-      if (window.history.state?.modal !== 'transaction-form') {
-        window.history.pushState({ modal: 'transaction-form' }, '');
-      }
-    } else {
-      if (window.history.state?.modal === 'transaction-form') {
-        window.history.back();
-      }
-    }
-    setIsFormOpen(open);
-  }
-
   const handleAddTransaction = async (transaction: Omit<Transaction, 'id' | 'type'>) => {
     const tempId = `temp-${Date.now()}`;
     const newTransactionOptimistic: Transaction = {
@@ -140,7 +123,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     };
   
     setAllTransactions(current => [newTransactionOptimistic, ...current]);
-    handleSetIsFormOpen(false);
+    handleCloseForm();
   
     try {
       const savedTransaction = await addTransaction(transaction);
@@ -161,8 +144,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleUpdateTransaction = async (transaction: Transaction) => {
     const originalTransactions = [...allTransactions];
     setAllTransactions(current => current.map(t => (t.id === transaction.id || t._id === transaction._id) ? transaction : t));
-    handleSetIsFormOpen(false);
-    setEditingTransaction(null);
+    handleCloseForm();
   
     try {
       await updateTransaction(transaction);
@@ -180,8 +162,8 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleDeleteTransaction = async (transaction: Transaction) => {
     const originalTransactions = [...allTransactions];
     setAllTransactions(current => current.filter(t => (t.id !== transaction.id && t._id !== transaction._id)));
-    handleSetIsFormOpen(false);
-    setEditingTransaction(null);
+    handleCloseForm();
+
     try {
       await deleteTransaction(transaction);
     } catch (error) {
@@ -196,18 +178,32 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
 
   const handleOpenFormForCreate = () => {
     setEditingTransaction(null);
-    handleSetIsFormOpen(true);
+    setFormStep('category');
+    setIsFormOpen(true);
   }
 
   const handleOpenFormForEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    handleSetIsFormOpen(true);
+    setFormStep('edit');
+    setIsFormOpen(true);
   }
   
   const handleCloseForm = () => {
-    handleSetIsFormOpen(false);
+    setIsFormOpen(false);
     setEditingTransaction(null);
+    setSelectedTag(null);
+    // A short delay to allow the modal to close before resetting the step
+    setTimeout(() => setFormStep('category'), 300);
   }
+
+  const handleCategorySelect = (tag: Tag) => {
+    setSelectedTag(tag);
+    setFormStep('details');
+  };
+
+  const handleBackToCategory = () => {
+    setFormStep('category');
+  };
 
   const handleAddTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
     try {
@@ -389,7 +385,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     setIsLoading(false);
   }, 500);
 
-  const renderContent = () => {
+  const renderViewContent = () => {
     switch (activeView) {
       case 'all-expenses':
         return (
@@ -448,6 +444,41 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     }
   };
 
+  const renderModalContent = () => {
+    if (formStep === 'edit') {
+      return (
+        <DetailsStep
+          onAddTransaction={handleAddTransaction}
+          onUpdateTransaction={handleUpdateTransaction}
+          onDeleteTransaction={handleDeleteTransaction}
+          transactionToEdit={editingTransaction}
+          tags={tagsWithIcons}
+          onClose={handleCloseForm}
+          onBack={handleBackToCategory}
+          selectedTag={tagsWithIcons.find(t => t.name === editingTransaction?.tag) || null}
+        />
+      )
+    }
+
+    switch (formStep) {
+        case 'category':
+            return <CategoryStep tags={tagsWithIcons} onSelectCategory={handleCategorySelect} onClose={handleCloseForm} />;
+        case 'details':
+            return <DetailsStep 
+                      onAddTransaction={handleAddTransaction} 
+                      onUpdateTransaction={handleUpdateTransaction}
+                      onDeleteTransaction={handleDeleteTransaction}
+                      transactionToEdit={null}
+                      tags={tagsWithIcons}
+                      onClose={handleCloseForm} 
+                      onBack={handleBackToCategory}
+                      selectedTag={selectedTag}
+                    />;
+        default:
+            return null;
+    }
+  }
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
@@ -456,29 +487,23 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       </div>
       
       <main className="flex-1 p-4 md:p-6 space-y-6 mb-24">
-        {renderContent()}
+        {renderViewContent()}
       </main>
 
-      <Dialog open={isFormOpen} onOpenChange={handleSetIsFormOpen}>
-        {(activeView === 'all-expenses' || activeView === 'advanced') && (
-            <DialogTrigger asChild>
-              <div className="fixed bottom-24 right-4 z-50">
-                <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
-                  <Plus className="h-8 w-8" />
-                  <span className="sr-only">Añadir Gasto</span>
-                </Button>
-              </div>
-            </DialogTrigger>
-        )}
-        <DialogContent>
-          <TransactionForm 
-            onAddTransaction={handleAddTransaction} 
-            onUpdateTransaction={handleUpdateTransaction}
-            onDeleteTransaction={handleDeleteTransaction}
-            transactionToEdit={editingTransaction}
-            tags={tagsWithIcons}
-            onClose={handleCloseForm}
-          />
+      {(activeView === 'all-expenses' || activeView === 'advanced') && (
+        <div className="fixed bottom-24 right-4 z-50">
+          <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
+            <Plus className="h-8 w-8" />
+            <span className="sr-only">Añadir Gasto</span>
+          </Button>
+        </div>
+      )}
+      
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent onInteractOutside={(e) => {
+            e.preventDefault();
+        }}>
+          {renderModalContent()}
         </DialogContent>
       </Dialog>
       <BottomNavbar activeView={activeView} setActiveView={setActiveView} />

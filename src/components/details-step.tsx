@@ -43,23 +43,27 @@ type FormTag = Tag & {
   iconNode: React.ReactNode;
 };
 
-interface TransactionFormProps {
+interface DetailsStepProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'type'>) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: FormTag[];
   onClose: () => void;
+  onBack: () => void;
+  selectedTag: FormTag | null;
 }
 
-export default function TransactionForm({ 
+export default function DetailsStep({ 
   onAddTransaction, 
   onUpdateTransaction, 
   onDeleteTransaction, 
   transactionToEdit, 
   tags, 
-  onClose, 
-}: TransactionFormProps) {
+  onClose,
+  onBack,
+  selectedTag
+}: DetailsStepProps) {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
@@ -74,7 +78,7 @@ export default function TransactionForm({
     } : {
       amount: 0,
       description: "",
-      tag: "",
+      tag: selectedTag?.name || "",
       date: new Date(),
     },
   });
@@ -91,11 +95,11 @@ export default function TransactionForm({
       form.reset({
         amount: 0,
         description: "",
-        tag: "",
+        tag: selectedTag?.name || "",
         date: new Date(),
       });
     }
-  }, [transactionToEdit, form]);
+  }, [transactionToEdit, selectedTag, form]);
   
   const watchedAmount = form.watch('amount');
   useEffect(() => {
@@ -135,21 +139,30 @@ export default function TransactionForm({
       field.onChange(0);
     }
   };
+  
+  const currentTag = transactionToEdit ? tags.find(t => t.name === transactionToEdit.tag) : selectedTag;
 
   return (
     <>
       <DialogHeader className="relative">
-        <Button variant="ghost" size="icon" className="absolute -top-2 -left-2" onClick={onClose}>
+        <Button variant="ghost" size="icon" className="absolute -top-2 -left-2" onClick={transactionToEdit ? onClose : onBack}>
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Volver</span>
         </Button>
-        <DialogTitle className="font-headline text-2xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Nuevo Gasto'}</DialogTitle>
-        <DialogDescription className="text-center">
-          {transactionToEdit ? 'Edita los detalles de tu gasto.' : 'Rellena los detalles de tu nuevo gasto.'}
-        </DialogDescription>
+        <DialogTitle className="font-headline text-2xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Gasto'}</DialogTitle>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4">
+          
+          {currentTag && (
+             <div className="flex items-center gap-3 justify-center">
+                 <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg" style={{ backgroundColor: `hsl(var(--tag-${currentTag.color}))`, color: `hsl(var(--tag-${currentTag.color}-foreground))` }}>
+                    {React.cloneElement(currentTag.iconNode as React.ReactElement, { className: 'w-5 h-5' })}
+                </div>
+                <span className="font-semibold text-xl">{currentTag.name}</span>
+            </div>
+          )}
+          
           <FormField
             control={form.control}
             name="amount"
@@ -243,42 +256,6 @@ export default function TransactionForm({
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tag"
-              render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Categoría</FormLabel>
-                  <FormControl>
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((tag) => {
-                        const isSelected = field.value === tag.name;
-                        return (
-                          <button
-                            key={tag.id}
-                            type="button"
-                            onClick={() => {
-                              if (isSubmitting) return;
-                              field.onChange(tag.name);
-                            }}
-                            className={cn(
-                                "flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium transition-colors",
-                                isSelected 
-                                    ? 'bg-primary text-primary-foreground' 
-                                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                            )}
-                          >
-                            {tag.iconNode}
-                            {tag.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

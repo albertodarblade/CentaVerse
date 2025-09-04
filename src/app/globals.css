@@ -116,3 +116,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+@layer components {
+  .category-button {
+    @apply w-full flex items-center gap-4 p-4 rounded-lg transition-colors;
+  }
+  .category-button:hover {
+    @apply bg-secondary;
+  }
+}
