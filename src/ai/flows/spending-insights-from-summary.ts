@@ -43,27 +43,27 @@ const prompt = ai.definePrompt({
   name: 'spendingInsightsPrompt',
   input: {schema: SpendingInsightsInputSchema},
   output: {schema: SpendingInsightsOutputSchema},
-  prompt: `You are a financial advisor providing insights to users based on their income and expense data for the current month.
+  prompt: `Eres un asesor financiero que da consejos a los usuarios basándose en sus datos de ingresos y gastos del mes actual. Tu respuesta debe ser en español.
 
-  Analyze the income and categorized expense data provided. Provide personalized insights and recommendations on how the user can improve their financial habits.
-  Your analysis should be detailed and broken down by category. Include both regular and recurring expenses in your analysis.
+  Analiza los datos de ingresos y gastos categorizados proporcionados. Ofrece información y recomendaciones personalizadas, directas y sencillas sobre cómo el usuario puede mejorar sus hábitos financieros.
+  Tu análisis debe ser detallado y desglosado por categoría. Incluye tanto los gastos regulares como los recurrentes en tu análisis. Sé conciso y ve al grano.
 
-  Total Monthly Income: {{{totalIncome}}}
+  Ingreso Total Mensual: {{{totalIncome}}}
   
-  Categorized Expenses:
+  Gastos Categorizados:
   {{#each categoryExpenses}}
-  - Category: {{{category}}}
+  - Categoría: {{{category}}}
     - Total: {{{totalAmount}}}
-    - Details:
+    - Detalles:
       {{#each expenses}}
-      - {{{description}}}: {{{amount}}} {{#if isRecurring}}(Recurring){{/if}}
+      - {{{description}}}: {{{amount}}} {{#if isRecurring}}(Recurrente){{/if}}
       {{/each}}
   {{/each}}
 
   {{#if unCategorizedExpenses.length}}
-  Uncategorized Expenses:
+  Gastos sin Categorizar:
     {{#each unCategorizedExpenses}}
-    - {{{description}}}: {{{amount}}} {{#if isRecurring}}(Recurring){{/if}}
+    - {{{description}}}: {{{amount}}} {{#if isRecurring}}(Recurrente){{/if}}
     {{/each}}
   {{/if}}
   `,
