@@ -20,10 +20,15 @@ export default function CategoryStep({ tags, onSelectCategory, onClose }: Catego
   return (
     <div>
         <DialogHeader>
-            <DialogTitle className="text-center font-headline text-2xl">Crear Gasto</DialogTitle>
-            <DialogDescription className="text-center">
-                Elige una categoría para tu nuevo gasto.
-            </DialogDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <DialogTitle className="text-center font-headline text-2xl">Crear Gasto</DialogTitle>
+                <DialogDescription className="text-center">
+                    Elige una categoría para tu nuevo gasto.
+                </DialogDescription>
+              </div>
+              <Button variant="outline">Editar</Button>
+            </div>
             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={onClose}>
                 <X className="h-5 w-5" />
                 <span className="sr-only">Cerrar</span>
