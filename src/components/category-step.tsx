@@ -35,17 +35,19 @@ export default function CategoryStep({
 
   return (
     <div>
-        <DialogHeader className="text-left">
-            <Button variant="ghost" size="icon" className="absolute top-4 left-4" onClick={onClose}>
-                <ArrowLeft className="h-5 w-5" />
-                <span className="sr-only">Volver</span>
-            </Button>
-            <div className="flex justify-between items-center pt-12">
-              <div>
-                <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
-                <DialogDescription>
-                    Elige una categoría para tu nuevo gasto.
-                </DialogDescription>
+        <DialogHeader>
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" className="-ml-4" onClick={onClose}>
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="sr-only">Volver</span>
+                </Button>
+                <div className="text-left">
+                  <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
+                  <DialogDescription>
+                      Elige una categoría para tu nuevo gasto.
+                  </DialogDescription>
+                </div>
               </div>
               <Dialog open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen}>
                 <DialogTrigger asChild>
