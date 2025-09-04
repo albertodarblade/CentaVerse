@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { Tag } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { MoreVertical, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar, ArrowLeft, Check, ChevronDown } from 'lucide-react';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
 
 const iconMap: { [key: string]: React.ReactNode } = {
   Briefcase: <Briefcase />, User: <User />, Lightbulb: <Lightbulb />, AlertTriangle: <AlertTriangle />, Utensils: <Utensils />, Car: <Car />, Home: <Home />, Clapperboard: <Clapperboard />, ShoppingCart: <ShoppingCart />, HeartPulse: <HeartPulse />, Plane: <Plane />, Gift: <Gift />, BookOpen: <BookOpen />, PawPrint: <PawPrint />, Gamepad2: <Gamepad2 />, Music: <Music />, Shirt: <Shirt />, Dumbbell: <Dumbbell />, Coffee: <Coffee />, Phone: <Phone />, Mic: <Mic />, Film: <Film />, School: <School />, Banknote: <Banknote />, Calendar: <Calendar />, MoreHorizontal: <MoreHorizontal />,
@@ -113,34 +113,35 @@ const AddEditView = ({
                       </FormControl>
                     </DialogTrigger>
                     <DialogContent className="h-full max-w-full w-full p-0 flex flex-col">
-                       <div className="flex flex-col h-full bg-background">
-                          <header className="p-4 border-b">
-                            <h2 className="text-xl font-bold text-center">Seleccionar Icono</h2>
-                          </header>
-                          <div className='flex-1 relative'>
-                            <ScrollArea className="absolute inset-0 p-4">
-                              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
-                                {iconNames.map(icon => (
-                                  <Button
-                                    key={icon}
-                                    variant="outline"
-                                    className="flex flex-col items-center justify-center h-24"
-                                    onClick={() => {
-                                      field.onChange(icon)
-                                      setIsIconSelectorOpen(false);
-                                    }}
-                                  >
-                                    {React.cloneElement(iconMap[icon] as React.ReactElement, { className: 'w-8 h-8 mb-2' })}
-                                    <span className="text-xs text-muted-foreground">{icon}</span>
-                                  </Button>
-                                ))}
-                              </div>
-                            </ScrollArea>
+                        <DialogHeader className="p-4 border-b">
+                            <DialogTitle className="text-xl font-bold text-center">Seleccionar Icono</DialogTitle>
+                            <DialogDescription className="sr-only">
+                                Elige un icono para la etiqueta.
+                            </DialogDescription>
+                        </DialogHeader>
+                       <div className="flex-1 relative">
+                        <ScrollArea className="absolute inset-0 p-4">
+                          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+                            {iconNames.map(icon => (
+                              <Button
+                                key={icon}
+                                variant="outline"
+                                className="flex flex-col items-center justify-center h-24"
+                                onClick={() => {
+                                  field.onChange(icon)
+                                  setIsIconSelectorOpen(false);
+                                }}
+                              >
+                                {React.cloneElement(iconMap[icon] as React.ReactElement, { className: 'w-8 h-8 mb-2' })}
+                                <span className="text-xs text-muted-foreground">{icon}</span>
+                              </Button>
+                            ))}
                           </div>
-                          <footer className="p-4 border-t">
-                            <Button variant="ghost" className="w-full" onClick={() => setIsIconSelectorOpen(false)}>Cancelar</Button>
-                          </footer>
-                        </div>
+                        </ScrollArea>
+                      </div>
+                      <footer className="p-4 border-t">
+                        <Button variant="ghost" className="w-full" onClick={() => setIsIconSelectorOpen(false)}>Cancelar</Button>
+                      </footer>
                     </DialogContent>
                   </Dialog>
                   <FormMessage />
