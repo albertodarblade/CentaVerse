@@ -35,32 +35,32 @@ import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from 'use-debounce';
 
 const iconMap: { [key: string]: React.ReactNode } = {
-  Briefcase: <Briefcase className="h-4 w-4" />,
-  User: <User className="h-4 w-4" />,
-  Lightbulb: <Lightbulb className="h-4 w-4" />,
-  AlertTriangle: <AlertTriangle className="h-4 w-4" />,
-  Utensils: <Utensils className="h-4 w-4" />,
-  Car: <Car className="h-4 w-4" />,
-  Home: <Home className="h-4 w-4" />,
-  Clapperboard: <Clapperboard className="h-4 w-4" />,
-  ShoppingCart: <ShoppingCart className="h-4 w-4" />,
-  HeartPulse: <HeartPulse className="h-4 w-4" />,
-  Plane: <Plane className="h-4 w-4" />,
-  Gift: <Gift className="h-4 w-4" />,
-  BookOpen: <BookOpen className="h-4 w-4" />,
-  PawPrint: <PawPrint className="h-4 w-4" />,
-  Gamepad2: <Gamepad2 className="h-4 w-4" />,
-  Music: <Music className="h-4 w-4" />,
-  Shirt: <Shirt className="h-4 w-4" />,
-  Dumbbell: <Dumbbell className="h-4 w-4" />,
-  Coffee: <Coffee className="h-4 w-4" />,
-  Phone: <Phone className="h-4 w-4" />,
-  Mic: <Mic className="h-4 w-4" />,
-  Film: <Film className="h-4 w-4" />,
-  School: <School className="h-4 w-4" />,
-  Banknote: <Banknote className="h-4 w-4" />,
-  Calendar: <Calendar className="h-4 w-4" />,
-  MoreHorizontal: <MoreHorizontal className="h-4 w-4" />,
+  Briefcase: <Briefcase />,
+  User: <User />,
+  Lightbulb: <Lightbulb />,
+  AlertTriangle: <AlertTriangle />,
+  Utensils: <Utensils />,
+  Car: <Car />,
+  Home: <Home />,
+  Clapperboard: <Clapperboard />,
+  ShoppingCart: <ShoppingCart />,
+  HeartPulse: <HeartPulse />,
+  Plane: <Plane />,
+  Gift: <Gift />,
+  BookOpen: <BookOpen />,
+  PawPrint: <PawPrint />,
+  Gamepad2: <Gamepad2 />,
+  Music: <Music />,
+  Shirt: <Shirt />,
+  Dumbbell: <Dumbbell />,
+  Coffee: <Coffee />,
+  Phone: <Phone />,
+  Mic: <Mic />,
+  Film: <Film />,
+  School: <School />,
+  Banknote: <Banknote />,
+  Calendar: <Calendar />,
+  MoreHorizontal: <MoreHorizontal />,
 };
 
 interface DashboardProps {
@@ -179,10 +179,10 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
 
   const handleDeleteTransaction = async (transaction: Transaction) => {
     try {
-      await deleteTransaction(transaction);
       setAllTransactions(current => current.filter(t => t.id !== transaction.id));
       handleSetIsFormOpen(false);
       setEditingTransaction(null);
+      await deleteTransaction(transaction);
     } catch (error) {
       toast({
         title: "Error",
@@ -363,14 +363,14 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     return tags.reduce((acc, tag) => {
       acc[tag.name] = {
         ...tag,
-        iconNode: iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />
+        iconNode: iconMap[tag.icon] || <MoreHorizontal />
       };
       return acc;
     }, {} as { [key: string]: Tag & { iconNode: React.ReactNode } });
   }, [tags]);
 
   const tagsWithIcons = useMemo(() => {
-    return tags.map(tag => ({...tag, iconNode: iconMap[tag.icon] || <MoreHorizontal className="h-4 w-4" />}));
+    return tags.map(tag => ({...tag, iconNode: iconMap[tag.icon] || <MoreHorizontal />}));
   }, [tags]);
 
   const loadMoreTransactions = useDebouncedCallback(async () => {
@@ -460,7 +460,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       <Dialog open={isFormOpen} onOpenChange={handleSetIsFormOpen}>
         {(activeView === 'all-expenses' || activeView === 'advanced') && (
             <DialogTrigger asChild>
-              <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50">
+              <div className="fixed bottom-24 right-4 z-50">
                 <Button variant="default" size="icon" className="h-16 w-16 rounded-full shadow-lg" onClick={handleOpenFormForCreate}>
                   <Plus className="h-8 w-8" />
                   <span className="sr-only">Añadir Gasto</span>
