@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 import { getAIInsightsAction } from "@/app/actions";
 import type { Transaction, Income, RecurringExpense, Tag } from "@/lib/types";
-import MarkdownContent from "./markdown-content";
 
 interface AIInsightsProps {
   transactions: Transaction[];
@@ -46,13 +45,10 @@ export default function AIInsights({ transactions, incomes, recurringExpenses, t
     const unCategorizedExpenses: { description: string, amount: number, isRecurring: boolean }[] = [];
 
     monthlyTransactions.forEach(t => {
-      if (t.tags.length > 0) {
-        t.tags.forEach(tagName => {
-          if (categoryExpensesMap[tagName]) {
-            categoryExpensesMap[tagName].totalAmount += t.amount;
-            categoryExpensesMap[tagName].expenses.push({ description: t.description, amount: t.amount, isRecurring: false });
-          }
-        });
+      const tagName = t.tag;
+      if (tagName && categoryExpensesMap[tagName]) {
+        categoryExpensesMap[tagName].totalAmount += t.amount;
+        categoryExpensesMap[tagName].expenses.push({ description: t.description, amount: t.amount, isRecurring: false });
       } else {
          unCategorizedExpenses.push({ description: t.description, amount: t.amount, isRecurring: false });
       }
@@ -106,7 +102,7 @@ export default function AIInsights({ transactions, incomes, recurringExpenses, t
         </Button>
         {insights && (
           <div className="prose prose-sm dark:prose-invert max-w-none rounded-lg border bg-secondary/50 p-4 text-card-foreground">
-            <MarkdownContent>{insights}</MarkdownContent>
+             <div dangerouslySetInnerHTML={{ __html: insights }} />
           </div>
         )}
       </CardContent>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Tag, Transaction, Income, RecurringExpense } from '@/lib/types';
 import Header from './header';
 import TransactionForm from './transaction-form';
@@ -178,12 +178,14 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
 
   const handleDeleteTransaction = async (transaction: Transaction) => {
+    const originalTransactions = [...allTransactions];
+    setAllTransactions(current => current.filter(t => (t.id !== transaction.id && t._id !== transaction._id)));
+    handleSetIsFormOpen(false);
+    setEditingTransaction(null);
     try {
-      setAllTransactions(current => current.filter(t => t.id !== transaction.id));
-      handleSetIsFormOpen(false);
-      setEditingTransaction(null);
       await deleteTransaction(transaction);
     } catch (error) {
+      setAllTransactions(originalTransactions);
       toast({
         title: "Error",
         description: "No se pudo eliminar la transacción.",
@@ -354,7 +356,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const filteredTransactions = useMemo(() => {
     return allTransactions.filter(transaction => {
       const searchTermMatch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const tagMatch = activeTag === 'all' || transaction.tags.includes(activeTag);
+      const tagMatch = activeTag === 'all' || transaction.tag === activeTag;
       return searchTermMatch && tagMatch;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allTransactions, searchTerm, activeTag]);

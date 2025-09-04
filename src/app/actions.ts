@@ -142,9 +142,8 @@ export async function updateTag(tag: any) {
 
         if (oldName !== tagData.name) {
              await db.collection('transactions').updateMany(
-                { tags: oldName },
-                { $set: { "tags.$[elem]": tagData.name } },
-                { arrayFilters: [{ "elem": oldName }] }
+                { tag: oldName },
+                { $set: { "tag": tagData.name } }
             );
         }
 
@@ -162,8 +161,8 @@ export async function deleteTag(tag: Tag) {
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
         
         await db.collection('transactions').updateMany(
-            { tags: tag.name },
-            { $pull: { tags: tag.name } }
+            { tag: tag.name },
+            { $set: { tag: "Sin categoría" } }
         );
 
         await db.collection('tags').deleteOne({ _id: objectId });

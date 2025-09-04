@@ -4,7 +4,7 @@ export type Transaction = {
   type: 'income' | 'expense';
   amount: number;
   description: string;
-  tags: string[];
+  tag: string; // Changed from tags: string[]
   date: Date;
 };
 
@@ -14,6 +14,7 @@ export type Tag = {
   name: string;
   icon: string;
   order: number;
+  color: string;
 }
 
 export type Income = {

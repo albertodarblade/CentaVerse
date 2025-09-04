@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Trash2, MoreHorizontal, ArrowLeft, CalendarIcon, CalculatorIcon } from "lucide-react";
+import { Trash2, ArrowLeft, CalendarIcon, CalculatorIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect } from "react";
@@ -33,8 +33,8 @@ const formSchema = z.object({
   description: z.string().min(2, {
     message: "La descripción debe tener al menos 2 caracteres.",
   }),
-  tags: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: "Tienes que seleccionar al menos una etiqueta.",
+  tag: z.string().min(1, {
+    message: "Tienes que seleccionar una etiqueta.",
   }),
   date: z.date(),
 });
@@ -69,12 +69,12 @@ export default function TransactionForm({
     defaultValues: transactionToEdit ? {
       amount: transactionToEdit.amount,
       description: transactionToEdit.description,
-      tags: transactionToEdit.tags,
+      tag: transactionToEdit.tag,
       date: new Date(transactionToEdit.date),
     } : {
       amount: 0,
       description: "",
-      tags: [],
+      tag: "",
       date: new Date(),
     },
   });
@@ -84,14 +84,14 @@ export default function TransactionForm({
       form.reset({
         amount: transactionToEdit.amount,
         description: transactionToEdit.description,
-        tags: transactionToEdit.tags,
+        tag: transactionToEdit.tag,
         date: new Date(transactionToEdit.date),
       });
     } else {
       form.reset({
         amount: 0,
         description: "",
-        tags: [],
+        tag: "",
         date: new Date(),
       });
     }
@@ -249,24 +249,21 @@ export default function TransactionForm({
             />
             <FormField
               control={form.control}
-              name="tags"
+              name="tag"
               render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Etiquetas</FormLabel>
+                    <FormLabel>Categoría</FormLabel>
                   <FormControl>
                     <div className="flex flex-wrap gap-2">
                       {tags.map((tag) => {
-                        const isSelected = field.value?.includes(tag.name);
+                        const isSelected = field.value === tag.name;
                         return (
                           <button
                             key={tag.id}
                             type="button"
                             onClick={() => {
                               if (isSubmitting) return;
-                              const newValue = isSelected
-                                ? field.value?.filter((value) => value !== tag.name)
-                                : [...(field.value || []), tag.name];
-                              field.onChange(newValue);
+                              field.onChange(tag.name);
                             }}
                             className={cn(
                                 "flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium transition-colors",
