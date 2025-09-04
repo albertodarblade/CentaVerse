@@ -14,10 +14,12 @@ import {
   addTransaction, 
   updateTransaction, 
   deleteTransaction, 
+  getTags,
   addTag, 
   updateTag, 
   deleteTag, 
   updateTagOrder, 
+  getIncomes,
   addIncome, 
   updateIncome, 
   deleteIncome,
@@ -91,6 +93,11 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     setHasMore(initialTransactions.length > 0);
   }, [initialTransactions]);
 
+  const refetchTags = async () => {
+    const updatedTags = await getTags();
+    setTags(updatedTags.sort((a, b) => a.order - b.order));
+  };
+  
   useEffect(() => {
     setTags(initialTags.sort((a, b) => a.order - b.order));
   }, [initialTags]);
@@ -136,16 +143,17 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
       type: 'expense',
       date: new Date(transaction.date)
     };
-
+  
     setAllTransactions(current => [newTransactionOptimistic, ...current]);
     handleSetIsFormOpen(false);
-
+  
     try {
       const savedTransaction = await addTransaction(transaction);
       setAllTransactions(current => 
         current.map(t => t.id === tempId ? savedTransaction : t)
       );
     } catch (error) {
+      console.error("Error adding transaction:", error);
       setAllTransactions(current => current.filter(t => t.id !== tempId));
       toast({
         title: "Error",
@@ -157,13 +165,14 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   
   const handleUpdateTransaction = async (transaction: Transaction) => {
     const originalTransactions = [...allTransactions];
-    setAllTransactions(current => current.map(t => t.id === transaction.id ? transaction : t));
+    setAllTransactions(current => current.map(t => (t.id === transaction.id || t._id === transaction._id) ? transaction : t));
     handleSetIsFormOpen(false);
     setEditingTransaction(null);
-
+  
     try {
       await updateTransaction(transaction);
     } catch (error) {
+      console.error("Error updating transaction:", error);
       setAllTransactions(originalTransactions);
       toast({
         title: "Error",
@@ -206,6 +215,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleAddTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
     try {
       await addTag(tag);
+      refetchTags();
     } catch (error) {
       toast({
         title: "Error",
@@ -216,20 +226,13 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
 
   const handleUpdateTag = async (tag: Tag) => {
-    try {
-        await updateTag(tag);
-    } catch (error) {
-        toast({
-            title: "Error",
-            description: "No se pudo actualizar la etiqueta.",
-            variant: "destructive"
-        });
-    }
+    // This is handled by handleSaveChangesForTags now to batch updates
   };
 
   const handleDeleteTag = async (tag: Tag) => {
     try {
         await deleteTag(tag);
+        refetchTags();
     } catch (error) {
         toast({
             title: "Error",
@@ -240,16 +243,23 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
 
   const handleReorderTags = async (tags: Tag[]) => {
+     // This is handled by handleSaveChangesForTags now to batch updates
+  };
+  
+  const handleSaveChangesForTags = async (updatedTags: Tag[]) => {
     try {
-      await updateTagOrder(tags);
-    } catch (error) {
-      toast({
+      const reorderPromise = updateTagOrder(updatedTags);
+      const updatePromises = updatedTags.map(tag => updateTag(tag));
+      await Promise.all([reorderPromise, ...updatePromises]);
+      refetchTags();
+    } catch(error) {
+       toast({
         title: "Error",
-        description: "No se pudo reordenar las etiquetas.",
+        description: "No se pudieron guardar los cambios en las etiquetas.",
         variant: "destructive"
       });
     }
-  };
+  }
 
   const handleAddIncome = async (income: Omit<Income, 'id'>) => {
     try {
@@ -403,7 +413,12 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
           />
         );
       case 'ai-insights':
-        return <AIInsights transactions={allTransactions} />;
+        return <AIInsights 
+                  transactions={allTransactions} 
+                  incomes={incomes} 
+                  recurringExpenses={recurringExpenses}
+                  tags={tags}
+               />;
       case 'advanced':
         return (
           <div className="space-y-4">
@@ -462,6 +477,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
             onUpdateTag={handleUpdateTag}
             onDeleteTag={handleDeleteTag}
             onReorderTags={handleReorderTags}
+            onSaveChangesForTags={handleSaveChangesForTags}
             onClose={handleCloseForm}
           />
         </DialogContent>
