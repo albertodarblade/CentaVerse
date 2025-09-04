@@ -2,7 +2,8 @@
 
 import type { Tag } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
+import { DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
 import { useState } from "react";
 import TagManager from "./tag-manager";
@@ -42,15 +43,11 @@ export default function CategoryStep({
                     Elige una categoría para tu nuevo gasto.
                 </DialogDescription>
               </div>
-              <Dialog open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen}>
-                <DialogTrigger asChild>
+              <Sheet open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen}>
+                <SheetTrigger asChild>
                   <Button variant="outline">Editar</Button>
-                </DialogTrigger>
-                <DialogContent className="h-full max-w-full w-full p-0">
-                  <DialogHeader>
-                    <DialogTitle className="sr-only">Gestionar Etiquetas</DialogTitle>
-                     <DialogDescription className="sr-only">Añadir, editar, eliminar y reordenar tus etiquetas.</DialogDescription>
-                  </DialogHeader>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[90%] p-0">
                    <TagManager 
                      tags={tags}
                      onAddTag={onAddTag}
@@ -59,8 +56,8 @@ export default function CategoryStep({
                      onReorderTags={onReorderTags}
                      onClose={() => setIsTagManagerOpen(false)}
                    />
-                </DialogContent>
-              </Dialog>
+                </SheetContent>
+              </Sheet>
             </div>
         </DialogHeader>
         <div className="pt-2">
