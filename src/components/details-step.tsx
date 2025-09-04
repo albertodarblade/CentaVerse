@@ -98,15 +98,22 @@ export default function DetailsStep({
         date: new Date(transactionToEdit.date),
       });
     } else {
-       const firstTag = tags[0];
        form.reset({
         amount: 0,
         description: "",
-        tag: firstTag?.name || "",
+        tag: "",
         date: new Date(),
       });
     }
-  }, [transactionToEdit, tags, form]);
+  }, [transactionToEdit, form]);
+  
+  useEffect(() => {
+    // Automatically open category selector for new transactions
+    if (!transactionToEdit) {
+      setIsCategorySelectorOpen(true);
+    }
+  }, [transactionToEdit]);
+
 
   const watchedAmount = form.watch('amount');
   useEffect(() => {
@@ -143,6 +150,14 @@ export default function DetailsStep({
     form.setValue('tag', tag.name);
     setIsCategorySelectorOpen(false);
   }
+
+  const handleCategorySelectorClose = () => {
+    setIsCategorySelectorOpen(false);
+    // If no tag is selected when creating a new transaction, close the main form
+    if (!transactionToEdit && !form.getValues('tag')) {
+      onClose();
+    }
+  };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
@@ -192,7 +207,7 @@ export default function DetailsStep({
                    <CategoryStep 
                       tags={tags}
                       onSelectCategory={handleCategorySelect}
-                      onClose={() => setIsCategorySelectorOpen(false)}
+                      onClose={handleCategorySelectorClose}
                       onAddTag={onAddTag}
                       onUpdateTag={onUpdateTag}
                       onDeleteTag={onDeleteTag}
