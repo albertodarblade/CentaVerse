@@ -167,7 +167,7 @@ export default function TransactionForm({
                       value={formattedAmount !== null ? formattedAmount : ''}
                       onChange={(e) => handleAmountChange(e, field)}
                       disabled={isSubmitting}
-                      className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="h-24 w-full border-none bg-transparent text-center text-7xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                      <Dialog open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
                         <DialogTrigger asChild>
