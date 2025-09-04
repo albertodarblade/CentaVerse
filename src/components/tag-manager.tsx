@@ -10,7 +10,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { MoreVertical, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar, ArrowLeft, Check, ChevronDown, Search, Pizza, Popcorn, Martini, Beer, Bus, Train, Ship, ShoppingBag, Tv, Building, Hotel, Bitcoin, Apple, Handshake, Leaf, Dog, Cat, Fish, GraduationCap, Pill, Stethoscope, Droplets, Baby, Wifi } from 'lucide-react';
+import { Pencil, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar, ArrowLeft, Check, ChevronDown, Search, Pizza, Popcorn, Martini, Beer, Bus, Train, Ship, ShoppingBag, Tv, Building, Hotel, Bitcoin, Apple, Handshake, Leaf, Dog, Cat, Fish, GraduationCap, Pill, Stethoscope, Droplets, Baby, Wifi } from 'lucide-react';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
@@ -30,7 +30,7 @@ const iconCategories = {
 };
 
 const iconMap: { [key: string]: React.ReactNode } = {
-  MoreVertical: <MoreVertical />, Trash2: <Trash2 />, Plus: <Plus />, Briefcase: <Briefcase />, User: <User />, Lightbulb: <Lightbulb />, AlertTriangle: <AlertTriangle />, Utensils: <Utensils />, Car: <Car />, Home: <Home />, Clapperboard: <Clapperboard />, ShoppingCart: <ShoppingCart />, HeartPulse: <HeartPulse />, MoreHorizontal: <MoreHorizontal />, Plane: <Plane />, Gift: <Gift />, BookOpen: <BookOpen />, PawPrint: <PawPrint />, Gamepad2: <Gamepad2 />, Music: <Music />, Shirt: <Shirt />, Dumbbell: <Dumbbell />, Coffee: <Coffee />, Phone: <Phone />, Mic: <Mic />, Film: <Film />, School: <School />, Banknote: <Banknote />, Calendar: <Calendar />, ArrowLeft: <ArrowLeft />, Check: <Check />, ChevronDown: <ChevronDown />, Search: <Search />, Pizza: <Pizza />, Popcorn: <Popcorn />, Martini: <Martini />, Beer: <Beer />, Bus: <Bus />, Train: <Train />, Ship: <Ship />, ShoppingBag: <ShoppingBag />, Tv: <Tv />, Building: <Building />, Hotel: <Hotel />, Bitcoin: <Bitcoin />, Apple: <Apple />, Handshake: <Handshake />, Leaf: <Leaf />, Dog: <Dog />, Cat: <Cat />, Fish: <Fish />, GraduationCap: <GraduationCap />, Pill: <Pill />, Stethoscope: <Stethoscope />, Droplets: <Droplets />, Baby: <Baby />, Wifi: <Wifi />
+  Pencil: <Pencil />, Trash2: <Trash2 />, Plus: <Plus />, Briefcase: <Briefcase />, User: <User />, Lightbulb: <Lightbulb />, AlertTriangle: <AlertTriangle />, Utensils: <Utensils />, Car: <Car />, Home: <Home />, Clapperboard: <Clapperboard />, ShoppingCart: <ShoppingCart />, HeartPulse: <HeartPulse />, MoreHorizontal: <MoreHorizontal />, Plane: <Plane />, Gift: <Gift />, BookOpen: <BookOpen />, PawPrint: <PawPrint />, Gamepad2: <Gamepad2 />, Music: <Music />, Shirt: <Shirt />, Dumbbell: <Dumbbell />, Coffee: <Coffee />, Phone: <Phone />, Mic: <Mic />, Film: <Film />, School: <School />, Banknote: <Banknote />, Calendar: <Calendar />, ArrowLeft: <ArrowLeft />, Check: <Check />, ChevronDown: <ChevronDown />, Search: <Search />, Pizza: <Pizza />, Popcorn: <Popcorn />, Martini: <Martini />, Beer: <Beer />, Bus: <Bus />, Train: <Train />, Ship: <Ship />, ShoppingBag: <ShoppingBag />, Tv: <Tv />, Building: <Building />, Hotel: <Hotel />, Bitcoin: <Bitcoin />, Apple: <Apple />, Handshake: <Handshake />, Leaf: <Leaf />, Dog: <Dog />, Cat: <Cat />, Fish: <Fish />, GraduationCap: <GraduationCap />, Pill: <Pill />, Stethoscope: <Stethoscope />, Droplets: <Droplets />, Baby: <Baby />, Wifi: <Wifi />
 };
 
 const colors = [ 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'cyan', 'blue', 'violet', 'fuchsia', 'black' ];
@@ -360,7 +360,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
               </div>
               <span className="flex-grow font-medium">{field.name}</span>
               <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); openEditView(field as Tag)}}>
-                  <MoreVertical />
+                  <Pencil />
               </Button>
             </div>
           ))}
