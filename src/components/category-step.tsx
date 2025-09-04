@@ -35,8 +35,12 @@ export default function CategoryStep({
 
   return (
     <div>
-        <DialogHeader>
-            <div className="flex justify-between items-center">
+        <DialogHeader className="text-left">
+            <Button variant="ghost" size="icon" className="absolute top-4 left-4" onClick={onClose}>
+                <ArrowLeft className="h-5 w-5" />
+                <span className="sr-only">Volver</span>
+            </Button>
+            <div className="flex justify-between items-center pt-12">
               <div>
                 <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
                 <DialogDescription>
@@ -59,10 +63,6 @@ export default function CategoryStep({
                 </DialogContent>
               </Dialog>
             </div>
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={onClose}>
-                <ArrowLeft className="h-5 w-5" />
-                <span className="sr-only">Volver</span>
-            </Button>
         </DialogHeader>
         <div className="pt-6">
             <ScrollArea className="h-96">
