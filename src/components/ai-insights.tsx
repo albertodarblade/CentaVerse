@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 import { getAIInsightsAction } from "@/app/actions";
 import type { Transaction, Income, RecurringExpense, Tag } from "@/lib/types";
-import ReactMarkdown from 'react-markdown';
+import MarkdownContent from "./markdown-content";
 
 interface AIInsightsProps {
   transactions: Transaction[];
@@ -106,7 +106,7 @@ export default function AIInsights({ transactions, incomes, recurringExpenses, t
         </Button>
         {insights && (
           <div className="prose prose-sm dark:prose-invert max-w-none rounded-lg border bg-secondary/50 p-4 text-card-foreground">
-            <ReactMarkdown>{insights}</ReactMarkdown>
+            <MarkdownContent>{insights}</MarkdownContent>
           </div>
         )}
       </CardContent>
