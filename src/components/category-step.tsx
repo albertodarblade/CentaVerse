@@ -46,7 +46,7 @@ export default function CategoryStep({
                 <DialogTrigger asChild>
                   <Button variant="outline">Editar</Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="h-full max-w-full w-full p-0">
                    <TagManager 
                      tags={tags}
                      onAddTag={onAddTag}

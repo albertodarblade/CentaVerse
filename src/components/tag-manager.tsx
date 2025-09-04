@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Tag } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from 'lucide-react';
+import { MoreVertical, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar, ArrowLeft } from 'lucide-react';
 import React from 'react';
 
 const iconMap: { [key: string]: React.ReactNode } = {
@@ -28,19 +28,21 @@ const tagSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
   icon: z.string(),
   color: z.string(),
-  order: z.number(),
+  order: z.number().optional(),
 });
 
 const formSchema = z.object({
   tags: z.array(tagSchema),
 });
 
-type FormTag = Tag & {
-  iconNode?: React.ReactNode;
-};
+const newTagFormSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
+  icon: z.string(),
+  color: z.string(),
+});
 
 interface TagManagerProps {
-  tags: FormTag[];
+  tags: (Tag & { iconNode?: React.ReactNode })[];
   onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
   onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
@@ -50,192 +52,146 @@ interface TagManagerProps {
 
 export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, onReorderTags, onClose }: TagManagerProps) {
   const [draggedTag, setDraggedTag] = useState<Tag | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      tags: tags,
-    },
+    defaultValues: { tags: tags.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) },
   });
   
-  const { fields, append, remove, move } = useFieldArray({
-    control: form.control,
-    name: "tags",
+  const { fields, move } = useFieldArray({ control: form.control, name: "tags" });
+
+  const newTagForm = useForm<z.infer<typeof newTagFormSchema>>({
+    resolver: zodResolver(newTagFormSchema),
+    defaultValues: { name: '', icon: 'MoreHorizontal', color: 'blue' },
   });
 
-  const handleDragStart = (index: number) => {
-    setDraggedTag(fields[index]);
-  };
+  const handleDragStart = (index: number) => setDraggedTag(fields[index]);
 
   const handleDrop = (index: number) => {
     if (draggedTag) {
       const fromIndex = fields.findIndex(f => f.id === draggedTag.id);
-      if (fromIndex > -1) {
-        move(fromIndex, index);
-      }
+      if (fromIndex > -1) move(fromIndex, index);
       setDraggedTag(null);
     }
   };
   
   const handleSaveChanges = async () => {
     const updatedTags = form.getValues('tags').map((tag, index) => ({ ...tag, order: index }));
-    await onReorderTags(updatedTags);
+    await onReorderTags(updatedTags as Tag[]);
     onClose();
   };
   
-  const handleAddNew = () => {
-    append({ name: '', icon: 'MoreHorizontal', color: 'black', order: fields.length });
+  const handleAddNewTag = async (values: z.infer<typeof newTagFormSchema>) => {
+    await onAddTag(values);
+    setIsAddDialogOpen(false);
+    newTagForm.reset({ name: '', icon: 'MoreHorizontal', color: 'blue' });
   };
   
-  const handleSaveNewTag = async (index: number) => {
-     const newTag = form.getValues('tags')[index];
-     if (newTag.name.trim() !== '') {
-         await onAddTag({ name: newTag.name, icon: newTag.icon, color: newTag.color });
-         remove(index); // Remove the temporary form row
-     }
-  }
-
-  const handleUpdateExistingTag = async (index: number) => {
-    const updatedTag = form.getValues('tags')[index];
-    await onUpdateTag(updatedTag as Tag);
-  }
-
-  const handleDeleteExistingTag = async (index: number) => {
-     const tagToDelete = fields[index];
-     await onDeleteTag(tagToDelete as Tag);
-     remove(index);
-  }
-
+  const handleDeleteExistingTag = async (tag: Tag) => await onDeleteTag(tag);
+  const handleUpdate = async (values: z.infer<typeof newTagFormSchema>) => {
+    if (editingTag) {
+      await onUpdateTag({ ...editingTag, ...values });
+      setEditingTag(null);
+    }
+  };
+  
+  const openEditDialog = (tag: Tag) => {
+    setEditingTag(tag);
+    newTagForm.reset({ name: tag.name, icon: tag.icon, color: tag.color });
+  };
+  
+  const AddEditDialog = ({ open, onOpenChange, onSubmit, dialogTitle, buttonText }: any) => (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+        </DialogHeader>
+        <Form {...newTagForm}>
+          <form onSubmit={newTagForm.handleSubmit(onSubmit)} className="space-y-4">
+             <FormField control={newTagForm.control} name="name" render={({ field }) => (
+                  <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <div className="flex gap-4">
+                  <FormField control={newTagForm.control} name="icon" render={({ field }) => (
+                      <FormItem className="flex-1"><FormLabel>Icono</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger>{React.cloneElement(iconMap[field.value] as React.ReactElement, { className: 'w-5 h-5' })}</SelectTrigger></FormControl>
+                          <SelectContent><ScrollArea className="h-64">{iconNames.map(icon => (
+                              <SelectItem key={icon} value={icon}><div className="flex items-center gap-2">{React.cloneElement(iconMap[icon] as React.ReactElement, { className: 'w-5 h-5' })}<span>{icon}</span></div></SelectItem>
+                          ))}</ScrollArea></SelectContent>
+                      </Select></FormItem>
+                  )}/>
+                  <FormField control={newTagForm.control} name="color" render={({ field }) => (
+                      <FormItem className="flex-1"><FormLabel>Color</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><div className="w-5 h-5 rounded-full" style={{ backgroundColor: `hsl(var(--tag-${field.value}))`}} /></SelectTrigger></FormControl>
+                          <SelectContent>{colors.map(color => (
+                              <SelectItem key={color} value={color}><div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full" style={{ backgroundColor: `hsl(var(--tag-${color}))`}} /><span>{color}</span></div></SelectItem>
+                          ))}</SelectContent>
+                      </Select></FormItem>
+                  )}/>
+              </div>
+            <Button type="submit">{buttonText}</Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Gestionar Etiquetas</DialogTitle>
-        <DialogDescription>
-          Arrastra para reordenar, edita los campos y guarda tus cambios.
-        </DialogDescription>
-      </DialogHeader>
-      <Form {...form}>
-        <form className="space-y-4">
-          <ScrollArea className="h-96 pr-4">
-            <div className="space-y-4">
-              {fields.map((field, index) => (
-                <div 
-                  key={field.id}
-                  className="flex items-center gap-2 p-2 border rounded-lg bg-secondary/50"
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleDrop(index)}
-                >
-                  <GripVertical className="cursor-move text-muted-foreground" />
+    <div className="flex flex-col h-full bg-background">
+      <header className="flex items-center gap-4 p-4 border-b">
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <ArrowLeft />
+        </Button>
+        <h2 className="text-xl font-bold">Gestionar Etiquetas</h2>
+      </header>
 
-                  <FormField
-                    control={form.control}
-                    name={`tags.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem className="flex-grow">
-                        <FormControl>
-                          <Input {...field} onBlur={() => field._id ? handleUpdateExistingTag(index) : null}/>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name={`tags.${index}.icon`}
-                    render={({ field: selectField }) => (
-                        <FormItem>
-                            <Select onValueChange={(value) => { selectField.onChange(value); if(field._id) handleUpdateExistingTag(index); }} defaultValue={selectField.value}>
-                                <FormControl>
-                                    <SelectTrigger className="w-16 h-10">
-                                        <SelectValue>
-                                          {React.cloneElement(iconMap[selectField.value] as React.ReactElement, { className: 'w-5 h-5' })}
-                                        </SelectValue>
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <ScrollArea className="h-64">
-                                      {iconNames.map(iconName => (
-                                          <SelectItem key={iconName} value={iconName}>
-                                              <div className="flex items-center gap-2">
-                                                  {React.cloneElement(iconMap[iconName] as React.ReactElement, { className: 'w-5 h-5' })}
-                                                  <span>{iconName}</span>
-                                              </div>
-                                          </SelectItem>
-                                      ))}
-                                    </ScrollArea>
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`tags.${index}.color`}
-                    render={({ field: selectField }) => (
-                        <FormItem>
-                            <Select onValueChange={(value) => { selectField.onChange(value); if(field._id) handleUpdateExistingTag(index); }} defaultValue={selectField.value}>
-                                <FormControl>
-                                    <SelectTrigger className="w-16 h-10">
-                                      <SelectValue>
-                                        <div className="w-5 h-5 rounded-full" style={{ backgroundColor: `hsl(var(--tag-${selectField.value}-foreground))`}} />
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {colors.map(color => (
-                                        <SelectItem key={color} value={color}>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-5 h-5 rounded-full" style={{ backgroundColor: `hsl(var(--tag-${color}-foreground))`}} />
-                                                <span>{color}</span>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )}
-                  />
-
-                  {field._id ? (
-                     <AlertDialog>
-                       <AlertDialogTrigger asChild>
-                         <Button type="button" variant="ghost" size="icon"><Trash2 className="text-destructive" /></Button>
-                       </AlertDialogTrigger>
-                       <AlertDialogContent>
-                         <AlertDialogHeader>
-                           <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                           <AlertDialogDescription>
-                             Las transacciones asociadas pasarán a "Sin categoría". Esta acción no se puede deshacer.
-                           </AlertDialogDescription>
-                         </AlertDialogHeader>
-                         <AlertDialogFooter>
-                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                           <AlertDialogAction onClick={() => handleDeleteExistingTag(index)}>Eliminar</AlertDialogAction>
-                         </AlertDialogFooter>
-                       </AlertDialogContent>
-                     </AlertDialog>
-                  ) : (
-                    <Button type="button" variant="ghost" size="icon" onClick={() => handleSaveNewTag(index)}>
-                        <Plus />
-                    </Button>
-                  )}
-                </div>
-              ))}
+      <main className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-2">
+          {fields.map((field, index) => (
+            <div 
+              key={field.id}
+              className="flex items-center gap-4 p-2 rounded-lg bg-card border"
+              draggable onDragStart={() => handleDragStart(index)} onDragOver={(e) => e.preventDefault()} onDrop={() => handleDrop(index)}
+              onClick={() => openEditDialog(field as Tag)}
+            >
+              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg" style={{ backgroundColor: `hsl(var(--tag-${field.color}))` }}>
+                  {React.cloneElement(iconMap[field.icon] as React.ReactElement, { className: 'w-6 h-6', style: {color: `hsl(var(--tag-${field.color}-foreground))`}})}
+              </div>
+              <span className="flex-grow font-medium">{field.name}</span>
+               <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={(e) => e.stopPropagation()}><Trash2 /></Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
+                      <AlertDialogDescription>Las transacciones asociadas pasarán a "Sin categoría". Esta acción no se puede deshacer.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteExistingTag(field as Tag)}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              <Button variant="ghost" size="icon" className="cursor-move">
+                  <MoreVertical />
+              </Button>
             </div>
-          </ScrollArea>
-          <Button type="button" variant="outline" className="w-full" onClick={handleAddNew}>
-            Añadir Nueva Etiqueta
+          ))}
+        </div>
+      </main>
+      
+      <AddEditDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onSubmit={handleAddNewTag} dialogTitle="Añadir Nueva Etiqueta" buttonText="Añadir Etiqueta" />
+      <AddEditDialog open={!!editingTag} onOpenChange={(isOpen) => !isOpen && setEditingTag(null)} onSubmit={handleUpdate} dialogTitle="Editar Etiqueta" buttonText="Guardar Cambios" />
+
+      <div className="relative p-4">
+          <Button className="w-full" onClick={handleSaveChanges}>OK</Button>
+          <Button size="icon" className="rounded-full absolute right-6 -top-5" onClick={() => setIsAddDialogOpen(true)}>
+            <Plus />
           </Button>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-            <Button type="button" onClick={handleSaveChanges}>Guardar Cambios</Button>
-          </div>
-        </form>
-      </Form>
-    </>
+      </div>
+    </div>
   );
 }
