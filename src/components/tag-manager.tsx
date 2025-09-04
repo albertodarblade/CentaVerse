@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { MoreVertical, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar, ArrowLeft, Check, ChevronDown } from 'lucide-react';
 import React from 'react';
@@ -113,12 +113,12 @@ const AddEditView = ({
                       </FormControl>
                     </DialogTrigger>
                     <DialogContent className="h-full max-w-full w-full p-0 flex flex-col">
-                      <DialogHeader className="p-4 border-b flex flex-row items-center gap-4">
+                      <header className="p-4 border-b flex flex-row items-center gap-4">
                         <Button variant="ghost" size="icon" onClick={() => setIsIconSelectorOpen(false)}>
                           <ArrowLeft />
                         </Button>
-                        <DialogTitle className="text-xl font-bold">Seleccionar Icono</DialogTitle>
-                      </DialogHeader>
+                        <h2 className="text-xl font-bold">Seleccionar Icono</h2>
+                      </header>
                       <div className="flex-1 relative">
                         <ScrollArea className="absolute inset-0 p-4">
                           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
