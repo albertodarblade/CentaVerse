@@ -2,9 +2,11 @@
 
 import type { Tag } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import { X } from "lucide-react";
+import { useState } from "react";
+import TagManager from "./tag-manager";
 
 type FormTag = Tag & {
   iconNode: React.ReactNode;
@@ -14,9 +16,23 @@ interface CategoryStepProps {
   tags: FormTag[];
   onSelectCategory: (tag: Tag) => void;
   onClose: () => void;
+  onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
+  onUpdateTag: (tag: Tag) => Promise<void>;
+  onDeleteTag: (tag: Tag) => Promise<void>;
+  onReorderTags: (tags: Tag[]) => Promise<void>;
 }
 
-export default function CategoryStep({ tags, onSelectCategory, onClose }: CategoryStepProps) {
+export default function CategoryStep({ 
+  tags, 
+  onSelectCategory, 
+  onClose,
+  onAddTag,
+  onUpdateTag,
+  onDeleteTag,
+  onReorderTags,
+}: CategoryStepProps) {
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
+
   return (
     <div>
         <DialogHeader>
@@ -27,7 +43,21 @@ export default function CategoryStep({ tags, onSelectCategory, onClose }: Catego
                     Elige una categoría para tu nuevo gasto.
                 </DialogDescription>
               </div>
-              <Button variant="outline">Editar</Button>
+              <Dialog open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">Editar</Button>
+                </DialogTrigger>
+                <DialogContent>
+                   <TagManager 
+                     tags={tags}
+                     onAddTag={onAddTag}
+                     onUpdateTag={onUpdateTag}
+                     onDeleteTag={onDeleteTag}
+                     onReorderTags={onReorderTags}
+                     onClose={() => setIsTagManagerOpen(false)}
+                   />
+                </DialogContent>
+              </Dialog>
             </div>
             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={onClose}>
                 <X className="h-5 w-5" />

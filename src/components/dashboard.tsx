@@ -209,7 +209,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     try {
       await addTag(tag);
       const updatedTags = await getTags();
-      setTags(updatedTags);
+      setTags(updatedTags.sort((a, b) => a.order - b.order));
     } catch (error) {
       toast({
         title: "Error",
@@ -223,7 +223,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     try {
         await updateTag(tag);
         const updatedTags = await getTags();
-        setTags(updatedTags);
+        setTags(updatedTags.sort((a, b) => a.order - b.order));
     } catch (error) {
         toast({
             title: "Error",
@@ -237,7 +237,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     try {
         await deleteTag(tag);
         const updatedTags = await getTags();
-        setTags(updatedTags);
+        setTags(updatedTags.sort((a, b) => a.order - b.order));
     } catch (error) {
         toast({
             title: "Error",
@@ -251,7 +251,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
      try {
       await updateTagOrder(tags);
       const updatedTags = await getTags();
-      setTags(updatedTags);
+      setTags(updatedTags.sort((a, b) => a.order - b.order));
     } catch(error) {
        toast({
         title: "Error",
@@ -462,7 +462,15 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
 
     switch (formStep) {
         case 'category':
-            return <CategoryStep tags={tagsWithIcons} onSelectCategory={handleCategorySelect} onClose={handleCloseForm} />;
+            return <CategoryStep 
+                      tags={tagsWithIcons} 
+                      onSelectCategory={handleCategorySelect} 
+                      onClose={handleCloseForm}
+                      onAddTag={handleAddTag}
+                      onUpdateTag={handleUpdateTag}
+                      onDeleteTag={handleDeleteTag}
+                      onReorderTags={handleReorderTags}
+                    />;
         case 'details':
             return <DetailsStep 
                       onAddTransaction={handleAddTransaction} 
