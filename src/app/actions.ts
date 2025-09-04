@@ -86,7 +86,6 @@ export async function deleteTransaction(transaction: Transaction) {
         const { id, _id } = transaction;
         const objectId = _id ? new ObjectId(_id) : new ObjectId(id);
         await db.collection('transactions').deleteOne({ _id: objectId });
-        revalidatePath('/');
     } catch (error)
     {
         console.error("Error deleting transaction:", error);
