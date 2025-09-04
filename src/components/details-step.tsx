@@ -166,6 +166,25 @@ export default function DetailsStep({
     }
     setIsCategorySelectorOpen(false);
   };
+  
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (isCategorySelectorOpen) {
+        event.preventDefault();
+        handleCategorySelectorClose();
+      }
+    };
+
+    if (isCategorySelectorOpen) {
+      window.history.pushState({ modal: 'category-selector' }, '');
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isCategorySelectorOpen]);
+
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
@@ -212,7 +231,7 @@ export default function DetailsStep({
                     </button>
                 </DialogTrigger>
                 <DialogContent 
-                  className="max-w-full w-full bottom-0 top-auto translate-y-0 p-6 pt-12 rounded-b-none rounded-t-2xl"
+                  className="max-w-full w-full bottom-0 top-auto translate-y-0 p-0 rounded-b-none rounded-t-2xl"
                   onInteractOutside={(e) => {
                     handleCategorySelectorClose();
                   }}
@@ -234,38 +253,40 @@ export default function DetailsStep({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormControl>
-                    <div className="relative flex items-center">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-4xl font-bold text-muted-foreground/30 pointer-events-none z-10">
-                        Bs.
-                      </span>
-                      <Input
-                        id="amount-input"
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="0"
-                        value={formattedAmount !== null ? formattedAmount : ''}
-                        onChange={(e) => handleAmountChange(e, field)}
-                        disabled={isSubmitting}
-                        className="h-24 w-full border-none bg-transparent text-center text-7xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                      />
-                       <Dialog open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
-                          <DialogTrigger asChild>
-                              <Button type="button" variant="ghost" size="icon" className="absolute right-0 h-12 w-12 text-muted-foreground">
-                                  <CalculatorIcon className="h-6 w-6" />
-                              </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                              <Calculator
-                                  onConfirm={(value) => {
-                                      form.setValue('amount', value);
-                                      setIsCalculatorOpen(false);
-                                  }}
-                              />
-                          </DialogContent>
-                      </Dialog>
-                    </div>
-                  </FormControl>
+                  <div className="form-control">
+                    <FormControl>
+                      <div className="relative flex items-center">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-4xl font-bold text-muted-foreground/30 pointer-events-none z-10">
+                          Bs.
+                        </span>
+                        <Input
+                          id="amount-input"
+                          type="text"
+                          inputMode="numeric"
+                          placeholder=" "
+                          value={formattedAmount !== null ? formattedAmount : ''}
+                          onChange={(e) => handleAmountChange(e, field)}
+                          disabled={isSubmitting}
+                          className="h-24 w-full border-none bg-transparent text-center text-7xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                         <Dialog open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
+                            <DialogTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon" className="absolute right-0 h-12 w-12 text-muted-foreground">
+                                    <CalculatorIcon className="h-6 w-6" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <Calculator
+                                    onConfirm={(value) => {
+                                        form.setValue('amount', value);
+                                        setIsCalculatorOpen(false);
+                                    }}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                      </div>
+                    </FormControl>
+                  </div>
                   <FormMessage className="text-center" />
                 </FormItem>
               )}

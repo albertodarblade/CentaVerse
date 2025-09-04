@@ -12,7 +12,7 @@ type FormTag = Tag & {
 };
 
 interface CategoryStepProps {
-  tags: FormTaf[];
+  tags: FormTag[];
   onSelectCategory: (tag: Tag) => void;
   onClose: () => void;
   onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
@@ -33,9 +33,9 @@ export default function CategoryStep({
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
 
   return (
-    <div>
+    <div className="pt-8">
         <DialogHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center px-6">
               <div className="text-left">
                 <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
                 <DialogDescription>
@@ -61,7 +61,7 @@ export default function CategoryStep({
         </DialogHeader>
         <div className="pt-6">
             <ScrollArea className="h-96">
-                <div className="flex flex-col gap-2 pr-4">
+                <div className="flex flex-col gap-2 px-6 pb-6">
                     {tags.map(tag => (
                         <button key={tag.id} onClick={() => onSelectCategory(tag)} className="category-button">
                              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg" style={{ backgroundColor: `hsl(var(--tag-${tag.color}))`, color: `hsl(var(--tag-${tag.color}-foreground))` }}>
