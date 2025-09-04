@@ -113,13 +113,13 @@ const AddEditView = ({
                       </FormControl>
                     </DialogTrigger>
                     <DialogContent className="h-full max-w-full w-full p-0 flex flex-col">
-                        <DialogHeader className="p-4 border-b">
-                            <DialogTitle className="text-xl font-bold text-center">Seleccionar Icono</DialogTitle>
-                            <DialogDescription className="sr-only">
-                                Elige un icono para la etiqueta.
-                            </DialogDescription>
-                        </DialogHeader>
-                       <div className="flex-1 relative">
+                      <DialogHeader className="p-4 border-b flex flex-row items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={() => setIsIconSelectorOpen(false)}>
+                          <ArrowLeft />
+                        </Button>
+                        <DialogTitle className="text-xl font-bold">Seleccionar Icono</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex-1 relative">
                         <ScrollArea className="absolute inset-0 p-4">
                           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
                             {iconNames.map(icon => (
@@ -139,9 +139,6 @@ const AddEditView = ({
                           </div>
                         </ScrollArea>
                       </div>
-                      <footer className="p-4 border-t">
-                        <Button variant="ghost" className="w-full" onClick={() => setIsIconSelectorOpen(false)}>Cancelar</Button>
-                      </footer>
                     </DialogContent>
                   </Dialog>
                   <FormMessage />
