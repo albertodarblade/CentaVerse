@@ -28,11 +28,10 @@ import {
   deleteRecurringExpense
 } from '@/app/actions';
 import { Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plus, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar } from "lucide-react";
-import { Dialog, DialogContent } from './ui/dialog';
+import { Sheet, SheetContent } from './ui/sheet';
 import { Button } from './ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from 'use-debounce';
-import CategoryStep from './category-step';
 import DetailsStep from './details-step';
 
 const iconMap: { [key: string]: React.ReactNode } = {
@@ -71,8 +70,6 @@ interface DashboardProps {
   initialRecurringExpenses: RecurringExpense[];
 }
 
-type FormStep = 'category' | 'details' | 'edit';
-
 export default function Dashboard({ initialTransactions, initialTags, initialIncomes, initialRecurringExpenses }: DashboardProps) {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [tags, setTags] = useState<Tag[]>(initialTags);
@@ -81,8 +78,6 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [formStep, setFormStep] = useState<FormStep>('category');
-  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
@@ -178,32 +173,18 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
 
   const handleOpenFormForCreate = () => {
     setEditingTransaction(null);
-    setFormStep('category');
     setIsFormOpen(true);
   }
 
   const handleOpenFormForEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    setFormStep('edit');
     setIsFormOpen(true);
   }
   
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingTransaction(null);
-    setSelectedTag(null);
-    // A short delay to allow the modal to close before resetting the step
-    setTimeout(() => setFormStep('category'), 300);
   }
-
-  const handleCategorySelect = (tag: Tag) => {
-    setSelectedTag(tag);
-    setFormStep('details');
-  };
-
-  const handleBackToCategory = () => {
-    setFormStep('category');
-  };
 
   const handleAddTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
     try {
@@ -444,50 +425,6 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     }
   };
 
-  const renderModalContent = () => {
-    if (formStep === 'edit') {
-      return (
-        <DetailsStep
-          onAddTransaction={handleAddTransaction}
-          onUpdateTransaction={handleUpdateTransaction}
-          onDeleteTransaction={handleDeleteTransaction}
-          transactionToEdit={editingTransaction}
-          tags={tagsWithIcons}
-          onClose={handleCloseForm}
-          onBack={handleBackToCategory}
-          selectedTag={tagsWithIcons.find(t => t.name === editingTransaction?.tag) || null}
-        />
-      )
-    }
-
-    switch (formStep) {
-        case 'category':
-            return <CategoryStep 
-                      tags={tagsWithIcons} 
-                      onSelectCategory={handleCategorySelect} 
-                      onClose={handleCloseForm}
-                      onAddTag={handleAddTag}
-                      onUpdateTag={handleUpdateTag}
-                      onDeleteTag={handleDeleteTag}
-                      onReorderTags={handleReorderTags}
-                    />;
-        case 'details':
-            return <DetailsStep 
-                      onAddTransaction={handleAddTransaction} 
-                      onUpdateTransaction={handleUpdateTransaction}
-                      onDeleteTransaction={handleDeleteTransaction}
-                      transactionToEdit={null}
-                      tags={tagsWithIcons}
-                      onClose={handleCloseForm} 
-                      onBack={handleBackToCategory}
-                      selectedTag={selectedTag}
-                    />;
-        default:
-            return null;
-    }
-  }
-
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <div className="p-4 md:p-6">
@@ -507,13 +444,28 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
         </div>
       )}
       
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent onInteractOutside={(e) => {
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent 
+          side="bottom" 
+          className="h-full"
+          onInteractOutside={(e) => {
             e.preventDefault();
-        }}>
-          {renderModalContent()}
-        </DialogContent>
-      </Dialog>
+          }}
+        >
+           <DetailsStep
+              onAddTransaction={handleAddTransaction}
+              onUpdateTransaction={handleUpdateTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              transactionToEdit={editingTransaction}
+              tags={tagsWithIcons}
+              onClose={handleCloseForm}
+              onAddTag={handleAddTag}
+              onUpdateTag={handleUpdateTag}
+              onDeleteTag={handleDeleteTag}
+              onReorderTags={handleReorderTags}
+            />
+        </SheetContent>
+      </Sheet>
       <BottomNavbar activeView={activeView} setActiveView={setActiveView} />
     </div>
   );
