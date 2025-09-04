@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { MoreVertical, Trash2, Plus, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, MoreHorizontal, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Calendar, ArrowLeft, Check, ChevronDown, Search, Pizza, Popcorn, Martini, Beer, Bus, Train, Ship, ShoppingBag, Tv, Building, Hotel, Bitcoin, Apple, Handshake, Leaf, Dog, Cat, Fish, GraduationCap, Pill, Stethoscope, Droplets, Baby, Wifi } from 'lucide-react';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 
 
 const iconCategories = {
@@ -29,12 +29,9 @@ const iconCategories = {
   "Varios": ["MoreHorizontal", "AlertTriangle", "Calendar", "Mic", "Building", "Hotel", "Bitcoin", "Apple", "Leaf", "Wifi"],
 };
 
-const allIconsList = Object.values(iconCategories).flat();
-
 const iconMap: { [key: string]: React.ReactNode } = {
   MoreVertical: <MoreVertical />, Trash2: <Trash2 />, Plus: <Plus />, Briefcase: <Briefcase />, User: <User />, Lightbulb: <Lightbulb />, AlertTriangle: <AlertTriangle />, Utensils: <Utensils />, Car: <Car />, Home: <Home />, Clapperboard: <Clapperboard />, ShoppingCart: <ShoppingCart />, HeartPulse: <HeartPulse />, MoreHorizontal: <MoreHorizontal />, Plane: <Plane />, Gift: <Gift />, BookOpen: <BookOpen />, PawPrint: <PawPrint />, Gamepad2: <Gamepad2 />, Music: <Music />, Shirt: <Shirt />, Dumbbell: <Dumbbell />, Coffee: <Coffee />, Phone: <Phone />, Mic: <Mic />, Film: <Film />, School: <School />, Banknote: <Banknote />, Calendar: <Calendar />, ArrowLeft: <ArrowLeft />, Check: <Check />, ChevronDown: <ChevronDown />, Search: <Search />, Pizza: <Pizza />, Popcorn: <Popcorn />, Martini: <Martini />, Beer: <Beer />, Bus: <Bus />, Train: <Train />, Ship: <Ship />, ShoppingBag: <ShoppingBag />, Tv: <Tv />, Building: <Building />, Hotel: <Hotel />, Bitcoin: <Bitcoin />, Apple: <Apple />, Handshake: <Handshake />, Leaf: <Leaf />, Dog: <Dog />, Cat: <Cat />, Fish: <Fish />, GraduationCap: <GraduationCap />, Pill: <Pill />, Stethoscope: <Stethoscope />, Droplets: <Droplets />, Baby: <Baby />, Wifi: <Wifi />
 };
-
 
 const colors = [ 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'cyan', 'blue', 'violet', 'fuchsia', 'black' ];
 
@@ -57,9 +54,8 @@ const newTagFormSchema = z.object({
   color: z.string(),
 });
 
-const IconSelector = ({ onSelect, onCancel }: { onSelect: (icon: string) => void; onCancel: () => void }) => {
+const IconSelector = ({ onSelect }: { onSelect: (icon: string) => void; }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
 
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return iconCategories;
@@ -76,60 +72,46 @@ const IconSelector = ({ onSelect, onCancel }: { onSelect: (icon: string) => void
     }
     return filtered;
   }, [searchTerm]);
+  
+  const handleIconClick = (icon: string) => {
+    onSelect(icon);
+  };
 
   return (
        <div className="flex flex-col h-full bg-background">
-          <header className="p-4 border-b flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={onCancel}>
-                  <ArrowLeft />
-              </Button>
-              <h2 className="text-xl font-bold">Seleccionar Icono</h2>
-          </header>
-          <div className="p-4 border-b">
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar icono..."
-                  className="w-full rounded-full bg-muted pl-10 pr-4 h-12 text-lg"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
-          </div>
-          <div className="flex-1 relative">
-            <ScrollArea className="absolute inset-0 p-4">
-              <div className="space-y-6">
-                {Object.entries(filteredCategories).map(([category, icons]) => (
-                  <div key={category}>
-                    <h3 className="text-md font-medium text-muted-foreground mb-3 px-2">{category}</h3>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
-                      {icons.map(icon => (
-                        <Button
-                          key={icon}
-                          variant={selectedIcon === icon ? "default" : "outline"}
-                          className="flex flex-col items-center justify-center h-24"
-                          onClick={() => setSelectedIcon(icon)}
-                        >
-                          {React.cloneElement(iconMap[icon] as React.ReactElement, { className: 'w-8 h-8 mb-2' })}
-                          <span className="text-xs text-muted-foreground">{icon}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+          <header className="p-4 border-b sticky top-0 bg-background z-10">
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar icono..."
+                    className="w-full rounded-full bg-muted pl-10 pr-4 h-12 text-lg"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
               </div>
-            </ScrollArea>
-          </div>
-          {(
-            <div className="p-4 border-t gap-2 flex flex-col">
-              <Button onClick={() => selectedIcon && onSelect(selectedIcon)} disabled={!selectedIcon} className="w-full">
-                Seleccionar
-              </Button>
-              <Button variant="ghost" onClick={onCancel} className="w-full">
-                Cancelar
-              </Button>
+          </header>
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-6">
+              {Object.entries(filteredCategories).map(([category, icons]) => (
+                <div key={category}>
+                  <h3 className="text-md font-medium text-muted-foreground mb-3 px-2">{category}</h3>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+                    {icons.map(icon => (
+                      <Button
+                        key={icon}
+                        variant="outline"
+                        className="flex flex-col items-center justify-center h-24"
+                        onClick={() => handleIconClick(icon)}
+                      >
+                        {React.cloneElement(iconMap[icon] as React.ReactElement, { className: 'w-8 h-8 mb-2' })}
+                        <span className="text-xs text-muted-foreground">{icon}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+          </ScrollArea>
       </div>
   );
 };
@@ -185,8 +167,8 @@ const AddEditView = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Icono</FormLabel>
-                  <Dialog open={isIconSelectorOpen} onOpenChange={setIsIconSelectorOpen}>
-                    <DialogTrigger asChild>
+                   <Sheet open={isIconSelectorOpen} onOpenChange={setIsIconSelectorOpen}>
+                    <SheetTrigger asChild>
                       <FormControl>
                         <Button variant="outline" role="combobox" className="w-full justify-between">
                           <div className="flex items-center gap-2">
@@ -196,21 +178,20 @@ const AddEditView = ({
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
-                    </DialogTrigger>
-                    <DialogContent className="h-full max-w-full w-full p-0 flex flex-col">
-                        <DialogHeader className="sr-only">
-                          <DialogTitle>Seleccionar Icono</DialogTitle>
-                          <DialogDescription>Elige un icono para tu etiqueta.</DialogDescription>
-                        </DialogHeader>
-                        <IconSelector 
-                          onSelect={(icon) => {
-                            field.onChange(icon);
-                            setIsIconSelectorOpen(false);
-                          }}
-                          onCancel={() => setIsIconSelectorOpen(false)}
-                        />
-                    </DialogContent>
-                  </Dialog>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[90%] p-0">
+                      <SheetHeader className="sr-only">
+                        <SheetTitle>Seleccionar Icono</SheetTitle>
+                        <SheetDescription>Elige un icono para tu etiqueta.</SheetDescription>
+                      </SheetHeader>
+                      <IconSelector 
+                        onSelect={(icon) => {
+                          field.onChange(icon);
+                          setIsIconSelectorOpen(false);
+                        }}
+                      />
+                    </SheetContent>
+                  </Sheet>
                   <FormMessage />
                 </FormItem>
               )}
@@ -291,6 +272,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
 
   const listForm = useForm<z.infer<typeof listFormSchema>>({
     defaultValues: { tags: tags.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) },
+    resolver: zodResolver(listFormSchema),
   });
   
   useEffect(() => {
@@ -299,21 +281,15 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
   
   const { fields, move } = useFieldArray({ control: listForm.control, name: "tags" });
 
-  const sortedFields = useMemo(() => {
-    const tagsMap = new Map(tags.map(t => [t.id, t]));
-    return fields.map(f => tagsMap.get(f.id!) || f).sort((a,b) => a.order! - b.order!);
-  }, [fields, tags]);
-
-  const handleDragStart = (index: number) => setDraggedTag(sortedFields[index]);
+  const handleDragStart = (index: number) => {
+    setDraggedTag(fields[index]);
+  };
 
   const handleDrop = (index: number) => {
     if (draggedTag) {
-      const fromIndex = sortedFields.findIndex(f => f.id === draggedTag.id);
-      const toIndex = index;
-      if (fromIndex > -1 && toIndex > -1) {
-          const fromOrder = listForm.getValues(`tags.${fromIndex}.order`);
-          const toOrder = listForm.getValues(`tags.${toIndex}.order`);
-          move(fromOrder!, toOrder!);
+      const fromIndex = fields.findIndex(f => f.id === draggedTag.id);
+      if (fromIndex !== -1 && fromIndex !== index) {
+        move(fromIndex, index);
       }
       setDraggedTag(null);
     }
@@ -391,7 +367,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
         </div>
       </ScrollArea>
       
-      <div className="relative p-4">
+      <div className="relative p-4 border-t">
           <Button className="w-full" onClick={handleSaveChanges}>OK</Button>
           <Button size="icon" className="rounded-full absolute right-6 -top-5" onClick={() => setView('add')}>
             <Plus />
