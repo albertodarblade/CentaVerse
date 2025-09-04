@@ -4,7 +4,6 @@ import type { Tag } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
-import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import TagManager from "./tag-manager";
 
@@ -13,7 +12,7 @@ type FormTag = Tag & {
 };
 
 interface CategoryStepProps {
-  tags: FormTag[];
+  tags: FormTaf[];
   onSelectCategory: (tag: Tag) => void;
   onClose: () => void;
   onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
@@ -36,18 +35,12 @@ export default function CategoryStep({
   return (
     <div>
         <DialogHeader>
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="-ml-4" onClick={onClose}>
-                    <ArrowLeft className="h-5 w-5" />
-                    <span className="sr-only">Volver</span>
-                </Button>
-                <div className="text-left">
-                  <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
-                  <DialogDescription>
-                      Elige una categoría para tu nuevo gasto.
-                  </DialogDescription>
-                </div>
+            <div className="flex justify-between items-center">
+              <div className="text-left">
+                <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
+                <DialogDescription>
+                    Elige una categoría para tu nuevo gasto.
+                </DialogDescription>
               </div>
               <Dialog open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen}>
                 <DialogTrigger asChild>

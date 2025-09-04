@@ -160,11 +160,11 @@ export default function DetailsStep({
   }
 
   const handleCategorySelectorClose = () => {
-    setIsCategorySelectorOpen(false);
     // If no tag is selected when creating a new transaction, close the main form
     if (!transactionToEdit && !form.getValues('tag')) {
       onClose();
     }
+    setIsCategorySelectorOpen(false);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
@@ -187,7 +187,7 @@ export default function DetailsStep({
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
           
           <div className="flex-1 space-y-8 pt-4 overflow-y-auto">
-            <Dialog open={isCategorySelectorOpen} onOpenChange={setIsCategorySelectorOpen}>
+            <Dialog open={isCategorySelectorOpen} onOpenChange={handleCategorySelectorClose}>
                 <DialogTrigger asChild>
                     <button type="button" className="w-full bg-secondary p-4 rounded-lg">
                         {currentTag ? (
@@ -211,7 +211,12 @@ export default function DetailsStep({
                         )}
                     </button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent 
+                  className="max-w-full w-full bottom-0 top-auto translate-y-0 p-6 pt-12 rounded-b-none rounded-t-2xl"
+                  onInteractOutside={(e) => {
+                    handleCategorySelectorClose();
+                  }}
+                  >
                    <CategoryStep 
                       tags={tags}
                       onSelectCategory={handleCategorySelect}
