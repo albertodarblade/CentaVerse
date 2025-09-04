@@ -4,7 +4,7 @@ import type { Tag } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
-import { X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import TagManager from "./tag-manager";
 
@@ -60,8 +60,8 @@ export default function CategoryStep({
               </Dialog>
             </div>
             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={onClose}>
-                <X className="h-5 w-5" />
-                <span className="sr-only">Cerrar</span>
+                <ArrowLeft className="h-5 w-5" />
+                <span className="sr-only">Volver</span>
             </Button>
         </DialogHeader>
         <div className="pt-6">
