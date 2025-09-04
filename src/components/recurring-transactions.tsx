@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import type { Income, RecurringExpense } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Trash2, Edit, Check, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -183,6 +183,18 @@ export default function RecurringTransactions({
     onDeleteRecurringExpense
 }: RecurringTransactionsProps) {
 
+  const totalIncomes = useMemo(() => incomes.reduce((sum, income) => sum + income.amount, 0), [incomes]);
+  const totalRecurringExpenses = useMemo(() => recurringExpenses.reduce((sum, expense) => sum + expense.amount, 0), [recurringExpenses]);
+
+  const [formattedTotalIncomes, setFormattedTotalIncomes] = useState<string | null>(null);
+  const [formattedTotalRecurringExpenses, setFormattedTotalRecurringExpenses] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFormattedTotalIncomes(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncomes));
+    setFormattedTotalRecurringExpenses(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalRecurringExpenses));
+  }, [totalIncomes, totalRecurringExpenses]);
+
+
   return (
     <div className="space-y-8">
       <div>
@@ -212,6 +224,14 @@ export default function RecurringTransactions({
               <p className="text-muted-foreground">No hay ingresos recurrentes registrados.</p>
             )}
           </CardContent>
+           {incomes.length > 0 && (
+            <CardFooter className="flex justify-end p-4 border-t">
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total de Ingresos Recurrentes</p>
+                <p className="text-lg font-bold">{formattedTotalIncomes}</p>
+              </div>
+            </CardFooter>
+           )}
         </Card>
       </div>
 
@@ -242,6 +262,14 @@ export default function RecurringTransactions({
               <p className="text-muted-foreground">No hay gastos recurrentes registrados.</p>
             )}
           </CardContent>
+           {recurringExpenses.length > 0 && (
+            <CardFooter className="flex justify-end p-4 border-t">
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Total de Gastos Recurrentes</p>
+                    <p className="text-lg font-bold">{formattedTotalRecurringExpenses}</p>
+                </div>
+            </CardFooter>
+           )}
         </Card>
       </div>
     </div>
