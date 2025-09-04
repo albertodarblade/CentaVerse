@@ -123,4 +123,27 @@ body {
   .category-button:hover {
     @apply bg-secondary;
   }
+
+  .form-label {
+      @apply absolute text-sm text-muted-foreground duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-background px-2 start-2.5;
+  }
+  .form-control {
+      @apply relative rounded-lg border border-input;
+  }
+  .peer:focus ~ .form-label,
+  .peer:not(:placeholder-shown) ~ .form-label {
+      @apply -translate-y-4 scale-75;
+  }
+  
+  .peer:not(:placeholder-shown) ~ .form-label {
+    @apply text-primary;
+  }
+
+  .peer:focus ~ .form-label {
+      @apply text-primary;
+  }
+
+  .form-label {
+      @apply peer-focus:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4;
+  }
 }

@@ -272,10 +272,12 @@ export default function DetailsStep({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Input placeholder={'p. ej., Cena con amigos'} {...field} disabled={isSubmitting} />
-                    </FormControl>
+                    <div className="form-control">
+                      <FormControl>
+                        <Input placeholder=" " {...field} disabled={isSubmitting} />
+                      </FormControl>
+                      <FormLabel>Descripción</FormLabel>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -285,7 +287,6 @@ export default function DetailsStep({
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Fecha</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -293,17 +294,17 @@ export default function DetailsStep({
                             type="button"
                             variant={"outline"}
                             className={cn(
-                              "w-[240px] pl-3 text-left font-normal",
+                              "w-full justify-start text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                              disabled={isSubmitting}
                           >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
                               format(field.value, "PPP", { locale: es })
                             ) : (
                               <span>Elige una fecha</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
