@@ -92,11 +92,6 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
     setPage(1);
     setHasMore(initialTransactions.length > 0);
   }, [initialTransactions]);
-
-  const refetchTags = async () => {
-    const updatedTags = await getTags();
-    setTags(updatedTags.sort((a, b) => a.order - b.order));
-  };
   
   useEffect(() => {
     setTags(initialTags.sort((a, b) => a.order - b.order));
@@ -215,7 +210,8 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   const handleAddTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
     try {
       await addTag(tag);
-      refetchTags();
+      const updatedTags = await getTags();
+      setTags(updatedTags);
     } catch (error) {
       toast({
         title: "Error",
@@ -226,13 +222,24 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
 
   const handleUpdateTag = async (tag: Tag) => {
-    // This is handled by handleSaveChangesForTags now to batch updates
+    try {
+        await updateTag(tag);
+        const updatedTags = await getTags();
+        setTags(updatedTags);
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "No se pudo actualizar la etiqueta.",
+            variant: "destructive"
+        });
+    }
   };
 
   const handleDeleteTag = async (tag: Tag) => {
     try {
         await deleteTag(tag);
-        refetchTags();
+        const updatedTags = await getTags();
+        setTags(updatedTags);
     } catch (error) {
         toast({
             title: "Error",
@@ -243,15 +250,10 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
   };
 
   const handleReorderTags = async (tags: Tag[]) => {
-     // This is handled by handleSaveChangesForTags now to batch updates
-  };
-  
-  const handleSaveChangesForTags = async (updatedTags: Tag[]) => {
-    try {
-      const reorderPromise = updateTagOrder(updatedTags);
-      const updatePromises = updatedTags.map(tag => updateTag(tag));
-      await Promise.all([reorderPromise, ...updatePromises]);
-      refetchTags();
+     try {
+      await updateTagOrder(tags);
+      const updatedTags = await getTags();
+      setTags(updatedTags);
     } catch(error) {
        toast({
         title: "Error",
@@ -259,7 +261,7 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
         variant: "destructive"
       });
     }
-  }
+  };
 
   const handleAddIncome = async (income: Omit<Income, 'id'>) => {
     try {
@@ -473,11 +475,6 @@ export default function Dashboard({ initialTransactions, initialTags, initialInc
             onDeleteTransaction={handleDeleteTransaction}
             transactionToEdit={editingTransaction}
             tags={tagsWithIcons}
-            onAddTag={handleAddTag}
-            onUpdateTag={handleUpdateTag}
-            onDeleteTag={handleDeleteTag}
-            onReorderTags={handleReorderTags}
-            onSaveChangesForTags={handleSaveChangesForTags}
             onClose={handleCloseForm}
           />
         </DialogContent>

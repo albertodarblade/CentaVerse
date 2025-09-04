@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon, X, CalculatorIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "./ui/dialog";
+import { Trash2, MoreHorizontal, ArrowLeft, CalendarIcon, CalculatorIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
@@ -27,34 +27,6 @@ import { Calendar } from "./ui/calendar";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Calculator from "./calculator";
-
-const iconList = [
-  { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
-  { name: 'User', component: <User className="h-4 w-4" /> },
-  { name: 'Lightbulb', component: <Lightbulb className="h-4 w-4" /> },
-  { name: 'AlertTriangle', component: <AlertTriangle className="h-4 w-4" /> },
-  { name: 'Utensils', component: <Utensils className="h-4 w-4" /> },
-  { name: 'Car', component: <Car className="h-4 w-4" /> },
-  { name: 'Home', component: <Home className="h-4 w-4" /> },
-  { name: 'Clapperboard', component: <Clapperboard className="h-4 w-4" /> },
-  { name: 'ShoppingCart', component: <ShoppingCart className="h-4 w-4" /> },
-  { name: 'HeartPulse', component: <HeartPulse className="h-4 w-4" /> },
-  { name: 'Plane', component: <Plane className="h-4 w-4" /> },
-  { name: 'Gift', component: <Gift className="h-4 w-4" /> },
-  { name: 'BookOpen', component: <BookOpen className="h-4 w-4" /> },
-  { name: 'PawPrint', component: <PawPrint className="h-4 w-4" /> },
-  { name: 'Gamepad2', component: <Gamepad2 className="h-4 w-4" /> },
-  { name: 'Music', component: <Music className="h-4 w-4" /> },
-  { name: 'Shirt', component: <Shirt className="h-4 w-4" /> },
-  { name: 'Dumbbell', component: <Dumbbell className="h-4 w-4" /> },
-  { name: 'Coffee', component: <Coffee className="h-4 w-4" /> },
-  { name: 'Phone', component: <Phone className="h-4 w-4" /> },
-  { name: 'Mic', component: <Mic className="h-4 w-4" /> },
-  { name: 'Film', component: <Film className="h-4 w-4" /> },
-  { name: 'School', component: <School className="h-4 w-4" /> },
-  { name: 'Banknote', component: <Banknote className="h-4 w-4" /> },
-  { name: 'MoreHorizontal', component: <MoreHorizontal className="h-4 w-4" /> },
-];
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }).int({ message: "La cantidad no puede incluir céntimos." }),
@@ -71,225 +43,13 @@ type FormTag = Tag & {
   iconNode: React.ReactNode;
 };
 
-const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName: string) => void, children: React.ReactNode, onOpenChange: (open: boolean) => void }) => (
-    <Popover onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-auto p-2 bg-background border-border">
-        <div className="grid grid-cols-5 gap-2">
-          {iconList.map(icon => (
-            <Button
-              key={icon.name}
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                onSelect(icon.name)
-              }}
-              className="h-8 w-8"
-            >
-              {icon.component}
-            </Button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-);
-
-const ManageTagsDialogContent = ({ tags, onAddTag, onDeleteTag, onSaveChanges, onOpenChange, onShouldClose }: {
-  tags: FormTag[];
-  onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
-  onDeleteTag: (tag: Tag) => void;
-  onSaveChanges: (tags: FormTag[]) => void;
-  onOpenChange: (open: boolean) => void;
-  onShouldClose: () => void;
-}) => {
-  const [editingTags, setEditingTags] = useState<FormTag[]>([]);
-  const [editingTagId, setEditingTagId] = useState<string | null>(null);
-  const [tagToEditCache, setTagToEditCache] = useState<FormTag | null>(null);
-  const [isAddingTag, setIsAddingTag] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagIcon, setNewTagIcon] = useState('MoreHorizontal');
-  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-
-  useEffect(() => {
-    setEditingTags(tags.map(tag => ({
-        ...tag,
-        iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
-    })));
-  }, [tags]);
-
-  const handleStartEdit = (tag: FormTag) => {
-    setEditingTagId(tag.id);
-    setTagToEditCache(tag);
-  };
-  
-  const handleCancelEdit = () => {
-    if (tagToEditCache) {
-        setEditingTags(currentTags => currentTags.map(t => t.id === tagToEditCache.id ? tagToEditCache : t));
-    }
-    setEditingTagId(null);
-    setTagToEditCache(null);
-  };
-
-  const handleSaveEdit = () => {
-    setEditingTagId(null);
-    setTagToEditCache(null);
-  }
-
-  const handleUpdateTag = (tagId: string, updates: Partial<FormTag>) => {
-    setEditingTags(currentTags => currentTags.map(t => {
-      if (t.id === tagId) {
-        const newIcon = updates.icon || t.icon;
-        return { 
-          ...t, 
-          ...updates,
-          iconNode: iconList.find(i => i.name === newIcon)?.component || <MoreHorizontal className="h-4 w-4" />
-        };
-      }
-      return t;
-    }));
-  };
-  
-  const handleReorder = (tagId: string, direction: 'up' | 'down') => {
-    const newTags = Array.from(editingTags);
-    const index = newTags.findIndex(t => t.id === tagId);
-    if (index === -1) return;
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= newTags.length) return;
-    const [reorderedItem] = newTags.splice(index, 1);
-    newTags.splice(newIndex, 0, reorderedItem);
-    setEditingTags(newTags);
-  };
-  
-  const handleCreateTag = async () => {
-    if (newTagName.trim() === '') return;
-    await onAddTag({ name: newTagName, icon: newTagIcon });
-    setNewTagName('');
-    setNewTagIcon('MoreHorizontal');
-    setIsAddingTag(false);
-  }
-
-  const handleSaveChangesClick = () => {
-    onSaveChanges(editingTags);
-    onShouldClose();
-  }
-
-  return (
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => {
-        if (isIconPickerOpen) {
-          e.preventDefault();
-        }
-      }}>
-        <DialogHeader>
-          <DialogTitle>Gestionar Etiquetas</DialogTitle>
-           <DialogClose onClick={onShouldClose} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            {editingTags.map((tag, index) => (
-              <div key={tag.id} className="flex items-center gap-2">
-                {editingTagId === tag.id ? (
-                   <>
-                    <IconPicker onSelect={(iconName) => handleUpdateTag(tag.id, { icon: iconName })} onOpenChange={setIsIconPickerOpen}>
-                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                            {tag.iconNode}
-                        </Button>
-                    </IconPicker>
-                    <Input value={tag.name} onChange={(e) => handleUpdateTag(tag.id, { name: e.target.value })} className="h-10" />
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleSaveEdit}><Check className="h-5 w-5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleCancelEdit}><X className="h-5 w-5" /></Button>
-                   </>
-                ) : (
-                  <>
-                    <div className="h-10 w-10 shrink-0 flex items-center justify-center border rounded-md">
-                      {tag.iconNode}
-                    </div>
-                    <span className="flex-1 px-3 py-2 h-10 flex items-center">{tag.name}</span>
-                    <div className="flex flex-col">
-                      <Button
-                        variant="ghost" size="icon" className="h-5 w-5"
-                        onClick={() => handleReorder(tag.id, 'up')}
-                        disabled={index === 0}
-                      ><ArrowUp className="h-4 w-4" /></Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-5 w-5"
-                        onClick={() => handleReorder(tag.id, 'down')}
-                        disabled={index === editingTags.length - 1}
-                      ><ArrowDown className="h-4 w-4" /></Button>
-                    </div>
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => handleStartEdit(tag)}>
-                      <Pencil className="h-5 w-5" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive">
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esto eliminará la etiqueta de todas las transacciones. Esta acción no se puede deshacer.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onDeleteTag(tag)}>Eliminar</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-          {isAddingTag ? (
-            <div className="p-4 border rounded-lg space-y-4">
-              <h4 className="font-medium">Nueva Etiqueta</h4>
-              <div className="flex items-center gap-2">
-                  <IconPicker onSelect={setNewTagIcon} onOpenChange={setIsIconPickerOpen}>
-                      <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                          {iconList.find(i => i.name === newTagIcon)?.component || <MoreHorizontal className="h-4 w-4" />}
-                      </Button>
-                  </IconPicker>
-                  <Input 
-                      placeholder="Nombre de la etiqueta" 
-                      value={newTagName} 
-                      onChange={(e) => setNewTagName(e.target.value)} 
-                      className="h-10" 
-                  />
-              </div>
-              <div className="flex justify-end gap-2">
-                  <Button variant="ghost" onClick={() => setIsAddingTag(false)}>Cancelar</Button>
-                  <Button onClick={handleCreateTag}>Crear</Button>
-              </div>
-            </div>
-          ) : (
-            <Button variant="outline" className="w-full" onClick={() => setIsAddingTag(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Añadir nueva etiqueta
-            </Button>
-          )}
-
-        </div>
-        <DialogFooter>
-          <Button onClick={handleSaveChangesClick}>Guardar Cambios</Button>
-        </DialogFooter>
-      </DialogContent>
-  )
-}
-
 interface TransactionFormProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'type'>) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: FormTag[];
-  onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
-  onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
-  onSaveChangesForTags: (tags: FormTag[]) => void;
-  refetchTags: () => void;
 }
 
 export default function TransactionForm({ 
@@ -298,13 +58,8 @@ export default function TransactionForm({
   onDeleteTransaction, 
   transactionToEdit, 
   tags, 
-  onAddTag, 
-  onDeleteTag, 
   onClose, 
-  onSaveChangesForTags,
-  refetchTags 
 }: TransactionFormProps) {
-  const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
@@ -351,16 +106,6 @@ export default function TransactionForm({
     }
   }, [watchedAmount]);
 
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (isManageTagsOpen && event.state?.modal !== 'manage-tags') {
-        setIsManageTagsOpen(false);
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isManageTagsOpen]);
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     if (transactionToEdit) {
@@ -380,21 +125,6 @@ export default function TransactionForm({
     }
   }
 
-  const handleAddNewTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
-    await onAddTag(tag);
-    await refetchTags();
-  };
-  
-  const handleSaveChangesForTagsClick = async (updatedTags: FormTag[]) => {
-    await onSaveChangesForTags(updatedTags);
-    await refetchTags();
-  }
-
-  const handleDeleteTag = async (tag: Tag) => {
-    await onDeleteTag(tag);
-    await refetchTags();
-  };
-
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
     const digitsOnly = value.replace(/[^0-9]/g, '');
@@ -405,23 +135,6 @@ export default function TransactionForm({
       field.onChange(0);
     }
   };
-
-  const handleSetIsManageTagsOpen = (open: boolean) => {
-    if (open) {
-      if (window.history.state?.modal !== 'manage-tags') {
-        window.history.pushState({ modal: 'manage-tags' }, '');
-      }
-    } else {
-      if (window.history.state?.modal === 'manage-tags') {
-        window.history.back();
-      }
-    }
-    setIsManageTagsOpen(open);
-  }
-
-  const handleCloseTagsManager = () => {
-    setIsManageTagsOpen(false);
-  }
 
   return (
     <>
@@ -539,24 +252,7 @@ export default function TransactionForm({
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
-                      <DialogTrigger asChild>
-                        <div className="mb-4 flex items-center justify-between cursor-pointer group">
-                            <div className="flex items-center gap-2">
-                                <FormLabel className="cursor-pointer group-hover:text-primary">Etiquetas</FormLabel>
-                                <Pencil className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                            </div>
-                        </div>
-                      </DialogTrigger>
-                      <ManageTagsDialogContent
-                          tags={tags}
-                          onAddTag={handleAddNewTag}
-                          onDeleteTag={handleDeleteTag}
-                          onSaveChanges={handleSaveChangesForTagsClick}
-                          onOpenChange={setIsManageTagsOpen}
-                          onShouldClose={handleCloseTagsManager}
-                      />
-                  </Dialog>
+                    <FormLabel>Etiquetas</FormLabel>
                   <FormControl>
                     <div className="flex flex-wrap gap-2">
                       {tags.map((tag) => {
