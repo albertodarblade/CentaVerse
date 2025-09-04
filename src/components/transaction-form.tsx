@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon, X } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal, Briefcase, User, Lightbulb, AlertTriangle, Utensils, Car, Home, Clapperboard, ShoppingCart, HeartPulse, Plane, Gift, BookOpen, PawPrint, Gamepad2, Music, Shirt, Dumbbell, Coffee, Phone, Mic, Film, School, Banknote, Plus, ArrowUp, ArrowDown, ArrowLeft, Check, CalendarIcon, X, CalculatorIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "./ui/calendar";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Calculator from "./calculator";
 
 const iconList = [
   { name: 'Briefcase', component: <Briefcase className="h-4 w-4" /> },
@@ -93,12 +94,13 @@ const IconPicker = ({ onSelect, children, onOpenChange }: { onSelect: (iconName:
     </Popover>
 );
 
-const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onSaveChanges, onOpenChange }: {
+const ManageTagsDialogContent = ({ tags, onAddTag, onDeleteTag, onSaveChanges, onOpenChange, onShouldClose }: {
   tags: FormTag[];
   onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
   onDeleteTag: (tag: Tag) => void;
   onSaveChanges: (tags: FormTag[]) => void;
   onOpenChange: (open: boolean) => void;
+  onShouldClose: () => void;
 }) => {
   const [editingTags, setEditingTags] = useState<FormTag[]>([]);
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
@@ -109,11 +111,11 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onS
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   useEffect(() => {
-    setEditingTags(initialTags.map(tag => ({
+    setEditingTags(tags.map(tag => ({
         ...tag,
         iconNode: iconList.find(i => i.name === tag.icon)?.component || <MoreHorizontal className="h-4 w-4" />
     })));
-  }, [initialTags]);
+  }, [tags]);
 
   const handleStartEdit = (tag: FormTag) => {
     setEditingTagId(tag.id);
@@ -168,7 +170,7 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onS
 
   const handleSaveChangesClick = () => {
     onSaveChanges(editingTags);
-    onOpenChange(false);
+    onShouldClose();
   }
 
   return (
@@ -179,7 +181,7 @@ const ManageTagsDialogContent = ({ tags: initialTags, onAddTag, onDeleteTag, onS
       }}>
         <DialogHeader>
           <DialogTitle>Gestionar Etiquetas</DialogTitle>
-           <DialogClose onClick={() => onOpenChange(false)} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
+           <DialogClose onClick={onShouldClose} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -284,14 +286,26 @@ interface TransactionFormProps {
   transactionToEdit: Transaction | null;
   tags: FormTag[];
   onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
-  onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
   onClose: () => void;
-  onReorderTags: (tags: FormTag[]) => void;
+  onSaveChangesForTags: (tags: FormTag[]) => void;
+  refetchTags: () => void;
 }
 
-export default function TransactionForm({ onAddTransaction, onUpdateTransaction, onDeleteTransaction, transactionToEdit, tags, onAddTag, onUpdateTag, onDeleteTag, onClose, onReorderTags }: TransactionFormProps) {
+export default function TransactionForm({ 
+  onAddTransaction, 
+  onUpdateTransaction, 
+  onDeleteTransaction, 
+  transactionToEdit, 
+  tags, 
+  onAddTag, 
+  onDeleteTag, 
+  onClose, 
+  onSaveChangesForTags,
+  refetchTags 
+}: TransactionFormProps) {
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
 
@@ -337,7 +351,6 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     }
   }, [watchedAmount]);
 
-
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (isManageTagsOpen && event.state?.modal !== 'manage-tags') {
@@ -369,16 +382,17 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
 
   const handleAddNewTag = async (tag: Omit<Tag, 'id' | 'order'>) => {
     await onAddTag(tag);
+    await refetchTags();
   };
   
-  const handleSaveChangesForTags = (updatedTags: FormTag[]) => {
-    const reorderPromise = onReorderTags(updatedTags);
-    const updatePromises = updatedTags.map(tag => onUpdateTag(tag));
-    Promise.all([reorderPromise, ...updatePromises]);
+  const handleSaveChangesForTagsClick = async (updatedTags: FormTag[]) => {
+    await onSaveChangesForTags(updatedTags);
+    await refetchTags();
   }
 
-  const handleDeleteTag = (tag: Tag) => {
-    onDeleteTag(tag);
+  const handleDeleteTag = async (tag: Tag) => {
+    await onDeleteTag(tag);
+    await refetchTags();
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
@@ -405,6 +419,10 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
     setIsManageTagsOpen(open);
   }
 
+  const handleCloseTagsManager = () => {
+    setIsManageTagsOpen(false);
+  }
+
   return (
     <>
       <DialogHeader className="relative">
@@ -425,7 +443,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-4xl font-bold text-muted-foreground/30 pointer-events-none z-10">
                       Bs.
                     </span>
@@ -438,6 +456,21 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                       disabled={isSubmitting}
                       className="h-24 w-full border-none bg-transparent text-center text-6xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
+                     <Dialog open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="absolute right-0 h-12 w-12 text-muted-foreground">
+                                <CalculatorIcon className="h-6 w-6" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <Calculator
+                                onConfirm={(value) => {
+                                    form.setValue('amount', value);
+                                    setIsCalculatorOpen(false);
+                                }}
+                            />
+                        </DialogContent>
+                    </Dialog>
                   </div>
                 </FormControl>
                 <FormMessage className="text-center" />
@@ -506,7 +539,7 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <Dialog open={isManageTagsOpen} onOpenChange={handleSetIsManageTagsOpen}>
+                  <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
                       <DialogTrigger asChild>
                         <div className="mb-4 flex items-center justify-between cursor-pointer group">
                             <div className="flex items-center gap-2">
@@ -519,8 +552,9 @@ export default function TransactionForm({ onAddTransaction, onUpdateTransaction,
                           tags={tags}
                           onAddTag={handleAddNewTag}
                           onDeleteTag={handleDeleteTag}
-                          onSaveChanges={handleSaveChangesForTags}
-                          onOpenChange={handleSetIsManageTagsOpen}
+                          onSaveChanges={handleSaveChangesForTagsClick}
+                          onOpenChange={setIsManageTagsOpen}
+                          onShouldClose={handleCloseTagsManager}
                       />
                   </Dialog>
                   <FormControl>
