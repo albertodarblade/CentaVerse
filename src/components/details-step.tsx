@@ -73,7 +73,6 @@ export default function DetailsStep({
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
-  const [focusAmountInput, setFocusAmountInput] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -115,16 +114,6 @@ export default function DetailsStep({
     }
   }, [transactionToEdit]);
 
-  useEffect(() => {
-    if (focusAmountInput) {
-      const amountInput = document.getElementById('amount-input');
-      if (amountInput) {
-        amountInput.focus();
-      }
-      setFocusAmountInput(false); // Reset the state
-    }
-  }, [focusAmountInput]);
-
 
   const watchedAmount = form.watch('amount');
   useEffect(() => {
@@ -161,7 +150,12 @@ export default function DetailsStep({
     form.setValue('tag', tag.name);
     setIsCategorySelectorOpen(false);
     if (form.getValues('amount') === 0) {
-      setFocusAmountInput(true);
+      setTimeout(() => {
+        const amountInput = document.getElementById('amount-input');
+        if (amountInput) {
+            amountInput.focus();
+        }
+      }, 500);
     }
   }
 
