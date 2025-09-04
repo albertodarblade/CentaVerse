@@ -35,7 +35,7 @@ export default function CategoryStep({
   return (
     <div className="pt-8">
         <DialogHeader>
-            <div className="flex justify-between items-center px-6">
+          <div className="flex justify-between items-center px-6 pb-4">
               <div className="text-left">
                 <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
                 <DialogDescription>
@@ -47,6 +47,10 @@ export default function CategoryStep({
                   <Button variant="outline">Editar</Button>
                 </DialogTrigger>
                 <DialogContent className="h-full max-w-full w-full p-0">
+                  <DialogHeader>
+                    <DialogTitle className="sr-only">Gestionar Etiquetas</DialogTitle>
+                     <DialogDescription className="sr-only">Añadir, editar, eliminar y reordenar tus etiquetas.</DialogDescription>
+                  </DialogHeader>
                    <TagManager 
                      tags={tags}
                      onAddTag={onAddTag}
@@ -59,7 +63,7 @@ export default function CategoryStep({
               </Dialog>
             </div>
         </DialogHeader>
-        <div className="pt-6">
+        <div className="pt-2">
             <ScrollArea className="h-96">
                 <div className="flex flex-col gap-2 px-6 pb-6">
                     {tags.map(tag => (

@@ -276,6 +276,12 @@ export default function DetailsStep({
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Calculadora</DialogTitle>
+                                <DialogDescription>
+                                    Realiza un cálculo rápido y confirma el monto.
+                                </DialogDescription>
+                              </DialogHeader>
                                 <Calculator
                                     onConfirm={(value) => {
                                         form.setValue('amount', value);

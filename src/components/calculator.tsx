@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
 interface CalculatorProps {
   onConfirm: (value: number) => void;
@@ -79,12 +78,6 @@ export default function Calculator({ onConfirm }: CalculatorProps) {
 
   return (
     <div>
-        <DialogHeader>
-            <DialogTitle>Calculadora</DialogTitle>
-            <DialogDescription>
-                Realiza un cálculo rápido y confirma el monto.
-            </DialogDescription>
-        </DialogHeader>
         <div className="p-4 space-y-4">
             <Input
                 type="text"
