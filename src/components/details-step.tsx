@@ -17,7 +17,7 @@ import type { Transaction, Tag } from "@/lib/types";
 import { Trash2, ArrowLeft, CalendarIcon, CalculatorIcon, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   DialogDescription
 } from "@/components/ui/dialog"
@@ -73,6 +73,7 @@ export default function DetailsStep({
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -149,6 +150,9 @@ export default function DetailsStep({
   const handleCategorySelect = (tag: Tag) => {
     form.setValue('tag', tag.name);
     setIsCategorySelectorOpen(false);
+    if (form.getValues('amount') === 0 && amountInputRef.current) {
+      amountInputRef.current.focus();
+    }
   }
 
   const handleCategorySelectorClose = () => {
@@ -227,6 +231,7 @@ export default function DetailsStep({
                         Bs.
                       </span>
                       <Input
+                        ref={amountInputRef}
                         type="text"
                         inputMode="numeric"
                         placeholder="0"
