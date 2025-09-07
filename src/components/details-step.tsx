@@ -97,7 +97,6 @@ export default function DetailsStep({
         tag: transactionToEdit.tag,
         date: new Date(transactionToEdit.date),
       });
-      setIsCategorySelectorOpen(false);
     } else {
        form.reset({
         amount: 0,
@@ -160,25 +159,6 @@ export default function DetailsStep({
     }
     setIsCategorySelectorOpen(false);
   };
-  
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (isCategorySelectorOpen) {
-        event.preventDefault();
-        handleCategorySelectorClose();
-      }
-    };
-
-    if (isCategorySelectorOpen) {
-      window.history.pushState({ modal: 'category-selector' }, '');
-      window.addEventListener('popstate', handlePopState);
-    }
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isCategorySelectorOpen]);
-
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
     const value = e.target.value;
@@ -204,7 +184,7 @@ export default function DetailsStep({
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
           
           <div className="flex-1 space-y-8 pt-4 overflow-y-auto">
-            <Dialog open={isCategorySelectorOpen} onOpenChange={handleCategorySelectorClose}>
+            <Dialog open={isCategorySelectorOpen} onOpenChange={setIsCategorySelectorOpen}>
                 <DialogTrigger asChild>
                     <button type="button" className="w-full bg-secondary p-4 rounded-lg">
                         {currentTag ? (
