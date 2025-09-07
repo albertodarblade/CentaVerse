@@ -200,7 +200,7 @@ export default function DetailsStep({
   return (
     <>
       <DialogHeader className="relative">
-        <DialogTitle className="font-headline text-2xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Gasto'}</DialogTitle>
+        <DialogTitle className="font-headline text-xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Gasto'}</DialogTitle>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">

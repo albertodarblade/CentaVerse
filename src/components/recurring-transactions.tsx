@@ -222,7 +222,7 @@ export default function RecurringTransactions({
       <div>
         <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-6 w-6 text-green-500" />
-            <h2 className="text-2xl font-bold">Ingresos Recurrentes</h2>
+            <h2 className="text-xl font-bold">Ingresos Recurrentes</h2>
         </div>
         <AddNewForm onAddItem={onAddIncome} itemType="income" />
         <Card className="mt-4">
@@ -259,7 +259,7 @@ export default function RecurringTransactions({
       <div>
         <div className="flex items-center gap-2 mb-4">
             <TrendingDown className="h-6 w-6 text-red-500" />
-            <h2 className="text-2xl font-bold">Gastos Recurrentes</h2>
+            <h2 className="text-xl font-bold">Gastos Recurrentes</h2>
         </div>
         <AddNewForm onAddItem={onAddRecurringExpense} itemType="expense" />
         <Card className="mt-4">

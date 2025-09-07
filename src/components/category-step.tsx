@@ -38,7 +38,7 @@ export default function CategoryStep({
         <DialogHeader>
           <div className="flex justify-between items-center px-6 pb-4">
               <div className="text-left">
-                <DialogTitle className="font-headline text-2xl">Categoría</DialogTitle>
+                <DialogTitle className="font-headline text-xl">Categoría</DialogTitle>
                 <DialogDescription>
                     Elige una categoría para tu nuevo gasto.
                 </DialogDescription>
