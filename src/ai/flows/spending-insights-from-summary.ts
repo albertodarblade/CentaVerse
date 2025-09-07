@@ -43,10 +43,13 @@ const prompt = ai.definePrompt({
   name: 'spendingInsightsPrompt',
   input: {schema: SpendingInsightsInputSchema},
   output: {schema: SpendingInsightsOutputSchema},
-  prompt: `Eres un asesor financiero que da consejos a los usuarios basándose en sus datos de ingresos y gastos del mes actual. Tu respuesta debe ser en español.
+  prompt: `Eres un asesor financiero. Tu respuesta debe ser en español.
+  Analiza los siguientes datos de ingresos y gastos del mes y proporciona un informe muy resumido y simple. No uses muchas palabras.
 
-  Analiza los datos de ingresos y gastos categorizados proporcionados. Ofrece información y recomendaciones personalizadas, directas y sencillas sobre cómo el usuario puede mejorar sus hábitos financieros.
-  Tu análisis debe ser detallado y desglosado por categoría. Incluye tanto los gastos regulares como los recurrentes en tu análisis. Sé conciso y ve al grano.
+  Tu informe debe contener:
+  1. Un resumen muy corto (una o dos frases) de la situación financiera.
+  2. Un máximo de 3 recomendaciones clave, prácticas y accionables para mejorar.
+  3. No desgloses los gastos por categoría ni incluyas detalles de cada transacción. Ve directo al grano.
 
   Ingreso Total Mensual: {{{totalIncome}}}
   
@@ -54,16 +57,12 @@ const prompt = ai.definePrompt({
   {{#each categoryExpenses}}
   - Categoría: {{{category}}}
     - Total: {{{totalAmount}}}
-    - Detalles:
-      {{#each expenses}}
-      - {{{description}}}: {{{amount}}} {{#if isRecurring}}(Recurrente){{/if}}
-      {{/each}}
   {{/each}}
 
   {{#if unCategorizedExpenses.length}}
   Gastos sin Categorizar:
     {{#each unCategorizedExpenses}}
-    - {{{description}}}: {{{amount}}} {{#if isRecurring}}(Recurrente){{/if}}
+    - {{{description}}}: {{{amount}}}
     {{/each}}
   {{/if}}
   `,
