@@ -290,15 +290,11 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
       const fromIndex = fields.findIndex(f => f.id === draggedTag.id);
       if (fromIndex !== -1 && fromIndex !== index) {
         move(fromIndex, index);
+        const updatedTags = listForm.getValues('tags').map((tag, i) => ({ ...tag, order: i }));
+        onReorderTags(updatedTags as Tag[]);
       }
       setDraggedTag(null);
     }
-  };
-
-  const handleSaveChangesAndClose = async () => {
-    const updatedTags = listForm.getValues('tags').map((tag, index) => ({ ...tag, order: index }));
-    await onReorderTags(updatedTags as Tag[]);
-    onClose();
   };
   
   const handleAddNewTag = async (values: z.infer<typeof newTagFormSchema>) => {
@@ -341,7 +337,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
   return (
     <div className="flex flex-col h-full bg-background">
       <header className="flex items-center gap-4 p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={handleSaveChangesAndClose}>
+        <Button variant="ghost" size="icon" onClick={onClose}>
           <ArrowLeft />
         </Button>
         <h2 className="text-xl font-bold">Gestionar Etiquetas</h2>
