@@ -97,6 +97,7 @@ export default function DetailsStep({
         tag: transactionToEdit.tag,
         date: new Date(transactionToEdit.date),
       });
+      setIsCategorySelectorOpen(false);
     } else {
        form.reset({
         amount: 0,
@@ -104,16 +105,9 @@ export default function DetailsStep({
         tag: "",
         date: new Date(),
       });
+       setIsCategorySelectorOpen(true);
     }
   }, [transactionToEdit, form]);
-  
-  useEffect(() => {
-    // Automatically open category selector for new transactions
-    if (!transactionToEdit) {
-      setIsCategorySelectorOpen(true);
-    }
-  }, [transactionToEdit]);
-
 
   const watchedAmount = form.watch('amount');
   useEffect(() => {
