@@ -199,8 +199,12 @@ export default function DetailsStep({
 
   return (
     <>
-      <DialogHeader className="relative">
-        <DialogTitle className="font-headline text-xl text-center">{transactionToEdit ? 'Editar Gasto' : 'Añadir Gasto'}</DialogTitle>
+      <DialogHeader className="relative flex-row items-center justify-center border-b">
+        <Button variant="ghost" size="icon" className="absolute left-2" onClick={onClose}>
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Cerrar</span>
+        </Button>
+        <DialogTitle className="font-headline text-xl text-center py-4">{transactionToEdit ? 'Editar Gasto' : 'Añadir Gasto'}</DialogTitle>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
