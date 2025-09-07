@@ -12,6 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Trash2, Edit, Check, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useDebounce } from 'use-debounce';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 const formSchema = z.object({
   description: z.string().min(2, { message: "La descripción debe tener al menos 2 caracteres." }),
@@ -58,7 +60,7 @@ const EditableRow = ({ item, onUpdate, onDelete }: { item: Income | RecurringExp
     }
 
     return (
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b">
             <div className="flex-1">
                 {isEditing ? (
                     <div className="space-y-2">
@@ -218,80 +220,85 @@ export default function RecurringTransactions({
 
 
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-6 w-6 text-green-500" />
-            <h2 className="text-xl font-bold">Ingresos Recurrentes</h2>
-        </div>
-        <AddNewForm onAddItem={onAddIncome} itemType="income" />
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>Lista de Ingresos</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {incomes.length > 0 ? (
-              <div className="divide-y">
-                  {incomes.map((income) => 
-                    <EditableRow 
-                        key={income.id} 
-                        item={income}
-                        onUpdate={onUpdateIncome}
-                        onDelete={onDeleteIncome}
-                    />
-                  )}
-              </div>
-            ) : (
-              <p className="text-muted-foreground p-6">No hay ingresos recurrentes registrados.</p>
-            )}
-          </CardContent>
-           {incomes.length > 0 && (
-            <CardFooter className="flex justify-end p-4 border-t">
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total de Ingresos Recurrentes</p>
-                <p className="text-lg font-bold">{formattedTotalIncomes}</p>
-              </div>
-            </CardFooter>
-           )}
-        </Card>
-      </div>
-
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-            <TrendingDown className="h-6 w-6 text-red-500" />
-            <h2 className="text-xl font-bold">Gastos Recurrentes</h2>
-        </div>
-        <AddNewForm onAddItem={onAddRecurringExpense} itemType="expense" />
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>Lista de Gastos Recurrentes</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {recurringExpenses.length > 0 ? (
-              <div className="divide-y">
-                  {recurringExpenses.map((expense) => 
-                    <EditableRow 
-                        key={expense.id} 
-                        item={expense}
-                        onUpdate={onUpdateRecurringExpense}
-                        onDelete={onDeleteRecurringExpense}
-                    />
-                  )}
-              </div>
-            ) : (
-              <p className="text-muted-foreground p-6">No hay gastos recurrentes registrados.</p>
-            )}
-          </CardContent>
-           {recurringExpenses.length > 0 && (
-            <CardFooter className="flex justify-end p-4 border-t">
-                <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total de Gastos Recurrentes</p>
-                    <p className="text-lg font-bold">{formattedTotalRecurringExpenses}</p>
+    <Tabs defaultValue="incomes" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="incomes">
+          <TrendingUp className="mr-2 h-4 w-4 text-green-500" />
+          Ingresos
+        </TabsTrigger>
+        <TabsTrigger value="expenses">
+           <TrendingDown className="mr-2 h-4 w-4 text-red-500" />
+          Egresos
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="incomes" className="mt-6">
+        <div className="space-y-4">
+          <AddNewForm onAddItem={onAddIncome} itemType="income" />
+          <Card>
+            <CardHeader>
+              <CardTitle>Lista de Ingresos</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {incomes.length > 0 ? (
+                <div className="divide-y">
+                    {incomes.map((income) => 
+                      <EditableRow 
+                          key={income.id} 
+                          item={income}
+                          onUpdate={onUpdateIncome}
+                          onDelete={onDeleteIncome}
+                      />
+                    )}
                 </div>
-            </CardFooter>
-           )}
-        </Card>
-      </div>
-    </div>
+              ) : (
+                <p className="text-muted-foreground p-6">No hay ingresos recurrentes registrados.</p>
+              )}
+            </CardContent>
+             {incomes.length > 0 && (
+              <CardFooter className="flex justify-end p-4 border-t">
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Total de Ingresos Recurrentes</p>
+                  <p className="text-lg font-bold">{formattedTotalIncomes}</p>
+                </div>
+              </CardFooter>
+             )}
+          </Card>
+        </div>
+      </TabsContent>
+      <TabsContent value="expenses" className="mt-6">
+        <div className="space-y-4">
+          <AddNewForm onAddItem={onAddRecurringExpense} itemType="expense" />
+          <Card>
+            <CardHeader>
+              <CardTitle>Lista de Gastos Recurrentes</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {recurringExpenses.length > 0 ? (
+                <div className="divide-y">
+                    {recurringExpenses.map((expense) => 
+                      <EditableRow 
+                          key={expense.id} 
+                          item={expense}
+                          onUpdate={onUpdateRecurringExpense}
+                          onDelete={onDeleteRecurringExpense}
+                      />
+                    )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground p-6">No hay gastos recurrentes registrados.</p>
+              )}
+            </CardContent>
+             {recurringExpenses.length > 0 && (
+              <CardFooter className="flex justify-end p-4 border-t">
+                  <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Total de Gastos Recurrentes</p>
+                      <p className="text-lg font-bold">{formattedTotalRecurringExpenses}</p>
+                  </div>
+              </CardFooter>
+             )}
+          </Card>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }
