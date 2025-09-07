@@ -98,13 +98,13 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
                 </PieChart>
               </ChartContainer>
           </div>
-          <div className="grid grid-cols-2 gap-6 w-full max-w-sm text-center">
+          <div className="grid grid-cols-2 gap-4 w-full max-w-sm text-center">
             <div>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS.income }}/>
                 Ingresos
               </div>
-              <p className="text-xl font-bold">
+              <p className="text-lg font-bold">
                 {formattedTotalIncome}
               </p>
             </div>
@@ -113,7 +113,7 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
                 Gastado
               </div>
-              <p className="text-xl font-bold">
+              <p className="text-lg font-bold">
                 {formattedTotalExpenses}
               </p>
             </div>
