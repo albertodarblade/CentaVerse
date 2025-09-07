@@ -295,7 +295,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
     }
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChangesAndClose = async () => {
     const updatedTags = listForm.getValues('tags').map((tag, index) => ({ ...tag, order: index }));
     await onReorderTags(updatedTags as Tag[]);
     onClose();
@@ -341,37 +341,35 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
   return (
     <div className="flex flex-col h-full bg-background">
       <header className="flex items-center gap-4 p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={handleSaveChangesAndClose}>
           <ArrowLeft />
         </Button>
         <h2 className="text-xl font-bold">Gestionar Etiquetas</h2>
       </header>
-
-      <ScrollArea className="flex-1">
-        <div className="space-y-2 p-4">
-          {fields.map((field, index) => (
-            <div 
-              key={field.id}
-              className="flex items-center gap-4 p-2 rounded-lg bg-card border"
-              draggable onDragStart={() => handleDragStart(index)} onDragOver={(e) => e.preventDefault()} onDrop={() => handleDrop(index)}
-            >
-              <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg" style={{ backgroundColor: `hsl(var(--tag-${field.color}))` }}>
-                  {React.cloneElement(iconMap[field.icon] as React.ReactElement, { className: 'w-6 h-6', style: {color: `hsl(var(--tag-${field.color}-foreground))`}})}
+      <div className="flex-1 overflow-y-auto">
+        <ScrollArea className="h-full">
+          <div className="space-y-2 p-4">
+            {fields.map((field, index) => (
+              <div 
+                key={field.id}
+                className="flex items-center gap-4 p-2 rounded-lg bg-card border"
+                draggable onDragStart={() => handleDragStart(index)} onDragOver={(e) => e.preventDefault()} onDrop={() => handleDrop(index)}
+              >
+                <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg" style={{ backgroundColor: `hsl(var(--tag-${field.color}))` }}>
+                    {React.cloneElement(iconMap[field.icon] as React.ReactElement, { className: 'w-6 h-6', style: {color: `hsl(var(--tag-${field.color}-foreground))`}})}
+                </div>
+                <span className="flex-grow font-medium">{field.name}</span>
+                <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); openEditView(field as Tag)}}>
+                    <Pencil />
+                </Button>
               </div>
-              <span className="flex-grow font-medium">{field.name}</span>
-              <Button variant="ghost" size="icon" onClick={(e) => {e.stopPropagation(); openEditView(field as Tag)}}>
-                  <Pencil />
-              </Button>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
       
       <div className="relative p-4 border-t">
-          <Button className="w-full" onClick={handleSaveChanges}>OK</Button>
-          <Button size="icon" className="rounded-full absolute right-6 -top-5" onClick={() => setView('add')}>
-            <Plus />
-          </Button>
+          <Button variant="secondary" className="w-full" onClick={() => setView('add')}>Crear Etiqueta</Button>
       </div>
     </div>
   );
