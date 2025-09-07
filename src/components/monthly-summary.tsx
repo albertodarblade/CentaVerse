@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   ChartContainer,
   ChartTooltip,
@@ -66,28 +66,8 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="grid grid-cols-2 gap-4 items-center">
-          <div className="flex flex-col space-y-6">
-            <div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="h-2.5 w-1 rounded-full" style={{ backgroundColor: COLORS.income }}/>
-                Ingresos
-              </div>
-              <p className="text-xl font-bold">
-                {formattedTotalIncome}
-              </p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="h-2.5 w-1 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
-                Gastado
-              </div>
-              <p className="text-xl font-bold">
-                {formattedTotalExpenses}
-              </p>
-            </div>
-          </div>
-          <div className="h-40">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-40 w-40">
              <ChartContainer
                 config={{
                     income: { label: 'Ingresos', color: COLORS.income },
@@ -118,8 +98,29 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
                 </PieChart>
               </ChartContainer>
           </div>
+          <div className="grid grid-cols-2 gap-6 w-full max-w-sm text-center">
+            <div>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS.income }}/>
+                Ingresos
+              </div>
+              <p className="text-xl font-bold">
+                {formattedTotalIncome}
+              </p>
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
+                Gastado
+              </div>
+              <p className="text-xl font-bold">
+                {formattedTotalExpenses}
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
+
