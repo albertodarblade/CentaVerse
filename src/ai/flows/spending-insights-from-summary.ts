@@ -43,13 +43,14 @@ const prompt = ai.definePrompt({
   name: 'spendingInsightsPrompt',
   input: {schema: SpendingInsightsInputSchema},
   output: {schema: SpendingInsightsOutputSchema},
-  prompt: `Eres un asesor financiero. Tu respuesta debe ser en español.
-  Analiza los siguientes datos de ingresos y gastos del mes y proporciona un informe muy resumido y simple. No uses muchas palabras.
+  prompt: `Eres un asesor financiero. Tu respuesta debe ser en español y usar formato Markdown.
+  Analiza los siguientes datos de ingresos y gastos del mes y proporciona un informe claro y útil.
 
   Tu informe debe contener:
-  1. Un resumen muy corto (una o dos frases) de la situación financiera.
-  2. Un máximo de 3 recomendaciones clave, prácticas y accionables para mejorar.
-  3. No desgloses los gastos por categoría ni incluyas detalles de cada transacción. Ve directo al grano.
+  1. Un resumen corto de la situación financiera.
+  2. Un desglose de los gastos por categoría, mostrando el total de cada una.
+  3. Un máximo de 3 recomendaciones clave y prácticas para mejorar.
+  4. Mantén las recomendaciones breves y directas.
 
   Ingreso Total Mensual: {{{totalIncome}}}
   
