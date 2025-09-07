@@ -23,7 +23,7 @@ const TransactionListItem = ({ transaction, onClick, tagMap }: { transaction: Tr
 
   useEffect(() => {
     setFormattedAmount(
-        `-Bs${new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(transaction.amount)}`
+        `-Bs${new Intl.NumberFormat('es-BO').format(transaction.amount)}`
     );
   }, [transaction.amount]);
 
@@ -39,14 +39,10 @@ const TransactionListItem = ({ transaction, onClick, tagMap }: { transaction: Tr
               {tag && (
                 <div className={cn(
                     "h-10 w-10 rounded-lg flex items-center justify-center",
-                    `bg-tag-${tag.color}`
+                    `bg-tag-${tag.color}`,
+                    `text-tag-${tag.color}-foreground`
                 )}>
-                  <div className={cn(
-                      "h-6 w-6",
-                      `text-tag-${tag.color}-foreground`
-                  )}>
                     {React.cloneElement(tag.iconNode as React.ReactElement, { className: 'h-6 w-6' })}
-                  </div>
                 </div>
               )}
               <p className="font-semibold text-base">{transaction.description}</p>
