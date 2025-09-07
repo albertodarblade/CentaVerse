@@ -29,7 +29,7 @@ interface RecurringTransactionsProps {
   onDeleteRecurringExpense: (expenseId: string) => Promise<void>;
 }
 
-const EditableRow = ({ item, onUpdate, onDelete, itemType }: { item: Income | RecurringExpense, onUpdate: (item: any) => Promise<void>, onDelete: (id: string) => Promise<void>, itemType: 'income' | 'expense' }) => {
+const EditableRow = ({ item, onUpdate, onDelete }: { item: Income | RecurringExpense, onUpdate: (item: any) => Promise<void>, onDelete: (id: string) => Promise<void> }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedDescription, setEditedDescription] = useState(item.description);
     const [editedAmount, setEditedAmount] = useState(item.amount.toString());
@@ -44,7 +44,9 @@ const EditableRow = ({ item, onUpdate, onDelete, itemType }: { item: Income | Re
     const handleUpdate = async () => {
         const amountNumber = parseInt(debouncedAmount, 10);
         if (debouncedDescription !== item.description || amountNumber !== item.amount) {
-            await onUpdate({ ...item, description: debouncedDescription, amount: amountNumber });
+            if (!isNaN(amountNumber) && amountNumber > 0 && debouncedDescription.length >= 2) {
+              await onUpdate({ ...item, description: debouncedDescription, amount: amountNumber });
+            }
         }
         setIsEditing(false);
     };
@@ -56,40 +58,53 @@ const EditableRow = ({ item, onUpdate, onDelete, itemType }: { item: Income | Re
     }
 
     return (
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="grid grid-cols-[1fr,auto] items-center gap-x-4 p-4 border-b">
             {isEditing ? (
                 <>
-                    <Input value={editedDescription} onChange={(e) => setEditedDescription(e.target.value)} className="mr-2"/>
-                    <Input type="number" value={editedAmount} onChange={(e) => setEditedAmount(e.target.value)} className="w-32" />
-                    <Button variant="ghost" size="icon" onClick={handleUpdate}><Check className="h-4 w-4"/></Button>
-                    <Button variant="ghost" size="icon" onClick={handleCancel}><X className="h-4 w-4"/></Button>
+                    <div className="space-y-2">
+                         <Input 
+                            value={editedDescription} 
+                            onChange={(e) => setEditedDescription(e.target.value)}
+                         />
+                         <Input 
+                            type="number" 
+                            value={editedAmount} 
+                            onChange={(e) => setEditedAmount(e.target.value)}
+                         />
+                    </div>
+                    <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={handleUpdate}><Check className="h-4 w-4 text-green-500"/></Button>
+                        <Button variant="ghost" size="icon" onClick={handleCancel}><X className="h-4 w-4 text-red-500"/></Button>
+                    </div>
                 </>
             ) : (
                 <>
-                    <span className="flex-1">{item.description}</span>
-                    <span className="font-bold mr-4">
-                        {formattedAmount}
-                    </span>
-                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4"/></Button>
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar recurrente?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Esta acción no se puede deshacer.
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onDelete(item.id)}>Eliminar</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    <span className="flex-1 truncate">{item.description}</span>
+                    <div className="flex items-center gap-1">
+                        <span className="font-bold mr-2">
+                            {formattedAmount}
+                        </span>
+                        <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4"/></Button>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar recurrente?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta acción no se puede deshacer.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(item.id)}>Eliminar</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 </>
             )}
         </div>
@@ -131,11 +146,13 @@ const AddNewForm = ({ onAddItem, itemType }: { onAddItem: (item: any) => Promise
                     name="description"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Descripción</FormLabel>
-                        <FormControl>
-                            <Input placeholder={`p. ej., ${itemType === 'income' ? 'Salario' : 'Alquiler'}`} {...field} />
-                        </FormControl>
-                        <FormMessage />
+                          <div className="form-control">
+                            <FormControl>
+                              <Input placeholder=" " {...field} />
+                            </FormControl>
+                            <FormLabel>Descripción</FormLabel>
+                          </div>
+                          <FormMessage />
                         </FormItem>
                     )}
                     />
@@ -144,23 +161,25 @@ const AddNewForm = ({ onAddItem, itemType }: { onAddItem: (item: any) => Promise
                     name="amount"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Monto</FormLabel>
-                        <FormControl>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-                                Bs.
-                                </span>
-                                <Input
-                                type="text"
-                                inputMode="numeric"
-                                placeholder="0"
-                                value={field.value > 0 ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
-                                onChange={(e) => handleAmountChange(e, field)}
-                                className="pl-10"
-                                />
-                            </div>
-                        </FormControl>
-                        <FormMessage />
+                          <div className="form-control">
+                            <FormControl>
+                                <div className="relative flex items-center">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-lg font-bold text-muted-foreground/30 pointer-events-none z-10">
+                                      Bs.
+                                    </span>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder=" "
+                                        value={field.value > 0 ? new Intl.NumberFormat('es-BO').format(field.value) : ''}
+                                        onChange={(e) => handleAmountChange(e, field)}
+                                        className="pl-12 text-lg"
+                                    />
+                                </div>
+                            </FormControl>
+                             <FormLabel>Monto</FormLabel>
+                          </div>
+                          <FormMessage />
                         </FormItem>
                     )}
                     />
@@ -207,7 +226,7 @@ export default function RecurringTransactions({
           <CardHeader>
             <CardTitle>Lista de Ingresos</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {incomes.length > 0 ? (
               <div className="divide-y">
                   {incomes.map((income) => 
@@ -216,12 +235,11 @@ export default function RecurringTransactions({
                         item={income}
                         onUpdate={onUpdateIncome}
                         onDelete={onDeleteIncome}
-                        itemType="income"
                     />
                   )}
               </div>
             ) : (
-              <p className="text-muted-foreground">No hay ingresos recurrentes registrados.</p>
+              <p className="text-muted-foreground p-6">No hay ingresos recurrentes registrados.</p>
             )}
           </CardContent>
            {incomes.length > 0 && (
@@ -245,7 +263,7 @@ export default function RecurringTransactions({
           <CardHeader>
             <CardTitle>Lista de Gastos Recurrentes</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {recurringExpenses.length > 0 ? (
               <div className="divide-y">
                   {recurringExpenses.map((expense) => 
@@ -254,12 +272,11 @@ export default function RecurringTransactions({
                         item={expense}
                         onUpdate={onUpdateRecurringExpense}
                         onDelete={onDeleteRecurringExpense}
-                        itemType="expense"
                     />
                   )}
               </div>
             ) : (
-              <p className="text-muted-foreground">No hay gastos recurrentes registrados.</p>
+              <p className="text-muted-foreground p-6">No hay gastos recurrentes registrados.</p>
             )}
           </CardContent>
            {recurringExpenses.length > 0 && (
