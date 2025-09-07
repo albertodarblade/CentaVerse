@@ -295,7 +295,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
     }
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChangesAndClose = async () => {
     const updatedTags = listForm.getValues('tags').map((tag, index) => ({ ...tag, order: index }));
     await onReorderTags(updatedTags as Tag[]);
     onClose();
@@ -341,7 +341,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
   return (
     <div className="flex flex-col h-full bg-background">
       <header className="flex items-center gap-4 p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={handleSaveChangesAndClose}>
           <ArrowLeft />
         </Button>
         <h2 className="text-xl font-bold">Gestionar Etiquetas</h2>
@@ -369,7 +369,6 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
       </div>
       
       <div className="p-4 border-t space-y-2">
-        <Button className="w-full" onClick={handleSaveChanges}>Guardar Cambios</Button>
         <Button variant="secondary" className="w-full" onClick={() => setView('add')}>Crear Etiqueta</Button>
       </div>
     </div>
