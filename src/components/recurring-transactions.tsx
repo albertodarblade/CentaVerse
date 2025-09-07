@@ -58,55 +58,58 @@ const EditableRow = ({ item, onUpdate, onDelete }: { item: Income | RecurringExp
     }
 
     return (
-        <div className="grid grid-cols-[1fr,auto] items-center gap-x-4 p-4 border-b">
-            {isEditing ? (
-                <>
+        <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex-1">
+                {isEditing ? (
                     <div className="space-y-2">
-                         <Input 
-                            value={editedDescription} 
-                            onChange={(e) => setEditedDescription(e.target.value)}
-                         />
-                         <Input 
-                            type="number" 
-                            value={editedAmount} 
-                            onChange={(e) => setEditedAmount(e.target.value)}
-                         />
+                        <Input 
+                           value={editedDescription} 
+                           onChange={(e) => setEditedDescription(e.target.value)}
+                        />
+                        <Input 
+                           type="number" 
+                           value={editedAmount} 
+                           onChange={(e) => setEditedAmount(e.target.value)}
+                        />
                     </div>
-                    <div className="flex gap-1">
+                ) : (
+                    <div>
+                        <p className="truncate font-medium">{item.description}</p>
+                        <p className="text-sm text-muted-foreground">{formattedAmount}</p>
+                    </div>
+                )}
+            </div>
+            <div className="flex items-center gap-1 ml-4">
+                {isEditing ? (
+                    <>
                         <Button variant="ghost" size="icon" onClick={handleUpdate}><Check className="h-4 w-4 text-green-500"/></Button>
                         <Button variant="ghost" size="icon" onClick={handleCancel}><X className="h-4 w-4 text-red-500"/></Button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <span className="flex-1 truncate">{item.description}</span>
-                    <div className="flex items-center gap-1">
-                        <span className="font-bold mr-2">
-                            {formattedAmount}
-                        </span>
+                    </>
+                ) : (
+                    <>
                         <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4"/></Button>
-                         <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar recurrente?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta acción no se puede deshacer.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(item.id)}>Eliminar</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </>
-            )}
+                        <AlertDialog>
+                           <AlertDialogTrigger asChild>
+                               <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                   <Trash2 className="h-4 w-4" />
+                               </Button>
+                           </AlertDialogTrigger>
+                           <AlertDialogContent>
+                               <AlertDialogHeader>
+                               <AlertDialogTitle>¿Eliminar recurrente?</AlertDialogTitle>
+                               <AlertDialogDescription>
+                                   Esta acción no se puede deshacer.
+                               </AlertDialogDescription>
+                               </AlertDialogHeader>
+                               <AlertDialogFooter>
+                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                               <AlertDialogAction onClick={() => onDelete(item.id)}>Eliminar</AlertDialogAction>
+                               </AlertDialogFooter>
+                           </AlertDialogContent>
+                       </AlertDialog>
+                    </>
+                )}
+            </div>
         </div>
     )
 }
