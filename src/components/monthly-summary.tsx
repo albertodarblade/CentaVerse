@@ -65,9 +65,9 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
 
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-40 w-40">
+      <CardContent className="p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+          <div className="h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0">
              <ChartContainer
                 config={{
                     income: { label: 'Ingresos', color: COLORS.income },
@@ -98,22 +98,22 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
                 </PieChart>
               </ChartContainer>
           </div>
-          <div className="grid grid-cols-2 gap-4 w-full max-w-sm text-center">
-            <div>
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS.income }}/>
+          <div className="flex flex-col gap-3 w-full">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.income }}/>
                 Ingresos
               </div>
-              <p className="text-lg font-bold">
+              <p className="text-base font-bold">
                 {formattedTotalIncome}
               </p>
             </div>
-            <div>
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
+             <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
                 Gastado
               </div>
-              <p className="text-lg font-bold">
+              <p className="text-base font-bold">
                 {formattedTotalExpenses}
               </p>
             </div>
@@ -123,3 +123,4 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
     </Card>
   );
 }
+
