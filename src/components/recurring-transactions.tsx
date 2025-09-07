@@ -60,10 +60,10 @@ const EditableRow = ({ item, onUpdate, onDelete }: { item: Income | RecurringExp
     }
 
     return (
-      <div className="flex items-center justify-between p-4 border-b">
-            <div className="flex-1">
+      <div className="flex items-start justify-between p-4 border-b">
+            <div className="flex-1 grid grid-cols-2 gap-4">
                 {isEditing ? (
-                    <div className="space-y-2">
+                    <div className="col-span-2 space-y-2">
                         <Input 
                            value={editedDescription} 
                            onChange={(e) => setEditedDescription(e.target.value)}
@@ -75,13 +75,13 @@ const EditableRow = ({ item, onUpdate, onDelete }: { item: Income | RecurringExp
                         />
                     </div>
                 ) : (
-                    <div>
+                    <div className="col-span-2">
                         <p className="truncate font-medium">{item.description}</p>
                         <p className="text-sm text-muted-foreground">{formattedAmount}</p>
                     </div>
                 )}
             </div>
-            <div className="flex items-center gap-1 ml-4">
+            <div className="flex flex-col items-center gap-2 ml-4">
                 {isEditing ? (
                     <>
                         <Button variant="ghost" size="icon" onClick={handleUpdate}><Check className="h-4 w-4 text-green-500"/></Button>
@@ -233,7 +233,6 @@ export default function RecurringTransactions({
       </TabsList>
       <TabsContent value="incomes" className="mt-6">
         <div className="space-y-4">
-          <AddNewForm onAddItem={onAddIncome} itemType="income" />
           <Card>
             <CardHeader>
               <CardTitle>Lista de Ingresos</CardTitle>
@@ -263,11 +262,11 @@ export default function RecurringTransactions({
               </CardFooter>
              )}
           </Card>
+          <AddNewForm onAddItem={onAddIncome} itemType="income" />
         </div>
       </TabsContent>
       <TabsContent value="expenses" className="mt-6">
         <div className="space-y-4">
-          <AddNewForm onAddItem={onAddRecurringExpense} itemType="expense" />
           <Card>
             <CardHeader>
               <CardTitle>Lista de Gastos Recurrentes</CardTitle>
@@ -297,6 +296,7 @@ export default function RecurringTransactions({
               </CardFooter>
              )}
           </Card>
+          <AddNewForm onAddItem={onAddRecurringExpense} itemType="expense" />
         </div>
       </TabsContent>
     </Tabs>
