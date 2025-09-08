@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/card";
 import type { Transaction, Tag } from "@/lib/types";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { formatTransactionDate, cn } from '@/lib/utils';
+import { formatTransactionDate } from '@/lib/utils';
 import { Loader2 } from "lucide-react";
 
 interface TransactionsListProps {
@@ -37,11 +37,13 @@ const TransactionListItem = ({ transaction, onClick, tagMap }: { transaction: Tr
       <div className="flex items-center">
           <div className="flex-1 flex items-center gap-4">
               {tag && (
-                <div className={cn(
-                    "h-10 w-10 rounded-lg flex items-center justify-center",
-                    `bg-tag-${tag.color}`,
-                    `text-tag-${tag.color}-foreground`
-                )}>
+                <div 
+                  className="h-10 w-10 rounded-lg flex items-center justify-center"
+                  style={{
+                    backgroundColor: `hsl(var(--tag-${tag.color}))`,
+                    color: `hsl(var(--tag-${tag.color}-foreground))`
+                  }}
+                >
                     {React.cloneElement(tag.iconNode as React.ReactElement, { className: 'h-6 w-6' })}
                 </div>
               )}
