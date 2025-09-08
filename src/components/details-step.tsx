@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,23 +14,46 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Transaction, Tag } from "@/lib/types";
-import { Trash2, ArrowLeft, CalendarIcon, CalculatorIcon, ChevronRight } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import {
+  Trash2,
+  ArrowLeft,
+  CalendarIcon,
+  CalculatorIcon,
+  ChevronRight,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import React, { useState, useEffect } from "react";
+import { DialogDescription } from "@/components/ui/dialog";
 import {
-  DialogDescription
-} from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { Calendar } from "./ui/calendar";
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import Calculator from "./calculator";
 import CategoryStep from "./category-step";
 
 const formSchema = z.object({
-  amount: z.coerce.number().positive({ message: "La cantidad debe ser positiva." }).int({ message: "La cantidad no puede incluir céntimos." }),
+  amount: z.coerce
+    .number()
+    .positive({ message: "La cantidad debe ser positiva." })
+    .int({ message: "La cantidad no puede incluir céntimos." }),
   description: z.string().min(2, {
     message: "La descripción debe tener al menos 2 caracteres.",
   }),
@@ -45,24 +68,26 @@ type FormTag = Tag & {
 };
 
 interface DetailsStepProps {
-  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'type'>) => Promise<void>;
+  onAddTransaction: (
+    transaction: Omit<Transaction, "id" | "type">
+  ) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
   transactionToEdit: Transaction | null;
   tags: FormTag[];
   onClose: () => void;
-  onAddTag: (tag: Omit<Tag, 'id' | 'order'>) => Promise<void>;
+  onAddTag: (tag: Omit<Tag, "id" | "order">) => Promise<void>;
   onUpdateTag: (tag: Tag) => Promise<void>;
   onDeleteTag: (tag: Tag) => Promise<void>;
   onReorderTags: (tags: Tag[]) => Promise<void>;
 }
 
-export default function DetailsStep({ 
-  onAddTransaction, 
-  onUpdateTransaction, 
-  onDeleteTransaction, 
-  transactionToEdit, 
-  tags, 
+export default function DetailsStep({
+  onAddTransaction,
+  onUpdateTransaction,
+  onDeleteTransaction,
+  transactionToEdit,
+  tags,
   onClose,
   onAddTag,
   onUpdateTag,
@@ -73,22 +98,24 @@ export default function DetailsStep({
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formattedAmount, setFormattedAmount] = useState<string | null>(null);
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: transactionToEdit ? {
-      amount: transactionToEdit.amount,
-      description: transactionToEdit.description,
-      tag: transactionToEdit.tag,
-      date: new Date(transactionToEdit.date),
-    } : {
-      amount: 0,
-      description: "",
-      tag: "",
-      date: new Date(),
-    },
+    defaultValues: transactionToEdit
+      ? {
+          amount: transactionToEdit.amount,
+          description: transactionToEdit.description,
+          tag: transactionToEdit.tag,
+          date: new Date(transactionToEdit.date),
+        }
+      : {
+          amount: 0,
+          description: "",
+          tag: "",
+          date: new Date(),
+        },
   });
-  
+
   useEffect(() => {
     if (transactionToEdit) {
       form.reset({
@@ -98,27 +125,27 @@ export default function DetailsStep({
         date: new Date(transactionToEdit.date),
       });
     } else {
-       form.reset({
+      form.reset({
         amount: 0,
         description: "",
         tag: "",
         date: new Date(),
       });
-       setIsCategorySelectorOpen(true);
+      setIsCategorySelectorOpen(true);
     }
   }, [transactionToEdit, form]);
 
-  const watchedAmount = form.watch('amount');
+  const watchedAmount = form.watch("amount");
   useEffect(() => {
     if (watchedAmount > 0) {
-        setFormattedAmount(new Intl.NumberFormat('es-BO').format(watchedAmount));
+      setFormattedAmount(new Intl.NumberFormat("es-BO").format(watchedAmount));
     } else {
-        setFormattedAmount('');
+      setFormattedAmount("");
     }
   }, [watchedAmount]);
 
-  const watchedTag = form.watch('tag');
-  const currentTag = tags.find(t => t.name === watchedTag);
+  const watchedTag = form.watch("tag");
+  const currentTag = tags.find((t) => t.name === watchedTag);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -132,37 +159,40 @@ export default function DetailsStep({
   }
 
   const handleDelete = async () => {
-    if(transactionToEdit) {
+    if (transactionToEdit) {
       setIsSubmitting(true);
       await onDeleteTransaction(transactionToEdit);
       setIsSubmitting(false);
     }
-  }
-  
+  };
+
   const handleCategorySelect = (tag: Tag) => {
-    form.setValue('tag', tag.name);
+    form.setValue("tag", tag.name);
     setIsCategorySelectorOpen(false);
-    if (form.getValues('amount') === 0) {
+    if (form.getValues("amount") === 0) {
       setTimeout(() => {
-        const amountInput = document.getElementById('amount-input');
+        const amountInput = document.getElementById("amount-input");
         if (amountInput) {
-            amountInput.focus();
+          amountInput.focus();
         }
       }, 500);
     }
-  }
+  };
 
   const handleCategorySelectorClose = () => {
     // If no tag is selected when creating a new transaction, close the main form
-    if (!transactionToEdit && !form.getValues('tag')) {
+    if (!transactionToEdit && !form.getValues("tag")) {
       onClose();
     }
     setIsCategorySelectorOpen(false);
   };
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, field: any) => {
+  const handleAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: any
+  ) => {
     const value = e.target.value;
-    const digitsOnly = value.replace(/[^0-9]/g, '');
+    const digitsOnly = value.replace(/[^0-9]/g, "");
     if (digitsOnly) {
       const numberValue = parseInt(digitsOnly, 10);
       field.onChange(numberValue);
@@ -174,58 +204,83 @@ export default function DetailsStep({
   return (
     <>
       <DialogHeader className="relative flex-row items-center justify-center border-b">
-        <Button variant="ghost" size="icon" className="absolute left-2" onClick={onClose}>
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Cerrar</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-2"
+          onClick={onClose}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Cerrar</span>
         </Button>
-        <DialogTitle className="font-headline text-xl text-center py-4">{transactionToEdit ? 'Editar Gasto' : 'Añadir Gasto'}</DialogTitle>
+        <DialogTitle className="font-headline text-xl text-center py-4">
+          {transactionToEdit ? "Editar Gasto" : "Añadir Gasto"}
+        </DialogTitle>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-          
-          <div className="flex-1 space-y-8 pt-4 overflow-y-auto">
-            <Dialog open={isCategorySelectorOpen} onOpenChange={setIsCategorySelectorOpen}>
-                <DialogTrigger asChild>
-                    <button type="button" className="w-full bg-secondary p-4 rounded-lg">
-                        {currentTag ? (
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg" style={{ backgroundColor: `hsl(var(--tag-${currentTag.color}))`, color: `hsl(var(--tag-${currentTag.color}-foreground))` }}>
-                                        {React.cloneElement(currentTag.iconNode as React.ReactElement, { className: 'w-6 h-6' })}
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-sm text-muted-foreground">Categoría</p>
-                                        <p className="font-semibold text-xl">{currentTag.name}</p>
-                                    </div>
-                                </div>
-                                <ChevronRight className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-between">
-                                <p>Seleccionar Categoría</p>
-                                <ChevronRight className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                        )}
-                    </button>
-                </DialogTrigger>
-                <DialogContent 
-                  className="max-w-full w-full bottom-0 top-auto translate-y-0 p-0 rounded-b-none rounded-t-2xl"
-                  onInteractOutside={(e) => {
-                    handleCategorySelectorClose();
-                  }}
-                  >
-                   <CategoryStep 
-                      tags={tags}
-                      onSelectCategory={handleCategorySelect}
-                      onClose={handleCategorySelectorClose}
-                      onAddTag={onAddTag}
-                      onUpdateTag={onUpdateTag}
-                      onDeleteTag={onDeleteTag}
-                      onReorderTags={onReorderTags}
-                    />
-                </DialogContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+          <div className="flex-1 space-y-8 pt-4 overflow-y-auto h-full">
+            <Dialog
+              open={isCategorySelectorOpen}
+              onOpenChange={setIsCategorySelectorOpen}
+            >
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full bg-secondary p-4 rounded-lg"
+                >
+                  {currentTag ? (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg"
+                          style={{
+                            backgroundColor: `hsl(var(--tag-${currentTag.color}))`,
+                            color: `hsl(var(--tag-${currentTag.color}-foreground))`,
+                          }}
+                        >
+                          {React.cloneElement(
+                            currentTag.iconNode as React.ReactElement,
+                            { className: "w-6 h-6" }
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm text-muted-foreground">
+                            Categoría
+                          </p>
+                          <p className="font-semibold text-xl">
+                            {currentTag.name}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <p>Seleccionar Categoría</p>
+                      <ChevronRight className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                </button>
+              </DialogTrigger>
+              <DialogContent
+                className="max-w-full w-full bottom-0 top-auto translate-y-0 p-0 rounded-b-none rounded-t-2xl"
+                onInteractOutside={(e) => {
+                  handleCategorySelectorClose();
+                }}
+              >
+                <CategoryStep
+                  tags={tags}
+                  onSelectCategory={handleCategorySelect}
+                  onClose={handleCategorySelectorClose}
+                  onAddTag={onAddTag}
+                  onUpdateTag={onUpdateTag}
+                  onDeleteTag={onDeleteTag}
+                  onReorderTags={onReorderTags}
+                />
+              </DialogContent>
             </Dialog>
-            
+
             <FormField
               control={form.control}
               name="amount"
@@ -242,31 +297,41 @@ export default function DetailsStep({
                           type="text"
                           inputMode="numeric"
                           placeholder=" "
-                          value={formattedAmount !== null ? formattedAmount : ''}
+                          value={
+                            formattedAmount !== null ? formattedAmount : ""
+                          }
                           onChange={(e) => handleAmountChange(e, field)}
                           disabled={isSubmitting}
                           className="h-24 w-full border-none bg-transparent text-center text-7xl font-bold tracking-tighter shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
-                         <Dialog open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
-                            <DialogTrigger asChild>
-                                <Button type="button" variant="ghost" size="icon" className="absolute right-0 h-12 w-12 text-muted-foreground">
-                                    <CalculatorIcon className="h-6 w-6" />
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Calculadora</DialogTitle>
-                                <DialogDescription>
-                                    Realiza un cálculo rápido y confirma el monto.
-                                </DialogDescription>
-                              </DialogHeader>
-                                <Calculator
-                                    onConfirm={(value) => {
-                                        form.setValue('amount', value);
-                                        setIsCalculatorOpen(false);
-                                    }}
-                                />
-                            </DialogContent>
+                        <Dialog
+                          open={isCalculatorOpen}
+                          onOpenChange={setIsCalculatorOpen}
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 h-12 w-12 text-muted-foreground"
+                            >
+                              <CalculatorIcon className="h-6 w-6" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Calculadora</DialogTitle>
+                              <DialogDescription>
+                                Realiza un cálculo rápido y confirma el monto.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <Calculator
+                              onConfirm={(value) => {
+                                form.setValue("amount", value);
+                                setIsCalculatorOpen(false);
+                              }}
+                            />
+                          </DialogContent>
                         </Dialog>
                       </div>
                     </FormControl>
@@ -276,7 +341,7 @@ export default function DetailsStep({
               )}
             />
 
-            <div className="space-y-4 px-4">
+            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="description"
@@ -284,7 +349,11 @@ export default function DetailsStep({
                   <FormItem>
                     <div className="form-control">
                       <FormControl>
-                        <Input placeholder=" " {...field} disabled={isSubmitting} />
+                        <Input
+                          placeholder=" "
+                          {...field}
+                          disabled={isSubmitting}
+                        />
                       </FormControl>
                       <FormLabel>Descripción</FormLabel>
                     </div>
@@ -292,7 +361,7 @@ export default function DetailsStep({
                   </FormItem>
                 )}
               />
-               <FormField
+              <FormField
                 control={form.control}
                 name="date"
                 render={({ field }) => (
@@ -307,7 +376,7 @@ export default function DetailsStep({
                               "w-full justify-start text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
-                             disabled={isSubmitting}
+                            disabled={isSubmitting}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
@@ -339,38 +408,54 @@ export default function DetailsStep({
 
           <div className="p-4 border-t bg-background">
             <div className="flex flex-col gap-4">
-               {transactionToEdit ? (
-                 <>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+              {transactionToEdit ? (
+                <>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Guardando..." : "Guardar Cambios"}
                   </Button>
                   <AlertDialog>
-                     <AlertDialogTrigger asChild>
-                       <Button type="button" variant="destructive" className="w-full" disabled={isSubmitting}>
-                         <Trash2 className="mr-2 h-4 w-4" />
-                         Eliminar
-                       </Button>
-                     </AlertDialogTrigger>
-                     <AlertDialogContent>
-                       <AlertDialogHeader>
-                         <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                         <AlertDialogDescription>
-                           Esta acción no se puede deshacer. Esto eliminará permanentemente la transacción.
-                         </AlertDialogDescription>
-                       </AlertDialogHeader>
-                       <AlertDialogFooter>
-                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                         <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
-                       </AlertDialogFooter>
-                     </AlertDialogContent>
-                   </AlertDialog>
-                 </>
-               ) : (
-                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                   {isSubmitting ? 'Guardando...' : 'Añadir Gasto'}
-                 </Button>
-               )}
-             </div>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="w-full"
+                        disabled={isSubmitting}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Eliminar
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Esto eliminará
+                          permanentemente la transacción.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Guardando..." : "Añadir Gasto"}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </Form>
