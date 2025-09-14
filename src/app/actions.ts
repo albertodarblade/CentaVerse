@@ -21,11 +21,31 @@ export async function getAIInsightsAction(input: SpendingInsightsInput) {
   }
 }
 
-export async function getTransactions(page: number, limit: number = 30): Promise<Transaction[]> {
+export async function getTransactions(page: number, limit: number = 30, date?: string): Promise<Transaction[]> {
     try {
         const db = await getDb();
+
+        let query = {};
+        if (date) {
+            const selectedDate = new Date(date);
+            // Set to the beginning of the day
+            selectedDate.setHours(0, 0, 0, 0);
+
+            const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+            const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+            // Set to the end of the day
+            endDate.setHours(23, 59, 59, 999);
+
+            query = {
+                date: {
+                    $gte: startDate,
+                    $lte: endDate,
+                },
+            };
+        }
+
         const transactions = await db.collection("transactions")
-            .find({})
+            .find(query)
             .sort({ date: -1 })
             .skip((page - 1) * limit)
             .limit(limit)

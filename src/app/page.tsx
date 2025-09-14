@@ -4,7 +4,7 @@ import type { Transaction, Tag, Income, RecurringExpense } from "@/lib/types";
 import { getTags, getIncomes, getTransactions, getRecurringExpenses } from "@/app/actions";
 
 export default async function Home() {
-  const transactions: Transaction[] = await getTransactions(1, 30);
+  const transactions: Transaction[] = await getTransactions(1, 30, new Date().toISOString());
   const tags: Tag[] = await getTags();
   const incomes: Income[] = await getIncomes();
   const recurringExpenses: RecurringExpense[] = await getRecurringExpenses();
