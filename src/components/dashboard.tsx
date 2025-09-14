@@ -126,7 +126,10 @@ export default function Dashboard({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1)
+  );
 
   useEffect(() => {
     setAllTransactions(initialTransactions);
@@ -430,7 +433,11 @@ export default function Dashboard({
     if (isLoading || !hasMore) return;
     setIsLoading(true);
     const nextPage = page + 1;
-    const newTransactions = await getTransactions(nextPage, 30, currentDate.toISOString());
+    const newTransactions = await getTransactions(
+      nextPage,
+      30,
+      currentDate.toISOString()
+    );
     if (newTransactions.length > 0) {
       setAllTransactions((prev) => [...prev, ...newTransactions]);
       setPage(nextPage);
