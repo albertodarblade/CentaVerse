@@ -126,6 +126,7 @@ export default function Dashboard({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     setAllTransactions(initialTransactions);
@@ -144,6 +145,20 @@ export default function Dashboard({
   useEffect(() => {
     setRecurringExpenses(initialRecurringExpenses);
   }, [initialRecurringExpenses]);
+
+  const fetchTransactionsByMonth = async (date: Date) => {
+    setIsLoading(true);
+    const newTransactions = await getTransactions(1, 30, date.toISOString());
+    setAllTransactions(newTransactions);
+    setPage(1);
+    setHasMore(newTransactions.length > 0);
+    setIsLoading(false);
+  };
+
+  const handleDateChange = (newDate: Date) => {
+    setCurrentDate(newDate);
+    fetchTransactionsByMonth(newDate);
+  };
 
   const handleAddTransaction = async (
     transaction: Omit<Transaction, "id" | "type">
@@ -415,7 +430,7 @@ export default function Dashboard({
     if (isLoading || !hasMore) return;
     setIsLoading(true);
     const nextPage = page + 1;
-    const newTransactions = await getTransactions(nextPage, 30);
+    const newTransactions = await getTransactions(nextPage, 30, currentDate.toISOString());
     if (newTransactions.length > 0) {
       setAllTransactions((prev) => [...prev, ...newTransactions]);
       setPage(nextPage);
@@ -493,6 +508,8 @@ export default function Dashboard({
           transactions={allTransactions}
           incomes={incomes}
           recurringExpenses={recurringExpenses}
+          date={currentDate}
+          onDateChange={handleDateChange}
         />
       </div>
 

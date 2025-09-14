@@ -10,12 +10,14 @@ import {
 } from '@/components/ui/chart';
 import { PieChart, Pie, Cell } from 'recharts';
 import type { Transaction, Income, RecurringExpense } from '@/lib/types';
-import { format } from 'date-fns';
+import { MonthPicker } from './ui/month-picker';
 
 interface MonthlySummaryProps {
   transactions: Transaction[];
   incomes: Income[];
   recurringExpenses: RecurringExpense[];
+  date: Date;
+  onDateChange: (date: Date) => void;
 }
 
 const COLORS = {
@@ -23,14 +25,13 @@ const COLORS = {
     expenses: 'hsl(var(--chart-2))',
 };
 
-export default function MonthlySummary({ transactions, incomes, recurringExpenses }: MonthlySummaryProps) {
+export default function MonthlySummary({ transactions, incomes, recurringExpenses, date, onDateChange }: MonthlySummaryProps) {
   const [formattedTotalIncome, setFormattedTotalIncome] = useState<string | null>(null);
   const [formattedTotalExpenses, setFormattedTotalExpenses] = useState<string | null>(null);
   
   const { totalIncome, totalExpenses, chartData } = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    const currentMonth = date.getMonth();
+    const currentYear = date.getFullYear();
 
     const monthlyTransactions = transactions.filter((t) => {
       const transactionDate = new Date(t.date);
@@ -56,7 +57,7 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
     chartData = chartData.filter(d => d.value > 0);
 
     return { totalIncome, totalExpenses, chartData };
-  }, [transactions, incomes, recurringExpenses]);
+  }, [transactions, incomes, recurringExpenses, date]);
   
   useEffect(() => {
     setFormattedTotalIncome(new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(totalIncome));
@@ -66,56 +67,59 @@ export default function MonthlySummary({ transactions, incomes, recurringExpense
   return (
     <Card>
       <CardContent className="p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
-          <div className="h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0">
-             <ChartContainer
-                config={{
-                    income: { label: 'Ingresos', color: COLORS.income },
-                    expenses: { label: 'Gastos', color: COLORS.expenses },
-                }}
-                className="mx-auto aspect-square h-full"
-              >
-                <PieChart>
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent 
-                        formatter={(value) => new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(value as number)}
-                        hideLabel 
-                    />}
-                  />
-                  <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius="70%"
-                    outerRadius="100%"
-                    strokeWidth={0}
-                  >
-                    {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ChartContainer>
-          </div>
-          <div className="flex flex-col gap-3 w-full">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.income }}/>
-                Ingresos
-              </div>
-              <p className="text-base font-bold">
-                {formattedTotalIncome}
-              </p>
+        <div className="flex flex-col items-center justify-center gap-4">
+          <MonthPicker date={date} onDateChange={onDateChange} />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 w-full mt-4">
+            <div className="h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0">
+               <ChartContainer
+                  config={{
+                      income: { label: 'Ingresos', color: COLORS.income },
+                      expenses: { label: 'Gastos', color: COLORS.expenses },
+                  }}
+                  className="mx-auto aspect-square h-full"
+                >
+                  <PieChart>
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent
+                          formatter={(value) => new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(value as number)}
+                          hideLabel
+                      />}
+                    />
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius="70%"
+                      outerRadius="100%"
+                      strokeWidth={0}
+                    >
+                      {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
             </div>
-             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
-                Gastado
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.income }}/>
+                  Ingresos
+                </div>
+                <p className="text-base font-bold">
+                  {formattedTotalIncome}
+                </p>
               </div>
-              <p className="text-base font-bold">
-                {formattedTotalExpenses}
-              </p>
+               <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS.expenses }}/>
+                  Gastado
+                </div>
+                <p className="text-base font-bold">
+                  {formattedTotalExpenses}
+                </p>
+              </div>
             </div>
           </div>
         </div>
