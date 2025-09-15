@@ -61,14 +61,10 @@ export async function getTransactions(page: number, limit: number = 30, date?: s
     }
 }
 
-export async function addTransaction(transaction: Omit<Transaction, 'id' | 'type'>) {
+export async function addTransaction(transaction: Omit<Transaction, 'id'>) {
   try {
     const db = await getDb();
-    const newTransaction: Omit<Transaction, 'id'> & { type: 'expense' | 'income' } = {
-        ...transaction,
-        type: 'expense'
-    };
-    const result = await db.collection('transactions').insertOne(newTransaction);
+    const result = await db.collection('transactions').insertOne(transaction);
     
     const insertedDoc = await db.collection('transactions').findOne({ _id: result.insertedId });
     return JSON.parse(JSON.stringify({ ...insertedDoc, id: insertedDoc?._id.toString() }));
@@ -143,10 +139,10 @@ export async function addTag(tag: Omit<Tag, 'id' | 'order'> & {order?: number}) 
     }
 }
 
-export async function updateTag(tag: any) {
+export async function updateTag(tag: Tag) {
     try {
         const db = await getDb();
-        const { _id, id, iconNode, ...tagData } = tag;
+        const { _id, id, ...tagData } = tag;
         const objectId = new ObjectId(_id);
         
         const oldTag = await db.collection('tags').findOne({ _id: objectId });
@@ -199,7 +195,7 @@ export async function updateTagOrder(tags: Tag[]) {
         const db = await getDb();
         const bulkOps = tags.map((tag, index) => ({
             updateOne: {
-                filter: { _id: new ObjectId(tag._id) },
+                filter: { _id: new ObjectId(tag.id) },
                 update: { $set: { order: index } }
             }
         }));

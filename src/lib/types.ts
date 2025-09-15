@@ -1,6 +1,8 @@
+import { ObjectId } from 'mongodb';
+
 export type Transaction = {
   id: string;
-  _id?: string;
+  _id?: ObjectId;
   type: 'income' | 'expense';
   amount: number;
   description: string;
@@ -10,7 +12,7 @@ export type Transaction = {
 
 export type Tag = {
   id: string;
-  _id?: string;
+  _id?: ObjectId;
   name: string;
   icon: string;
   order: number;
@@ -19,14 +21,14 @@ export type Tag = {
 
 export type Income = {
   id: string;
-  _id?: string;
+  _id?: ObjectId;
   amount: number;
   description: string;
 };
 
 export type RecurringExpense = {
   id: string;
-  _id?: string;
+  _id?: ObjectId;
   amount: number;
   description: string;
 }

@@ -37,7 +37,7 @@ const colors = [ 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'cyan', 'b
 
 const tagSchema = z.object({
   id: z.string().optional(),
-  _id: z.string().optional(),
+  _id: z.any().optional(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
   icon: z.string(),
   color: z.string(),
@@ -238,7 +238,7 @@ const AddEditView = ({
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Eliminar etiqueta?</AlertDialogTitle>
-                      <AlertDialogDescription>Las transacciones asociadas pasarán a "Sin categoría". Esta acción no se puede deshacer.</AlertDialogDescription>
+                      <AlertDialogDescription>Las transacciones asociadas pasarán a &quot;Sin categoría&quot;. Esta acción no se puede deshacer.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -282,7 +282,7 @@ export default function TagManager({ tags, onAddTag, onUpdateTag, onDeleteTag, o
   const { fields, move } = useFieldArray({ control: listForm.control, name: "tags" });
 
   const handleDragStart = (index: number) => {
-    setDraggedTag(fields[index]);
+    setDraggedTag(fields[index] as Tag);
   };
 
   const handleDrop = (index: number) => {
