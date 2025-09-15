@@ -69,7 +69,7 @@ type FormTag = Tag & {
 
 interface DetailsStepProps {
   onAddTransaction: (
-    transaction: Omit<Transaction, "id" | "type">
+    transaction: Omit<Transaction, "id">
   ) => Promise<void>;
   onUpdateTransaction: (transaction: Transaction) => Promise<void>;
   onDeleteTransaction: (transaction: Transaction) => Promise<void>;
@@ -152,7 +152,7 @@ export default function DetailsStep({
     if (transactionToEdit) {
       await onUpdateTransaction({ ...transactionToEdit, ...values });
     } else {
-      await onAddTransaction(values);
+      await onAddTransaction({...values, type: 'expense'});
     }
     setIsSubmitting(false);
     onClose();

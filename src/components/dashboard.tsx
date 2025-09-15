@@ -161,13 +161,13 @@ export default function Dashboard({
   };
 
   const handleAddTransaction = async (
-    transaction: Omit<Transaction, "id" | "type">
+    transaction: Omit<Transaction, "id">
   ) => {
     const tempId = `temp-${Date.now()}`;
     const newTransactionOptimistic: Transaction = {
       ...transaction,
       id: tempId,
-      _id: tempId,
+      _id: tempId as any,
       type: "expense",
       date: new Date(transaction.date),
     };
@@ -531,7 +531,7 @@ export default function Dashboard({
         </div>
       )}
 
-      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen} size>
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
         <SheetContent
           side="bottom"
           className="h-full"
